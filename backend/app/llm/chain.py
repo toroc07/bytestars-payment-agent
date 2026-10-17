@@ -4,6 +4,7 @@ import hashlib
 import json
 import logging
 import tempfile
+import time
 from pathlib import Path
 from typing import Any
 
@@ -94,12 +95,14 @@ class LLMChain:
         for provider in self.providers:
             if not provider.supports(request):
                 continue
+            started = time.monotonic()
             try:
                 data = provider.generate_json(request)
-            except LLMError as exc:
-                log.warning("LLM provider failed: %s", exc)  # never log the invoice content
+            except LLMError as exc:  # never log the invoice content, only who failed and how long it took
+                log.warning("LLM provider failed after %.1f s: %s", time.monotonic() - started, exc)
                 errors.append(str(exc))
                 continue
+            log.warning("LLM provider %s answered in %.1f s", provider.name, time.monotonic() - started)
             if self.cache:
                 self.cache.put(key, data)
             return data, provider.name
