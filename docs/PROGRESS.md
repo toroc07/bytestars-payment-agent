@@ -72,8 +72,9 @@ Tareas por definir por Dev C (empresa ficticia, reglas, beneficiarios, acuerdos,
 ## Deploy
 | Tarea | Estado | Notas |
 |---|---|---|
-| Cuenta Neon + proyecto Vercel api/web | pendiente | `DEPLOY.md` |
-| Confirmar créditos/free tier de Gemini | pendiente | lo revisa quien tiene Google AI Pro |
+| Base de datos en Neon (crear, conectar al proyecto api, migraciones y seed) | pendiente | **Dev B**; `DEPLOY.md` pasos 1 y 3 |
+| Proyectos Vercel api y web (variables, CORS, prueba con el dataset) | pendiente | **Dev A**; `DEPLOY.md` pasos 2, 4, 5 y 6 |
+| Confirmar créditos/free tier de Gemini | listo | gratis: 20 lecturas al día por modelo y proyecto; se encadenan 3 modelos (ADR-019); `gemini-2.5-flash` ya no se ofrece a cuentas nuevas |
 
 ## Bloqueos y preguntas abiertas
 - ~~(Dev A → Dev B) Implementar en el backend los campos ✱ del `RuleSet` y del `Beneficiary` propuestos en `docs/DATA_MODEL.md` (reglas de Dev C) y regenerar `contracts/openapi.json`.~~ **Completado.**

@@ -3,6 +3,8 @@
 Objetivo: una URL pública para que los participantes del hackathon prueben la demo.
 
 ## Topología
+Responsables: **Dev A** los proyectos de Vercel; **Dev B** la base de datos en Neon.
+
 Un solo repositorio de GitHub → **dos proyectos Vercel** con *Root Directory* distinto:
 
 | Proyecto | Root Directory | Contenido |
@@ -18,7 +20,7 @@ Base de datos: **Neon Postgres** (integración con Vercel). **SQLite no sirve en
 | web | `VITE_API_URL` | URL pública del proyecto api |
 | api | `DATABASE_URL` | cadena de Neon (la inyecta la integración) |
 | api | `CORS_ORIGINS` | URL pública del proyecto web |
-| api | `GEMINI_API_KEY`, `GEMINI_MODEL` | key de AI Studio y modelo vigente |
+| api | `GEMINI_API_KEY`, `GEMINI_MODEL` | key de AI Studio y modelos en orden: `gemini-3.8-flash,gemini-3.5-flash,gemini-3.5-flash-lite` |
 | api | `GROQ_API_KEY`, `OPENROUTER_API_KEY` | respaldos (opcionales) |
 | api | `LLM_PROVIDER_ORDER`, `LLM_CACHE` | `gemini,groq,openrouter`, `true` |
 | api | `APP_ENV` | `production` |
