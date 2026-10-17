@@ -1,8 +1,7 @@
 # DECISION_ENGINE — Especificación del motor de decisiones
 
 Dueño: Dev A (Dev B colabora). Implementación en `backend/app/engine/`.
-Este documento fija **el contrato y las garantías** del motor. **El catálogo concreto de reglas, sus umbrales y valores todavía no está definido**:
-lo define el equipo junto con la persona a cargo del dataset y las reglas de la empresa ficticia (ver `docs/PROGRESS.md`).
+Este documento fija **el contrato, las garantías y el catálogo de reglas** del motor. El catálogo sale de las reglas de la empresa ficticia que definió Dev C; los criterios de traducción a resultados los decidió Dev A (ver "Criterios" abajo).
 
 ## Contrato
 `evaluate(factura_extraída, reglas, contexto) → EngineResult` (tipos en `docs/DATA_MODEL.md`).
@@ -10,16 +9,42 @@ lo define el equipo junto con la persona a cargo del dataset y las reglas de la 
 - **Determinista:** misma entrada → misma salida.
 - **Fail-closed:** cualquier excepción o situación no prevista → `escalate`, nunca `pay`.
 
-## Catálogo de reglas — por definir
-El reto exige como mínimo poder configurar:
-- límites por pago y por periodo,
-- beneficiarios permitidos,
-- aprobación humana por encima de cierto monto,
+## Reglas de la empresa (Dev C)
+1. **Límites:** ningún pago supera US$10.000 (si lo supera, se rechaza). El total pagado en 7 días no supera US$50.000 (lo que pase del tope queda para el siguiente periodo). Un mismo proveedor no recibe más de US$20.000 por periodo sin revisión.
+2. **Beneficiarios permitidos:** solo se paga a proveedores de la lista (si no está, se rechaza). Un proveedor nuevo entra a la lista solo tras verificar razón social, país, datos bancarios y dueños con 25 % o más. No se paga a personas, empresas ni países sancionados en EE. UU.
+3. **Aprobación humana:** todo pago por encima de US$5.000 requiere aprobación de una persona. Si el monto o los datos bancarios cambian respecto al último pago al proveedor, pasa a revisión humana.
+4. **Validación y registros:** toda factura trae proveedor, número de factura, monto, fecha y concepto; si falta un dato, queda incompleta. Si ya fue pagada, se rechaza como duplicada. Cada factura, pago y aprobación se guarda 5 años.
 
-y los casos trampa del reto: cobro duplicado, beneficiario nuevo fuera de la lista, factura que no cuadra con lo acordado, monto sobre el límite, presupuesto/saldo insuficiente para el periodo.
+### Criterios de traducción (decididos por Dev A)
+- **"Se rechaza" = `block`.** En la UI se muestra como "Rechazada por el agente". No se paga; queda en el registro y se puede reevaluar si se corrige la causa.
+- **"Queda para el siguiente periodo" = `escalate`.** La factura queda "Por aprobar" con el motivo "supera el tope del periodo"; nada se paga solo. No hay estado "programada".
+- **Verificación y sanciones = marcas en el beneficiario** (`verified`, `sanctioned`) y una lista de países sancionados en el `RuleSet`. El motor no consulta listas reales: verificar identidad y cumplimiento quedan fuera del alcance del reto; una persona marca los datos.
+- **Montos en USD:** los límites se comparan en la moneda base (USD) usando `fx_rates`. Si la moneda no tiene tasa, no se puede comparar y la regla falla con `escalate` (fail-closed).
+- **Conservar 5 años** no es una regla del motor: es un requisito de almacenamiento (decisiones append-only, sin borrado de facturas, decisiones ni aprobaciones). Ver `docs/DATA_MODEL.md`.
 
-Para cada regla que se defina, documentar aquí: identificador, condición de falla, resultado por defecto (`block` o `escalate`), qué parámetros del `RuleSet` usa y un ejemplo de mensaje de explicación.
-Una regla puede ser `skipped` cuando no aplica (queda visible en el registro).
+## Catálogo de reglas
+Parámetros con su valor de Dev C entre paréntesis (campos propuestos en `docs/DATA_MODEL.md`, a implementar por Dev B).
+
+| ID | Nombre | Falla cuando… | Resultado | Parámetros del `RuleSet` | Mensaje de ejemplo |
+|---|---|---|---|---|---|
+| R01 | `REQUIRED_FIELDS` | falta proveedor, número de factura, monto, fecha o concepto (o la lectura es poco confiable) | `escalate` | `required_fields`, `min_extraction_confidence` | «Factura incompleta: falta el número de factura.» |
+| R02 | `NOT_DUPLICATE` | ya existe una factura **pagada o aprobada** del mismo proveedor con el mismo número | `block` | `duplicate_window_days` | «Duplicada: FAC-1001 de DevShop ya se pagó el 2026-10-01.» |
+| R03 | `BENEFICIARY_ALLOWED` | el proveedor no está en la lista de permitidos | `block` | `require_allowlisted_beneficiary` | «Proveedor nuevo: no está en la lista de beneficiarios permitidos.» |
+| R04 | `BENEFICIARY_VERIFIED` | el proveedor está en la lista pero no está verificado | `block` | `require_verified_beneficiary` | «Proveedor sin verificar (razón social, país, banco y dueños ≥25 %).» |
+| R05 | `NOT_SANCTIONED` | el proveedor está marcado como sancionado o su país está en la lista de sancionados | `block` | `block_sanctioned`, `sanctioned_countries` | «País sancionado: XX.» |
+| R06 | `CURRENCY_CONVERTIBLE` | la moneda no tiene tasa de cambio a USD | `escalate` | `fx_rates`, `allowed_currencies` | «No hay tasa para JPY: no se pueden comprobar los límites.» |
+| R07 | `PER_PAYMENT_LIMIT` | monto en USD > límite por pago (10.000) | `block` | `per_payment_limit` | «USD 12,500.00 supera el límite por pago de USD 10,000.00.» |
+| R08 | `APPROVAL_THRESHOLD` | monto en USD > umbral de aprobación (5.000) | `escalate` | `approval_threshold` | «USD 6,600.00 supera el umbral de USD 5,000.00: requiere aprobación.» |
+| R09 | `PERIOD_LIMIT` | pagado en los últimos `period_days` (7) + monto > límite del periodo (50.000) | `escalate` | `period_days`, `period_limit` | «Supera el tope de los últimos 7 días (USD 50,000.00): queda para revisión.» |
+| R10 | `VENDOR_PERIOD_LIMIT` | pagado al mismo proveedor en el periodo + monto > límite por proveedor (20.000) | `escalate` | `per_vendor_period_limit` | «Este proveedor superaría USD 20,000.00 en el periodo.» |
+| R11 | `VENDOR_CHANGES` | el monto o los datos bancarios difieren del último pago al mismo proveedor | `escalate` | `review_on_vendor_changes` | «La cuenta bancaria cambió respecto al último pago.» |
+
+Una regla queda `skipped` cuando no aplica (por ejemplo R10 o R11 sin pagos previos al proveedor, o R04–R05 si R03 ya falló); queda visible en el registro.
+
+**Fuera del catálogo de Dev C** (existen hoy en el `RuleSet` del backend; decidir con el equipo si se quitan o se mantienen como reglas extra): `period_budget` (presupuesto que rechaza), `agreement_tolerance_pct` (comparar con lo acordado). R11 cubre el caso del reto "factura que no cuadra" comparando con el último pago en lugar de un acuerdo.
+
+### Contexto que necesita el motor
+Además de lo actual (`today`, `beneficiary`, `previous_invoices`, `spent_in_period`): `spent_vendor_in_period` (lo pagado a ese proveedor en el periodo) y `last_payment_to_vendor` (`amount`, `currency`, `bank_account`). El beneficiario debe traer `verified`, `sanctioned` y `country`.
 
 ## Agregación del resultado
 1. Si algún check `failed` tiene `outcome_if_failed = block` → **`block`**.

@@ -24,16 +24,40 @@ Mapa resultado → estado de la factura: `pay→paid`, `block→blocked`, `escal
 `id`, `source_type`, `source_filename?`, `raw_text?` (**no confiable**), `extracted?` (ExtractedInvoice), `status`, `received_at`.
 
 ## RuleSet (políticas de la empresa, versionadas)
-> **Por definir.** Los campos concretos dependen de las reglas de la empresa ficticia, que **aún no están definidas** (las define la persona a cargo del dataset junto con el equipo). Solo se fija lo que exige el reto y la estructura general:
+Campos según el catálogo de `docs/DECISION_ENGINE.md` (reglas de Dev C). **Propuesta de Dev A para que Dev B la implemente**; los marcados con ✱ son nuevos respecto al backend actual. Valor por defecto = el de Dev C.
 
-| Campo | Significado |
-|---|---|
-| `version` | se incrementa en cada guardado |
-| _(campos de reglas)_ | **por definir.** El reto menciona: límites por pago y por periodo, beneficiarios permitidos, aprobación humana por encima de cierto monto |
-| `severity_overrides` | `{rule_id: block|escalate}` (opcional); **nunca `pay`** (se valida) |
+| Campo | Tipo | Defecto | Significado (regla) |
+|---|---|---|---|
+| `version` | int | 1 | se incrementa en cada guardado |
+| `company_name` | str | — | empresa ficticia |
+| `base_currency` | str ISO | `USD` | moneda en la que se miden los límites |
+| `fx_rates` | `{moneda: decimal}` | — | unidades de USD por 1 unidad de cada moneda (R06) |
+| `allowed_currencies` | list[str] | — | monedas aceptadas (R06) |
+| `per_payment_limit` | decimal | 10000.00 | por encima se rechaza (R07) |
+| `approval_threshold` | decimal | 5000.00 | por encima se escala (R08) |
+| `period_days` ✱ | int | 7 | ventana móvil del periodo (R09, R10); reemplaza a `period` (weekly/monthly) |
+| `period_limit` | decimal | 50000.00 | tope del periodo; por encima se escala (R09) |
+| `per_vendor_period_limit` ✱ | decimal | 20000.00 | tope por proveedor en el periodo; por encima se escala (R10) |
+| `require_allowlisted_beneficiary` | bool | true | solo proveedores de la lista (R03) |
+| `require_verified_beneficiary` ✱ | bool | true | solo proveedores verificados (R04) |
+| `block_sanctioned` ✱ | bool | true | rechazar sancionados (R05) |
+| `sanctioned_countries` ✱ | list[str ISO-2] | — | países sancionados (R05) |
+| `review_on_vendor_changes` ✱ | bool | true | escalar si cambian monto o datos bancarios (R11) |
+| `required_fields` ✱ | list[str] | proveedor, número, monto, fecha, concepto | datos obligatorios (R01) |
+| `min_extraction_confidence` | float 0–1 | 0.8 | lectura poco confiable cuenta como incompleta (R01) |
+| `duplicate_window_days` | int | — | ventana para buscar duplicados (R02); sin ventana = siempre |
+| `retention_years` ✱ | int | 5 | conservación de facturas, pagos y aprobaciones (informativo; ver abajo) |
+| `severity_overrides` | `{rule_id: block\|escalate}` | {} | cambia la severidad de una regla; **nunca `pay`** (se valida) |
+
+Fuera del catálogo de Dev C (decidir si se quitan): `period_budget`, `agreement_tolerance_pct`, `period`.
 
 ## Beneficiary
-`id`, `name`, `tax_id?`, `account?`, `country?`, `allowed` (bool).
+`id`, `name`, `tax_id?`, `account?` (datos bancarios), `country?`, `allowed` (bool).
+Propuesta ✱ (reglas R04, R05, R11): `legal_name?` (razón social), `verified` (bool, por defecto false), `verified_at?`, `owners` (lista de `{name, pct}` con 25 % o más), `sanctioned` (bool, por defecto false).
+Un proveedor nuevo entra a la lista con `verified=false` hasta que una persona revisa razón social, país, datos bancarios y dueños.
+
+## Conservación (5 años)
+Facturas, decisiones (pagos y rechazos) y aprobaciones se conservan 5 años: **no hay borrado** de esas entidades (decisiones append-only; el reinicio de la demo es la única excepción y solo en el entorno de demostración).
 
 ## Agreement (lo acordado: contrato / orden de compra)
 `id`, `beneficiary_id`, `description`, `expected_amount` (>0), `currency`, `po_reference?`, `valid_from?`, `valid_to?`.
