@@ -66,7 +66,7 @@ El motor de decisiones es de Dev A pero **Dev B ayuda con él**: el reparto de r
 
 ## 5. Convenciones
 
-- **Idioma:** código, nombres de variables, endpoints y commits en **inglés**; documentación, textos de UI y explicaciones del agente en **español**.
+- **Idioma:** código, nombres de variables y endpoints en **inglés**; commits, documentación, textos de UI y explicaciones del agente en **español**.
 - **Dinero:** nunca `float`. Decimales en backend; en JSON viajan como **string** (`"3400.00"`). Moneda en ISO 4217.
 - **Fechas:** ISO 8601 (`2026-10-16`).
 - **JSON:** `snake_case`. IDs: strings.

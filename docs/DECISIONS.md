@@ -58,6 +58,9 @@ Decisión (Dev B con Dev A y Dev C):
 ## ADR-017 · R11 compara el monto con lo acordado, no con el último pago
 Decisión (Dev A): la parte de monto de R11 escala solo si el monto se aleja del acuerdo del proveedor más que `agreement_tolerance_pct`. La cuenta bancaria sí se sigue comparando con el registro y con el último pago, y el NIT con el registro. Además, R02 trata como duplicado el mismo cobro reenviado con otro número (mismo proveedor, orden de compra, monto y moneda). Por qué: los proveedores facturan montos distintos cada vez. Con la lectura literal ("si el monto cambia respecto al último pago, revisión"), el dataset daba 8 pagos y 74 escaladas de 100. Con esta lectura da 62 pagos y ninguna trampa pagada. Para volver a la lectura literal basta con restaurar la comparación de monto contra `last_vendor_invoice` en `r11_vendor_changes`. **Pendiente de validar con Dev C.**
 
+## ADR-020 · Mensajes de commit en español
+Decisión (Dev A, para todo el equipo): los mensajes de commit se escriben en español, conservando el prefijo de Conventional Commits (`feat`, `fix`, `docs`, `test`, `chore`…). El código, los nombres y los endpoints siguen en inglés. Por qué: el equipo escribe y revisa en español, y así el historial se lee igual que la documentación. Actualizados `AGENTS.md` §5 y `docs/WORKFLOW.md`.
+
 ## ADR-019 · Lector local primero para facturas con texto; Gemini para imágenes y casos dudosos
 Decisión (Dev A, con aprobación del equipo):
 1. Si la factura trae texto (chat, cuerpo de correo o PDF con capa de texto) y no trae imagen, `agent/local_reader.py` la lee con patrones fijos de facturas colombianas. Si encuentra número, proveedor, NIT, cuenta, monto, moneda, fecha y concepto, esa lectura se usa y **no se llama al LLM**.

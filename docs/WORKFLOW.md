@@ -18,7 +18,7 @@
 - Una rama = una cosa. Vida corta (horas, no días). Haz `git pull --rebase origin main` antes de abrir el PR.
 
 ## Commits y PRs
-- Conventional Commits en inglés: `feat(engine): add per-payment limit rule`, `fix(front): sidebar badge color`, `docs: update api contract`.
+- Conventional Commits con el tipo en inglés y la descripción en español: `feat(motor): agregar la regla de límite por pago`, `fix(front): color del indicador en la barra lateral`, `docs: actualizar el contrato de la API`.
 - PRs pequeños, con la plantilla de `.github/PULL_REQUEST_TEMPLATE.md`.
 - Revisión: la otra persona (o un agente de revisión) revisa solo lo que toca su zona o el contrato.
 
