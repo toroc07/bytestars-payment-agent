@@ -266,3 +266,27 @@ def test_broken_cache_store_does_not_break_the_reading(repos):
     llm = LLMChain([FakeProvider(answer=CLEAN)], JsonCache()).with_store(Broken())
     response = send(repos, "Factura No. ATS-842", llm=llm)
     assert response.invoice.extracted.invoice_number == "ATS-842"
+
+
+def test_per_minute_limit_skips_the_model_without_waiting():
+    import time
+
+    from app.llm.base import LLMError, LLMRequest
+    from app.llm.gemini import GeminiProvider
+
+    class RateLimited(Exception):
+        code = 429
+
+    class Models:
+        def generate_content(self, **_kwargs):
+            raise RateLimited("GenerateRequestsPerMinutePerProjectPerModel-FreeTier")
+
+    class Client:
+        models = Models()
+
+    provider = GeminiProvider("key", "gemini-busy", client=Client())
+    request = LLMRequest(system="s", text="t")
+    started = time.monotonic()
+    with pytest.raises(LLMError):
+        provider.generate_json(request)
+    assert time.monotonic() - started < 1 and provider.supports(request) is False

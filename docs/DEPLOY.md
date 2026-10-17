@@ -29,7 +29,7 @@ Las keys viven **solo** en las variables de entorno de Vercel. Nunca en el repo 
 
 ## Limitaciones a tener presentes
 - El cuerpo de una petición a una función serverless en Vercel está limitado a ~4.5 MB → `MAX_UPLOAD_MB=4`.
-- Las llamadas al LLM pueden tardar varios segundos (leer una imagen con Gemini tomó entre 4 y 40 s en las pruebas): verificar el tiempo máximo de ejecución de la función en el plan y, si hace falta, subir `maxDuration` en `backend/vercel.json`.
+- Las llamadas al LLM pueden tardar varios segundos (leer una imagen con Gemini tomó entre 4 y 40 s en las pruebas): el límite del plan Hobby es 300 s y está configurado en `backend/vercel.json`.
 - Neon "duerme" y la primera consulta tras inactividad es más lenta (cold start).
 - Memoria local de las funciones no se comparte entre instancias: cualquier estado (rate limit, caché, sesiones) debe ir en la base de datos o en reglas del firewall de Vercel.
 
@@ -46,7 +46,7 @@ Las keys viven **solo** en las variables de entorno de Vercel. Nunca en el repo 
 - **Punto de entrada:** Vercel detecta FastAPI sin configuración en `backend/app/main.py`. No hay carpeta `api/` ni reescrituras.
 - **Dependencias:** solo `backend/requirements.txt`. Python 3.12 por `backend/.python-version`. **No debe haber `pyproject.toml` ni `uv.lock` en `backend/`:** si hay un `pyproject.toml`, Vercel lo prefiere y corre `uv lock`, que falla sin una tabla `[project]`. La configuración de ruff está en `ruff.toml` y la de pytest en `pytest.ini`.
 - **Build:** `buildCommand` en `backend/vercel.json` ejecuta `backend/scripts/vercel_build.py`, que copia `dataset/company.json` a `backend/seed_data/` (ignorado por git), porque solo se despliega `backend/`. Si no encuentra el archivo, **el build falla**: activar en el proyecto *Settings → Build and Deployment → Root Directory → "Include files outside the root directory in the Build Step"*.
-- **Función:** `backend/vercel.json` sube `maxDuration` a 60 s (leer una imagen con Gemini tomó hasta 40 s) y deja fuera del paquete los tests.
+- **Función:** `backend/vercel.json` fija `maxDuration` en 300 s, el máximo del plan Hobby (una imagen con Gemini tardó 49 s en la primera prueba en Vercel), y deja fuera del paquete los tests.
 - **Base de datos:** sin `DATABASE_URL`, el backend usa SQLite en `/tmp` (la demo arranca, pero se pierde en cada instancia nueva). Con Neon, las tablas (incluida `llm_cache`) se crean solas al arrancar.
 - **Reinicio seguro:** `/api/dev/reset` responde 503 y no borra nada si no encuentra `company.json`.
 

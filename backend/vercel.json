@@ -3,7 +3,7 @@
   "buildCommand": "python scripts/vercel_build.py",
   "functions": {
     "app/main.py": {
-      "maxDuration": 60,
+      "maxDuration": 300,
       "excludeFiles": "{tests/**,.venv/**,**/__pycache__/**,*.db,.env}"
     }
   }
