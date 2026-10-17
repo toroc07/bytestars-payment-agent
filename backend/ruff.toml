@@ -1,0 +1,10 @@
+# Ruff settings. Kept out of pyproject.toml on purpose: on Vercel a pyproject.toml takes over dependency
+# installation (uv lock), and dependencies live in requirements.txt (docs/DEPLOY.md, ADR-023).
+target-version = "py312"
+line-length = 120
+exclude = [".venv"]
+
+[lint]
+ignore = [
+    "B008",  # FastAPI Depends, Query, Form, File in parameter defaults
+]

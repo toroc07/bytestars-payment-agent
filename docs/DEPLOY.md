@@ -43,9 +43,9 @@ Las keys viven **solo** en las variables de entorno de Vercel. Nunca en el repo 
 - Verificar en AI Studio los límites vigentes del free tier antes del día de la demo, y tener la caché precargada con el dataset como plan B.
 
 ## Configuración del backend para Vercel (ya en el repo)
-- **Punto de entrada:** Vercel detecta FastAPI sin configuración en `backend/app/main.py`; `backend/pyproject.toml` lo fija con `[tool.vercel] entrypoint = "app.main:app"`. No hay carpeta `api/` ni reescrituras.
-- **Dependencias:** `backend/requirements.txt`. Python 3.12 por `backend/.python-version`. No hay `uv.lock` (el anterior estaba vacío y pedía 3.13).
-- **Build:** `backend/scripts/vercel_build.py` copia `dataset/company.json` a `backend/seed_data/` (ignorado por git), porque solo se despliega `backend/`. Si no encuentra el archivo, **el build falla**: activar en el proyecto *Settings → Build and Deployment → Root Directory → "Include files outside the root directory in the Build Step"*.
+- **Punto de entrada:** Vercel detecta FastAPI sin configuración en `backend/app/main.py`. No hay carpeta `api/` ni reescrituras.
+- **Dependencias:** solo `backend/requirements.txt`. Python 3.12 por `backend/.python-version`. **No debe haber `pyproject.toml` ni `uv.lock` en `backend/`:** si hay un `pyproject.toml`, Vercel lo prefiere y corre `uv lock`, que falla sin una tabla `[project]`. La configuración de ruff está en `ruff.toml` y la de pytest en `pytest.ini`.
+- **Build:** `buildCommand` en `backend/vercel.json` ejecuta `backend/scripts/vercel_build.py`, que copia `dataset/company.json` a `backend/seed_data/` (ignorado por git), porque solo se despliega `backend/`. Si no encuentra el archivo, **el build falla**: activar en el proyecto *Settings → Build and Deployment → Root Directory → "Include files outside the root directory in the Build Step"*.
 - **Función:** `backend/vercel.json` sube `maxDuration` a 60 s (leer una imagen con Gemini tomó hasta 40 s) y deja fuera del paquete los tests.
 - **Base de datos:** sin `DATABASE_URL`, el backend usa SQLite en `/tmp` (la demo arranca, pero se pierde en cada instancia nueva). Con Neon, las tablas (incluida `llm_cache`) se crean solas al arrancar.
 - **Reinicio seguro:** `/api/dev/reset` responde 503 y no borra nada si no encuentra `company.json`.
