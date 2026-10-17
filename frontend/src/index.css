@@ -1,0 +1,168 @@
+@import "tailwindcss";
+
+/* Security-cheque world: warm safety paper, near-black ink, one intaglio-green accent. */
+@theme {
+  --font-sans: "Geist Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Geist Mono Variable", ui-monospace, monospace;
+
+  --color-paper: #f3f1ea;
+  --color-paper-deep: #e8e4d8;
+  --color-sheet: #fbfaf6;
+  --color-ink: #1e1c18;
+  --color-ink-soft: #4a463d;
+  --color-ink-muted: #655f53;
+  --color-rule: #d6d0c1;
+  --color-rule-strong: #c4bca8;
+
+  --color-intaglio: #1e5a48;
+  --color-intaglio-deep: #164536;
+  --color-intaglio-tint: #dbe7e1;
+
+  --color-ochre: #7a4e00;
+  --color-ochre-tint: #f3e3bf;
+  --color-ochre-rule: #ddbf7e;
+
+  --color-brick: #a23b24;
+  --color-brick-tint: #f4ddd5;
+  --color-brick-rule: #e2b3a6;
+
+  --ease-out-strong: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+@layer base {
+  html {
+    color-scheme: light;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body {
+    background: var(--color-paper);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+  }
+
+  ::selection {
+    background: var(--color-intaglio-tint);
+    color: var(--color-intaglio-deep);
+  }
+
+  input,
+  textarea {
+    caret-color: var(--color-intaglio);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-intaglio);
+    outline-offset: 2px;
+  }
+
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-rule-strong) transparent;
+  }
+
+  a {
+    text-underline-offset: 3px;
+  }
+}
+
+@utility tabular {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+@utility pressable {
+  transition: transform 140ms var(--ease-out-strong), background-color 160ms ease, color 160ms ease,
+    box-shadow 160ms ease, opacity 160ms ease;
+  &:active:not(:disabled) {
+    transform: scale(0.97);
+  }
+}
+
+/* The one authored moment: a decision is fed out of the printer, top to bottom. */
+@keyframes cheque-issue {
+  from {
+    clip-path: inset(0 0 100% 0);
+    transform: translateY(-6px);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+    transform: translateY(0);
+  }
+}
+
+.cheque-issue {
+  animation: cheque-issue 360ms var(--ease-out-strong) both;
+}
+
+/* Overlays (Radix sets data-state). */
+@keyframes overlay-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes overlay-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+@keyframes sheet-in {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+@keyframes sheet-out {
+  from { transform: translateX(0); }
+  to { transform: translateX(100%); }
+}
+@keyframes sheet-left-in {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(0); }
+}
+@keyframes sheet-left-out {
+  from { transform: translateX(0); }
+  to { transform: translateX(-100%); }
+}
+@keyframes dialog-in {
+  from { opacity: 0; transform: translate(-50%, -48%) scale(0.97); }
+  to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+@keyframes dialog-out {
+  from { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  to { opacity: 0; transform: translate(-50%, -50%) scale(0.97); }
+}
+
+.overlay[data-state="open"] { animation: overlay-in 200ms ease-out; }
+.overlay[data-state="closed"] { animation: overlay-out 150ms ease-out; }
+.sheet-right[data-state="open"] { animation: sheet-in 320ms var(--ease-drawer); }
+.sheet-right[data-state="closed"] { animation: sheet-out 200ms var(--ease-out-strong); }
+.sheet-left[data-state="open"] { animation: sheet-left-in 320ms var(--ease-drawer); }
+.sheet-left[data-state="closed"] { animation: sheet-left-out 200ms var(--ease-out-strong); }
+.dialog[data-state="open"] { animation: dialog-in 200ms var(--ease-out-strong); }
+.dialog[data-state="closed"] { animation: dialog-out 140ms var(--ease-out-strong); }
+
+@keyframes ink-pulse {
+  0%, 100% { opacity: 0.35; }
+  50% { opacity: 0.9; }
+}
+.ink-pulse {
+  animation: ink-pulse 1.2s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cheque-issue {
+    animation: overlay-in 200ms ease-out both;
+  }
+  .sheet-right[data-state],
+  .sheet-left[data-state],
+  .dialog[data-state] {
+    animation-name: overlay-in;
+    animation-duration: 150ms;
+  }
+  .ink-pulse {
+    animation: none;
+    opacity: 0.6;
+  }
+  .pressable:active:not(:disabled) {
+    transform: none;
+  }
+}

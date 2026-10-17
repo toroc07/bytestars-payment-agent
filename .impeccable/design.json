@@ -1,0 +1,60 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-16T22:15:00-05:00",
+  "title": "Design System: ByteStars Payment Agent",
+  "extensions": {
+    "colorMeta": {
+      "intaglio": { "role": "primary", "displayName": "Tinta intaglio", "canonical": "#1e5a48", "tonalRamp": ["#dbe7e1", "#1e5a48", "#164536"] },
+      "paper": { "role": "neutral", "displayName": "Papel de seguridad", "canonical": "#f3f1ea", "tonalRamp": ["#fbfaf6", "#f3f1ea", "#e8e4d8"] },
+      "ink": { "role": "neutral", "displayName": "Tinta", "canonical": "#1e1c18", "tonalRamp": ["#655f53", "#4a463d", "#1e1c18"] },
+      "ochre": { "role": "status", "displayName": "Ocre pendiente", "canonical": "#7a4e00", "tonalRamp": ["#f3e3bf", "#ddbf7e", "#7a4e00"] },
+      "brick": { "role": "status", "displayName": "Ladrillo frenada", "canonical": "#a23b24", "tonalRamp": ["#f4ddd5", "#e2b3a6", "#a23b24"] }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "Títulos de página y estado vacío." },
+      "amount": { "displayName": "Monto", "purpose": "El monto del cheque; lo único grande de la pantalla." },
+      "figure": { "displayName": "Cifra", "purpose": "Fechas, números de factura, versión de reglas." }
+    },
+    "shadows": [
+      { "name": "cheque", "value": "0 1px 0 #d6d0c1, 0 12px 32px -20px rgb(30 28 24 / 0.4)", "purpose": "El cheque de decisión sobre el papel." },
+      { "name": "panel", "value": "0 24px 48px -16px rgb(30 28 24 / 0.35)", "purpose": "Diálogos y cajones." }
+    ],
+    "motion": [
+      { "name": "ease-out-strong", "value": "cubic-bezier(0.23, 1, 0.32, 1)", "purpose": "Entradas y respuesta a la presión." },
+      { "name": "ease-drawer", "value": "cubic-bezier(0.32, 0.72, 0, 1)", "purpose": "Cajones laterales (320ms al abrir, 200ms al cerrar)." },
+      { "name": "cheque-issue", "value": "clip-path inset(0 0 100% 0) to inset(0), 360ms ease-out-strong", "purpose": "El único momento propio: la decisión se imprime." }
+    ],
+    "breakpoints": [
+      { "name": "sm", "value": "640px" },
+      { "name": "md", "value": "768px" },
+      { "name": "lg", "value": "1024px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Acción principal: enviar, aprobar, guardar.",
+      "html": "<button class=\"ds-btn\">Aprobar pago</button>",
+      "css": ".ds-btn{background:#1e5a48;color:#f3f1ea;height:40px;padding:0 16px;border:0;border-radius:8px;font:500 14px 'Geist Variable',system-ui,sans-serif;transition:transform 140ms cubic-bezier(0.23,1,0.32,1),background-color 160ms ease}.ds-btn:hover{background:#164536}.ds-btn:active{transform:scale(0.97)}"
+    },
+    {
+      "name": "Verdict",
+      "kind": "chip",
+      "refersTo": "verdict-pending",
+      "description": "Veredicto del cheque; la forma del glifo dice el estado.",
+      "html": "<span class=\"ds-verdict\"><i></i>Escalada a aprobación</span>",
+      "css": ".ds-verdict{display:inline-flex;align-items:center;gap:8px;padding:6px 12px;border-radius:9999px;background:#f3e3bf;color:#7a4e00;box-shadow:inset 0 0 0 1px #ddbf7e;font:600 14px 'Geist Variable',system-ui,sans-serif}.ds-verdict i{width:10px;height:10px;border-radius:50%;border:2.5px solid #7a4e00}"
+    }
+  ],
+  "narrative": {
+    "northStar": "El cheque de seguridad",
+    "rules": [
+      "Un solo acento de marca (intaglio); ocre y ladrillo solo dicen estado.",
+      "Cada estado tiene su forma: círculo lleno, anillo, cuadro.",
+      "Toda cifra va en Geist Mono con tabular-nums.",
+      "Lo simulado se declara simulado."
+    ]
+  }
+}
