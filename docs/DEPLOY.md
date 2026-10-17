@@ -16,7 +16,6 @@ Base de datos: **Neon Postgres** (integración con Vercel). **SQLite no sirve en
 | Proyecto | Variable | Valor |
 |---|---|---|
 | web | `VITE_API_URL` | URL pública del proyecto api |
-| web | `VITE_USE_MOCKS` | `false` |
 | api | `DATABASE_URL` | cadena de Neon (la inyecta la integración) |
 | api | `CORS_ORIGINS` | URL pública del proyecto web |
 | api | `GEMINI_API_KEY`, `GEMINI_MODEL` | key de AI Studio y modelo vigente |
@@ -44,7 +43,7 @@ Las keys viven **solo** en las variables de entorno de Vercel. Nunca en el repo 
 1. Crear base de datos Neon y conectarla al proyecto api.
 2. Crear proyecto api (Root = `backend`), cargar variables, desplegar. Comprobar `/health` y `/openapi.json`.
 3. Ejecutar migraciones y seed contra Neon.
-4. Crear proyecto web (Root = `frontend`), poner `VITE_API_URL`, desplegar.
+4. Crear proyecto web (Root = `frontend`), poner `VITE_API_URL`, desplegar. `frontend/vercel.json` ya define build, salida (`dist`) y la reescritura de rutas del SPA a `index.html`.
 5. Actualizar `CORS_ORIGINS` en api con la URL del web y redesplegar.
 6. Probar el flujo completo con las facturas del dataset desde la URL pública.
 7. Despliegues de preview por PR: usar una rama de Neon o la misma BD con datos ficticios.

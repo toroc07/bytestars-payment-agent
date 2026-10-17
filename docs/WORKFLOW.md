@@ -4,7 +4,7 @@
 1. **Cada quien trabaja en carpetas distintas** (ver tabla de dueños en `AGENTS.md`).
 2. **Se habla por contratos:** `docs/DATA_MODEL.md` + `docs/API_CONTRACT.md` (frontend↔backend) y `ports` (agente↔base de datos).
 3. **Desarrollo desacoplado:**
-   - Frontend con mocks (`VITE_USE_MOCKS=true`) desde `contracts/examples/`: no necesita backend.
+   - Frontend contra el backend local real (sin mocks); sin datos o sin backend muestra estados vacíos o de error.
    - Motor/agente con repositorios falsos en memoria (en `backend/tests/`): no necesitan base de datos.
    - API/DB con datos del `dataset/`: no necesitan LLM.
 4. **Zonas compartidas** (`schemas`, `ports`, `contracts`, `docs`): cambio pequeño, PR propio, **aprueban Dev A y Dev B**. El `dataset/` es de Dev C (cambios de formato se acuerdan con los tres).

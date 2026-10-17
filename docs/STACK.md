@@ -4,13 +4,15 @@ Decisiones tomadas (ver justificación en `docs/DECISIONS.md`). Cualquier depend
 
 | Apartado | Herramienta | Notas |
 |---|---|---|
-| **Frontend** | React + Vite + TypeScript | SPA; sin SSR (no aporta aquí) |
-| UI | Tailwind CSS + shadcn/ui | sidebar, dialog/sheet, tabla, badge, form ya hechos |
-| Datos del servidor | TanStack Query | caché y estados de carga |
-| Routing | React Router | `/` chat, `/log` registro |
-| Tipos API | openapi-typescript | genera tipos desde `contracts/openapi.json` |
-| Mocks | MSW (o fixtures directos) | alimentados por `contracts/examples/` |
-| Tests UI | Vitest + Testing Library | Playwright opcional para el demo |
+| **Frontend** | React 19 + Vite 8 + TypeScript 6 | SPA; sin SSR (no aporta aquí) |
+| UI | Tailwind CSS 4 + `radix-ui` (primitivos escritos al estilo shadcn en `src/components/ui`) | tema en `src/index.css`; sistema visual en `DESIGN.md` |
+| Iconos / fuentes | lucide-react · Geist y Geist Mono (`@fontsource-variable`) | fuentes autohospedadas |
+| Datos del servidor | TanStack Query 5 | caché, estados de carga y error |
+| Routing | React Router 8 | `/` chat, `/c/:id` conversación, `/registro` registro |
+| Tipos API | openapi-typescript 7 (vía `npx`, script `npm run gen:api`) | no se instala: pide TypeScript 5 |
+| Lint | oxlint | viene con la plantilla de Vite |
+| Mocks | ninguno | el frontend usa el backend local real (ADR-012) |
+| Tests UI | Vitest + Testing Library (pendiente) · Playwright MCP para revisar en navegador | |
 | **Backend** | Python 3.12 + FastAPI | rutas sync (`def`), OpenAPI automático |
 | Validación/contrato | Pydantic v2 | fuente de verdad del contrato de datos |
 | Config | pydantic-settings | variables de entorno |
@@ -33,7 +35,7 @@ Decisiones tomadas (ver justificación en `docs/DECISIONS.md`). Cualquier depend
 
 ## Variables de entorno
 Backend: `APP_ENV`, `DATABASE_URL`, `CORS_ORIGINS`, `MAX_UPLOAD_MB`, `LLM_PROVIDER_ORDER`, `LLM_CACHE`, `GEMINI_API_KEY`, `GEMINI_MODEL`, `GROQ_API_KEY`, `OPENROUTER_API_KEY`.
-Frontend: `VITE_API_URL`, `VITE_USE_MOCKS`.
+Frontend: `VITE_API_URL` (producción) y `VITE_DEV_BACKEND` (proxy local).
 Cada carpeta tendrá su `.env.example` (sin valores reales). Nunca se suben los `.env`.
 
 ## Herramientas de desarrollo disponibles al equipo

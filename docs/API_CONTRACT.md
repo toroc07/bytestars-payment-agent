@@ -44,7 +44,5 @@ Reglas de comportamiento:
 - `/api/dev/*` con rate limit; en producción pueden desactivarse con `APP_ENV=production` si hace falta.
 - El endpoint de mensajes **nunca** devuelve error 500 por fallos del LLM: responde con una decisión `escalate` que explica el fallo.
 
-## Desarrollo del frontend sin backend
-`VITE_USE_MOCKS=true`: el frontend responde estos endpoints con los JSON de `contracts/examples/`.
-Archivos esperados en `contracts/examples/` (los crea quien implemente el contrato, acordados en `docs/PROGRESS.md`):
-`conversations.json`, `messages_pay.json`, `messages_block.json`, `messages_escalate.json`, `rules.json`, `beneficiaries.json`, `agreements.json`, `summary.json`.
+## Desarrollo del frontend
+El frontend trabaja contra el backend real (sin mocks; ver `DECISIONS.md` ADR-012). En local, Vite reenvía `/api`, `/health` y `/openapi.json` al backend. Además del contrato de arriba, el frontend lee `GET /openapi.json` para generar los formularios de configuración, y la pestaña Demo usa `POST /api/dev/reset`.
