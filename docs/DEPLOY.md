@@ -29,14 +29,15 @@ Las keys viven **solo** en las variables de entorno de Vercel. Nunca en el repo 
 
 ## Limitaciones a tener presentes
 - El cuerpo de una petición a una función serverless en Vercel está limitado a ~4.5 MB → `MAX_UPLOAD_MB=4`.
-- Las llamadas al LLM pueden tardar varios segundos: verificar el tiempo máximo de ejecución de la función en el plan Hobby.
+- Las llamadas al LLM pueden tardar varios segundos (leer una imagen con Gemini tomó entre 4 y 40 s en las pruebas): verificar el tiempo máximo de ejecución de la función en el plan y, si hace falta, subir `maxDuration` en `backend/vercel.json`.
 - Neon "duerme" y la primera consulta tras inactividad es más lenta (cold start).
 - Memoria local de las funciones no se comparte entre instancias: cualquier estado (rate limit, caché, sesiones) debe ir en la base de datos o en reglas del firewall de Vercel.
 
 ## Protecciones de la demo pública
 - Límite de tamaño y tipos de archivo permitidos.
 - Rate limit por IP (firewall de Vercel o contador en BD).
-- Caché de extracciones por hash del contenido: las facturas del dataset no consumen cuota del LLM.
+- Caché de lecturas del LLM en la tabla `llm_cache` (Neon): una factura ya leída no vuelve a gastar cuota, en ninguna instancia, y la caché no se borra al reiniciar la demo. Para precargarla, basta con pasar el dataset una vez por la URL pública (o con `python -m scripts.evaluate_dataset` apuntando a Neon).
+- Límite en `POST /api/conversations/{id}/messages`: 120 envíos cada 10 minutos por IP (en memoria de cada instancia). Para un límite común a todas las instancias, crear en Vercel → Firewall una regla de *rate limit* sobre esa ruta.
 - Endpoint de reseteo del demo (`/api/dev/reset`) con rate limit.
 - Solo datos ficticios (el free tier de Gemini puede usar los datos para entrenar).
 - Verificar en AI Studio los límites vigentes del free tier antes del día de la demo, y tener la caché precargada con el dataset como plan B.

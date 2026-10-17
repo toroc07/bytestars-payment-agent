@@ -86,6 +86,9 @@ Una acción humana crea **otra** Decision; nunca se edita una existente.
 - `ConversationSummary` (fila del sidebar): `id`, `title` (ej. "Cloudly Hosting - USD 3,400"), `invoice_id?`, `invoice_status?`, `last_outcome?`, `updated_at`.
 - `SendMessageResponse`: `user_message`, `assistant_message`, `invoice?`.
 
+## LlmCache (lecturas del LLM guardadas; tabla `llm_cache`)
+`key` (sha256 de la petición: instrucción + texto + archivo), `value` (el JSON que devolvió el LLM, sin validar todavía: el agente lo valida campo por campo cada vez), `created_at`. Sirve para no gastar cuota leyendo dos veces el mismo documento, también entre instancias de Vercel. **No se borra al reiniciar la demo** (`/api/dev/reset`): guardar las lecturas es justamente lo que se quiere conservar. No guarda decisiones ni datos de la empresa.
+
 ## Ports (interfaces de repositorio) — a definir en `backend/app/ports.py`
 El agente y el motor dependen solo de estas interfaces; `db` las implementa. Operaciones mínimas:
 - **RuleSet:** obtener vigente · guardar nueva versión.
@@ -94,4 +97,5 @@ El agente y el motor dependen solo de estas interfaces; `db` las implementa. Ope
 - **Invoice:** agregar · obtener · listar (filtro por estado) · actualizar · extracciones previas (para duplicados) · última factura pagada por proveedor.
 - **Decision:** agregar · obtener · listar por factura · listar · **gasto entre fechas** (suma de `amount_base_currency` de facturas con estado efectivo `paid`/`approved`, con soporte de filtro por proveedor). **Sin update ni delete.**
 - **Conversation:** crear · listar · obtener mensajes · agregar mensaje.
+- **LlmCache:** obtener por clave · guardar (si la clave ya existe, se conserva la primera lectura).
 Todo síncrono (rutas FastAPI `def`).

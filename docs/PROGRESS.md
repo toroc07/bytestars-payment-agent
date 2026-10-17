@@ -33,6 +33,7 @@ Dev B también ayuda con el motor de decisiones: al repartir tareas del motor, a
 | `vercel.json` (rutas del SPA) y carga diferida (registro, configuración) | listo | bundle principal 471 KB |
 | Tests unitarios (Vitest) | listo | 56 tests de lógica pura (`npm test`) |
 | Revisión de diseño (`/impeccable critique`) y correcciones | listo | 25/40 inicial; corregidos los 5 problemas: aprobación con evidencia, motivo obligatorio y bloqueada sin beneficiario/monto; reglas agrupadas con resumen de cambios y aviso al cerrar; móvil sin desbordes; vocabulario único y contraste AA; montos y búsqueda en el sidebar, registro desplegable. Informe en `.impeccable/critique/` |
+| Prueba en el navegador con decisiones reales (Playwright) | listo | 100 facturas en 2 lotes: 100/100 iguales a `expected.json`; aprobar, rechazar, reevaluar tras agregar un proveedor, registro y CSV (103 filas) correctos; móvil sin desbordes. Corregidos: notas repetidas en el cheque, conversación sin factura marcada «Recibida», textos falsos («un proveedor nuevo se escala», «el presupuesto rechaza»), scroll horizontal, R11 sin los números de cuenta |
 | Repetir `/impeccable critique` con decisiones reales | pendiente | la revisión de diseño no se ha repetido; ahora hay decisiones reales para hacerla |
 
 ## Motor, agente y LLM (Dev A; Dev B ayuda en el motor)
@@ -45,6 +46,7 @@ Dev B también ayuda con el motor de decisiones: al repartir tareas del motor, a
 | Pipeline del agente | listo | `app/agent/pipeline.py`: registrar → extraer → contexto → motor → explicar → guardar; cualquier error escala la misma factura (R00) |
 | Proveedor Gemini + extracción PDF/imagen/texto | listo | `app/llm/gemini.py` con varios modelos en cadena (ADR-019); evaluación con Gemini: **100/100 iguales a `expected.json`, autonomía 80 %, 0 trampas pagadas, 0 datos mal leídos** (75 por lector local, 25 imágenes con Gemini) |
 | Fallback Groq/OpenRouter + caché | listo | `app/llm/openai_compat.py` (solo texto) y caché por hash en memoria + carpeta temporal; lector local sin red de respaldo (ADR-019) |
+| Prueba de prompt injection con Gemini real | listo | 4 ataques en imágenes y texto (suplantar a un proveedor permitido, cambiar el monto, JSON falso, romper el formato): Gemini no obedeció ninguno; impostor rechazado (R03) y chat incompleto escalado (R01) |
 | Chat de consulta (solo lectura) | pendiente | hoy un texto que no es factura recibe un mensaje de ayuda; falta responder preguntas sobre decisiones guardadas |
 | Script de evaluación del dataset | listo | `python -m scripts.evaluate_dataset [--offline]`: pasa las 100 facturas por el pipeline real en orden y compara con `expected.json` (coincidencia, autonomía, trampas pagadas, datos mal leídos); sale con código 1 si se paga una trampa |
 
@@ -84,7 +86,8 @@ Tareas por definir por Dev C (empresa ficticia, reglas, beneficiarios, acuerdos,
 - ~~(Dev A → Dev B) `Beneficiary.verified` tenía default `true`.~~ **Corregido por Dev A:** default `false` en schema y modelo.
 - ~~(Dev A → Dev B) Fechas sin zona horaria.~~ **Corregido por Dev A:** `UtcDatetime` en schemas serializa con offset UTC.
 - (Dev A → Dev B) `period` (weekly/monthly) convive con `period_days` y el motor solo usa `period_days`. No se quitó porque es columna NOT NULL y hace falta migración; decidir si se borra.
-- (Dev A → Dev B) `POST /api/invoices/{id}/reevaluate` usa `R01` como id del check de error; el motor usa `R00 ENGINE_ERROR` para fallos internos. Conviene unificar.
+- ~~(Dev A → Dev B) `reevaluate` armaba su propio contexto y usaba `R01` en los errores.~~ **Corregido por Dev A:** la ruta llama a `agent.pipeline.reevaluate` (ADR-022).
+- (Dev A → Dev B) Nuevas en tu zona (ADR-022): tabla `llm_cache` + `SqlLlmCacheRepository`, `get_llm_cache_repo` en `deps.py`, `app/api/rate_limit.py` aplicado al envío de mensajes. En Neon la tabla la crea `create_all` al arrancar.
 - (Dev A → Dev C) Validar `dataset/company.json` y `dataset/expected.json` (allowlist inferida, trampas y criterio de R11 en ADR-017), y agregar facturas por encima de US$5.000 y US$10.000 para cubrir R07 y R08.
 - (Dev A → Dev B) Revisión del commit `ae3f511`: se mantienen el filtro de marcas de agua en PDF y el lector de facturas en inglés. Se revirtió `GEMINI_MODEL` (`gemini-2.5-flash`, `2.0-flash` y `1.5-flash` devuelven 404: ya no se ofrecen a cuentas nuevas) y se cambió "$" a secas → USD, que podía pagar en dólares una factura en pesos (ADR-021). Si tu key sí puede usar otro modelo, agrégalo al final de la lista en tu `.env`: un modelo con 404 se salta solo durante una hora.
 - (Dev A → Dev B) Sugerencia: agregar `title`/`description` en español a los `Field` del `RuleSet` para que el panel de reglas no dependa del diccionario de etiquetas del frontend.

@@ -18,7 +18,7 @@ Tipos de petición/respuesta = entidades de `docs/DATA_MODEL.md`.
 | `GET /api/conversations` | Sidebar: historial | — | `ConversationSummary[]` |
 | `POST /api/conversations` | Nuevo chat | `{title?}` | `ConversationSummary` |
 | `GET /api/conversations/{id}/messages` | Mensajes de un chat | — | `ChatMessage[]` |
-| `POST /api/conversations/{id}/messages` | Enviar texto y/o archivo; procesa la factura y responde. Si es solo texto y no parece una factura, responde con ayuda y `invoice: null` (no registra nada) | multipart: `text?`, `file?` | `SendMessageResponse` |
+| `POST /api/conversations/{id}/messages` | Enviar texto y/o archivo; procesa la factura y responde. Si es solo texto y no parece una factura, responde con ayuda y `invoice: null` (no registra nada). Límite: 120 envíos cada 10 minutos por IP → `429` con `Retry-After` | multipart: `text?`, `file?` | `SendMessageResponse` |
 | `GET /api/invoices` | Registro / filtros | query `status?` | `Invoice[]` |
 | `GET /api/invoices/{id}` | Detalle | — | `Invoice` |
 | `GET /api/invoices/{id}/decisions` | Historial de decisiones (explicación completa) | — | `Decision[]` |
