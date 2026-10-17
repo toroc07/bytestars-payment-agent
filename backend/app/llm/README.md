@@ -1,8 +1,14 @@
 # llm/ — Proveedores de LLM (Dev A)
 
-Interfaz común para: (a) **extraer** una factura estructurada desde PDF/imagen/texto y (b) **redactar** explicaciones.
-El LLM nunca decide pagar.
+Interfaz común para **leer** una factura y devolver JSON. El LLM nunca decide pagar.
 
-Proveedores previstos: Gemini (principal) → Groq / OpenRouter (respaldo, solo texto) → **caché** por hash del contenido.
-Orden y claves por variables de entorno (`docs/STACK.md`). Si todo falla, devolver extracción vacía (el motor la escalará).
-Para pruebas debe existir un proveedor falso que no use red.
+| Archivo | Qué hace |
+|---|---|
+| `base.py` | `LLMRequest` (instrucción, texto, archivo opcional), `Provider`, errores |
+| `gemini.py` | Gemini (`GEMINI_API_KEY`, `GEMINI_MODEL`): lee texto, PDF e imágenes; respuesta JSON, sin *thinking*, 2 reintentos ante 429 |
+| `openai_compat.py` | Groq y OpenRouter (`GROQ_API_KEY`, `OPENROUTER_API_KEY`): solo texto |
+| `chain.py` | `LLMChain`: caché por hash de la petición (memoria + carpeta temporal) y luego los proveedores en el orden de `LLM_PROVIDER_ORDER` |
+| `__init__.py` | `get_llm()`: arma la cadena desde el entorno |
+
+Si nadie responde, `LLMUnavailable`: el agente usa el lector local (`agent/local_reader.py`) o deja la factura sin datos y el motor la escala.
+Los tests usan `tests/agent/fakes.py` (sin red), y `tests/conftest.py` impide llamar a un proveedor real.

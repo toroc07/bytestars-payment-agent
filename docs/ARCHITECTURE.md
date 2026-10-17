@@ -39,7 +39,7 @@ Prohibido: `engine → llm/db`, `agent → db`, `db → agent/engine`, ciclos.
 
 1. **Entrada.** El usuario adjunta un PDF/imagen o pega texto en el chat → `POST` al endpoint de mensajes.
 2. **Registro.** `api` guarda la factura con estado `received`.
-3. **Extracción (LLM).** `llm` convierte el documento en `ExtractedInvoice` (JSON estructurado). Cadena de proveedores: Gemini → Groq/OpenRouter (solo texto) → caché por hash del contenido. Si todo falla → factura con datos vacíos (el motor la escalará).
+3. **Extracción (LLM).** `llm` convierte el documento en `ExtractedInvoice` (JSON estructurado). Un PDF con capa de texto se manda como texto; las imágenes y los PDF escaneados, como archivo. Primero se busca en la caché por hash del contenido y luego en la cadena: Gemini → Groq/OpenRouter (solo texto). Si ningún proveedor responde, un **lector local sin red** (`agent/local_reader.py`) lee el texto con patrones fijos; si tampoco hay texto (imagen sin LLM), la factura queda sin datos y el motor la escala. La salida del LLM se valida campo por campo: lo que no tiene forma válida queda vacío.
 4. **Contexto (código, sin LLM).** `agent` arma `EvaluationContext`: beneficiario coincidente, acuerdo vigente, facturas previas (duplicados), gasto acumulado del periodo.
 5. **Decisión (motor).** `engine.evaluate(extracción, reglas, contexto)` → resultado + lista de chequeos. **Determinista y sin I/O.**
 6. **Explicación.** Resumen en español **construido por plantilla desde los chequeos** (siempre). Opcionalmente el LLM lo redacta mejor; el texto del LLM nunca cambia el resultado.

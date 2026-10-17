@@ -41,11 +41,11 @@ Dev B también ayuda con el motor de decisiones: al repartir tareas del motor, a
 | Definir catálogo de reglas y sus campos en `RuleSet` | listo | reglas de Dev C → R01–R11 en `DECISION_ENGINE.md`; campos propuestos en `DATA_MODEL.md` (ADR-015) |
 | Implementar motor de reglas + tests | listo | Dev A: R01–R11 en `backend/app/engine/`, fail-closed (error interno → R00 + escalar); R02 detecta el mismo cobro reenviado con otro número y R11 compara el monto con lo acordado (ADR-017) |
 | Property tests de invariantes | listo | hypothesis: nunca `pay` con una regla fallida (I1), determinismo (I2), sin datos esenciales nunca `pay` (I4) |
-| Repositorios falsos en memoria para tests | pendiente | |
-| Pipeline del agente | pendiente | |
-| Proveedor Gemini + extracción PDF/imagen/texto | pendiente | |
-| Fallback Groq/OpenRouter + caché | pendiente | |
-| Chat de consulta (solo lectura) | pendiente | |
+| Repositorios falsos en memoria para tests | listo | `tests/agent/fakes.py` (repos + proveedor LLM falso); `tests/conftest.py` impide llamar a un LLM real en los tests |
+| Pipeline del agente | listo | `app/agent/pipeline.py`: registrar → extraer → contexto → motor → explicar → guardar; cualquier error escala la misma factura (R00) |
+| Proveedor Gemini + extracción PDF/imagen/texto | listo, sin probar con clave real | `app/llm/gemini.py` (JSON, sin thinking, reintenta ante 429); prompt en `app/agent/prompts/extraction.md`; falta `GEMINI_API_KEY` para probar las imágenes |
+| Fallback Groq/OpenRouter + caché | listo | `app/llm/openai_compat.py` (solo texto) y caché por hash en memoria + carpeta temporal; lector local sin red de respaldo (ADR-019) |
+| Chat de consulta (solo lectura) | pendiente | hoy un texto que no es factura recibe un mensaje de ayuda |
 | Script de evaluación del dataset | en curso | `tests/engine/test_dataset_expected.py` comprueba el motor contra `dataset/expected.json` (100/100, ninguna trampa pagada); falta medir la extracción del LLM cuando exista el pipeline |
 
 ## Backend y base de datos (Dev B)
