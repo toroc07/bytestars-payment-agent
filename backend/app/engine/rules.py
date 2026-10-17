@@ -261,16 +261,20 @@ def r11_vendor_changes(f: Facts) -> RuleCheck:
         return check("R11", "VENDOR_CHANGES", SKIPPED, "escalate",
                      "La revisión por cambios del proveedor no está activada.")
     inv, b, last = f.invoice, f.ctx.beneficiary, f.ctx.last_vendor_invoice
-    changes: list[str] = []
+    # Each finding keeps the values side by side: a person approving or rejecting must see both numbers.
+    findings: list[tuple[str, str, str]] = []  # (message, observed, expected)
     # Against the vendor's registered data: catches impersonation (known name, other NIT or account).
     if b and inv.vendor_tax_id and b.tax_id and digits(inv.vendor_tax_id) != digits(b.tax_id):
-        changes.append(f"el NIT {inv.vendor_tax_id} no coincide con el registrado ({b.tax_id})")
-    if b and inv.beneficiary_account and b.account and digits(inv.beneficiary_account) != digits(b.account):
-        changes.append("la cuenta bancaria no coincide con la registrada")
+        findings.append((f"el NIT {inv.vendor_tax_id} no coincide con el registrado ({b.tax_id})",
+                         f"NIT {inv.vendor_tax_id}", f"NIT registrado {b.tax_id}"))
+    account = inv.beneficiary_account
+    if b and account and b.account and digits(account) != digits(b.account):
+        findings.append((f"piden pagar a la cuenta {account}, que no es la registrada ({b.account})",
+                         f"cuenta {account}", f"cuenta registrada {b.account}"))
     # Against the last payment to the same vendor.
-    if last and (inv.beneficiary_account and last.beneficiary_account
-                 and digits(inv.beneficiary_account) != digits(last.beneficiary_account)):
-        changes.append("la cuenta bancaria cambió respecto al último pago")
+    if last and account and last.beneficiary_account and digits(account) != digits(last.beneficiary_account):
+        findings.append((f"la cuenta cambió respecto al último pago ({last.beneficiary_account} → {account})",
+                         f"cuenta {account}", f"cuenta del último pago {last.beneficiary_account}"))
     # Amount against what was agreed (ADR-017): vendors bill varying amounts, so comparing with the
     # last payment would send every recurring invoice to a person.
     agreement = f.ctx.agreement
@@ -278,15 +282,19 @@ def r11_vendor_changes(f: Facts) -> RuleCheck:
     if agreed is not None and f.amount_base is not None:
         deviation = abs(f.amount_base - agreed) * 100 / agreed
         if deviation > f.rules.agreement_tolerance_pct:
-            changes.append(
-                f"el monto no cuadra con lo acordado ({money(agreed, f.rules.base_currency)}, "
-                f"diferencia {deviation:.1f} % > {f.rules.agreement_tolerance_pct} %)"
-            )
-    if changes:
-        unique = list(dict.fromkeys(changes))
-        return check("R11", "VENDOR_CHANGES", FAILED, "escalate", "Revisión humana: " + "; ".join(unique) + ".",
-                     observed="; ".join(unique),
-                     expected="mismos datos que el registro, el último pago y lo acordado")
+            message = (f"el monto no cuadra con lo acordado ({money(agreed, f.rules.base_currency)}, "
+                       f"diferencia {deviation:.1f} % > {f.rules.agreement_tolerance_pct} %)")
+            findings.append((
+                message,
+                money(f.amount_base, f.rules.base_currency),
+                f"{money(agreed, f.rules.base_currency)} ± {f.rules.agreement_tolerance_pct} %",
+            ))
+    if findings:
+        def joined(index: int) -> str:
+            return "; ".join(dict.fromkeys(finding[index] for finding in findings))
+
+        return check("R11", "VENDOR_CHANGES", FAILED, "escalate", f"Revisión humana: {joined(0)}.",
+                     observed=joined(1), expected=joined(2))
     if b is None and last is None and agreed is None:
         return check("R11", "VENDOR_CHANGES", SKIPPED, "escalate",
                      "No hay datos registrados, pagos previos ni acuerdo para comparar.")
