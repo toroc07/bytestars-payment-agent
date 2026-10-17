@@ -1,146 +1,153 @@
+"""Evaluates the agent on the dataset against dataset/expected.json (docs/PROJECT.md, "Cómo se evalúa").
+
+Runs the real pipeline (extraction -> context -> engine -> persistence) over the 100 invoices in canonical
+order (factura_001..100) on a freshly seeded in-memory SQLite, feeding each file the way the frontend sends it:
+.txt as text, .eml as headers + body text with the PDF attached, PDF and images as files.
+
+Usage (from backend/):
+    python -m scripts.evaluate_dataset            # uses the LLM keys in .env
+    python -m scripts.evaluate_dataset --offline  # no LLM: offline reader only (images escalate)
+
+Exit code 1 if a trap (duplicate, unknown vendor, impersonation, account change) was paid. Invoices
+expected to escalate only because the 7-day cap was reached ("tope_semanal") are reported apart: whether the
+cap is reached depends on what was paid before them, and the engine checks the real spend every time.
+"""
+
+import argparse
 import email
+import json
 import sys
-from datetime import date
+import time
+from collections import Counter
+from datetime import UTC, datetime, timedelta
 from email import policy
 from pathlib import Path
-
-BACKEND_DIR = Path(__file__).resolve().parents[1]
-REPO_ROOT = BACKEND_DIR.parent
-sys.path.insert(0, str(BACKEND_DIR))
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
-from app.agent.extraction import extract_invoice_data
+from app.agent.pipeline import handle_chat_turn
 from app.db.models import Base
 from app.db.repositories import (
     SqlAgreementRepository,
     SqlBeneficiaryRepository,
+    SqlConversationRepository,
     SqlDecisionRepository,
     SqlInvoiceRepository,
     SqlRuleSetRepository,
 )
 from app.db.seed import seed_database
-from app.engine import evaluate
-from app.schemas import EvaluationContext, Outcome, SourceType
+from app.llm import LLMChain, get_llm
+from app.schemas import ChatMessage, SourceType
+
+DATASET = Path(__file__).resolve().parents[2] / "dataset"
+FIELDS = ("invoice_number", "vendor_tax_id", "beneficiary_account", "amount", "currency", "issue_date",
+          "po_reference")
 
 
-def parse_eml_file(path: Path) -> tuple[str, bytes | None, str | None, SourceType]:
-    msg = email.message_from_bytes(path.read_bytes(), policy=policy.default)
-    headers = [
-        f"Correo: {path.name}",
-        f"De: {msg.get('From', '')}",
-        f"Asunto: {msg.get('Subject', '')}",
-        f"Fecha: {msg.get('Date', '')}",
-    ]
-    body_parts: list[str] = []
-    att_bytes: bytes | None = None
-    att_name: str | None = None
-    source_type = SourceType.text
-
-    for part in msg.walk():
-        ctype = part.get_content_type()
-        disp = str(part.get_content_disposition() or "")
-        if ctype == "text/plain" and "attachment" not in disp:
-            payload = part.get_content()
-            if isinstance(payload, str):
-                body_parts.append(payload.strip())
-        elif ctype in ("application/pdf", "image/png", "image/jpeg") and att_bytes is None:
-            att_bytes = part.get_payload(decode=True)
-            att_name = part.get_filename() or path.stem
-            source_type = SourceType.pdf if ctype == "application/pdf" else SourceType.image
-
-    full_text = "\n".join(headers) + "\n\n" + "\n\n".join(body_parts)
-    return full_text.strip(), att_bytes, att_name, source_type
+def as_frontend_input(path: Path) -> tuple[str | None, bytes | None, str | None, SourceType]:
+    """(text, file bytes, filename, source type) as the web app would send this file."""
+    suffix = path.suffix.lower()
+    if suffix == ".txt":
+        return path.read_text(encoding="utf-8"), None, None, SourceType.text
+    if suffix == ".eml":
+        msg = email.message_from_bytes(path.read_bytes(), policy=policy.default)
+        body = msg.get_body(preferencelist=("plain",))
+        attachment = next(msg.iter_attachments(), None)
+        text = f"Correo: {path.name}\nDe: {msg['from']}\nAsunto: {msg['subject']}\n\n"
+        text += body.get_content() if body else ""
+        if attachment is None:
+            return text, None, None, SourceType.text
+        source = SourceType.pdf if attachment.get_content_type() == "application/pdf" else SourceType.image
+        return text, attachment.get_content(), attachment.get_filename(), source
+    source = SourceType.pdf if suffix == ".pdf" else SourceType.image
+    return None, path.read_bytes(), path.name, source
 
 
-def main() -> None:
-    engine = create_engine(
-        "sqlite://",
-        connect_args={"check_same_thread": False},
-        poolclass=StaticPool,
-    )
+def extraction_diffs(expected: dict, got: dict | None) -> dict:
+    got = got or {}
+    diffs = {}
+    for field in FIELDS:
+        want, have = expected.get(field), got.get(field)
+        if field == "po_reference" and want == "No aplica":
+            want = None
+        if field == "amount" and want and have and float(want) == float(have):
+            continue
+        if (want or None) != (have or None):
+            diffs[field] = (want, have)
+    return diffs
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser.add_argument("--offline", action="store_true", help="no LLM: only the offline reader")
+    parser.add_argument("--limit", type=int, default=None, help="evaluate only the first N invoices")
+    args = parser.parse_args()
+
+    expected = json.loads((DATASET / "expected.json").read_text(encoding="utf-8"))
+    cases = expected["invoices"][: args.limit]
+    llm = LLMChain([], cache=None) if args.offline else get_llm()
+
+    engine = create_engine("sqlite://", connect_args={"check_same_thread": False}, poolclass=StaticPool)
     Base.metadata.create_all(bind=engine)
-    SessionLocal = sessionmaker(bind=engine)
+    db = sessionmaker(bind=engine, autoflush=False, autocommit=False)()
+    seed_database(db)
+    repos = dict(  # noqa: C408 - keyword names are the pipeline parameters
+        conv_repo=SqlConversationRepository(db), inv_repo=SqlInvoiceRepository(db),
+        dec_repo=SqlDecisionRepository(db), rule_repo=SqlRuleSetRepository(db),
+        ben_repo=SqlBeneficiaryRepository(db), agr_repo=SqlAgreementRepository(db),
+    )
 
-    with SessionLocal() as db:
-        seed_database(db)
-        rule_repo = SqlRuleSetRepository(db)
-        ben_repo = SqlBeneficiaryRepository(db)
-        agr_repo = SqlAgreementRepository(db)
-        inv_repo = SqlInvoiceRepository(db)
-        dec_repo = SqlDecisionRepository(db)
+    print(f"Evaluando {len(cases)} facturas · LLM: {', '.join(llm.available) or 'ninguno (lector local)'}\n")
+    outcomes: Counter = Counter()
+    sources: Counter = Counter()
+    mismatches, improper_pays, cap_dependent, reading_errors = [], [], [], []
+    clock_start = datetime.now(UTC)
+    started = time.monotonic()
+    for index, case in enumerate(cases):
+        text, file_bytes, filename, source_type = as_frontend_input(DATASET / case["file"])
+        conversation = repos["conv_repo"].create(title=case["file"])
+        now = clock_start + timedelta(seconds=index)  # strictly increasing, all inside one 7-day window
+        user = ChatMessage(id=f"msg-eval-{index}", conversation_id=conversation.id, role="user",
+                           content=text or filename or "", created_at=now)
+        response = handle_chat_turn(conversation_id=conversation.id, user_message=user, text=text,
+                                    file_bytes=file_bytes, filename=filename, source_type=source_type,
+                                    llm=llm, clock=lambda now=now: now, **repos)
+        decision = response.assistant_message.decision
+        got = decision.outcome.value
+        explanation = decision.explanation or ""
+        source = explanation.split("Datos leídos con ", 1)[-1].split(".\n", 1)[0] if "Datos leídos con" in explanation \
+            else "sin lectura"
+        sources[source] += 1
+        outcomes[(case["expected_outcome"], got)] += 1
 
-        rules = rule_repo.get_current()
-        dataset_dir = REPO_ROOT / "dataset"
-        files = sorted(
-            list((dataset_dir / "Correos").glob("*.eml"))
-            + list((dataset_dir / "PDFS").glob("*.pdf"))
-            + list((dataset_dir / "Imagenes").glob("*.*"))
-        )
+        failed = [c.rule_id for c in decision.checks if c.status == "failed"]
+        mark = "OK " if got == case["expected_outcome"] else "XX "
+        print(f"{mark}{case['file']:<28} esperado {case['expected_outcome']:<8} obtuvo {got:<8} {','.join(failed)}")
+        if got != case["expected_outcome"]:
+            mismatches.append(case["file"])
+        if got == "pay" and case["expected_outcome"] != "pay":
+            (cap_dependent if case["case"] == "tope_semanal" else improper_pays).append(case["file"])
+        extracted = response.invoice.extracted.model_dump(mode="json") if response.invoice.extracted else None
+        if diffs := extraction_diffs(case["expected_extraction"], extracted):
+            reading_errors.append((case["file"], diffs))
 
-        if not files:
-            print("No se encontraron archivos en dataset/")
-            return
-
-        counts = {Outcome.pay: 0, Outcome.escalate: 0, Outcome.block: 0}
-        unsafe_pays = 0
-
-        print(f"Evaluando {len(files)} archivos del dataset con reglas v{rules.version}...\n")
-        print(f"{'Archivo':<25} | {'Resultado':<10} | {'Monto Base':<12} | {'Reglas Fallidas'}")
-        print("-" * 80)
-
-        for fpath in files:
-            if fpath.suffix.lower() == ".eml":
-                text, file_bytes, filename, stype = parse_eml_file(fpath)
-            elif fpath.suffix.lower() == ".pdf":
-                text, file_bytes, filename, stype = None, fpath.read_bytes(), fpath.name, SourceType.pdf
-            else:
-                text, file_bytes, filename, stype = None, fpath.read_bytes(), fpath.name, SourceType.image
-
-            extracted = extract_invoice_data(
-                text=text,
-                file_bytes=file_bytes,
-                filename=filename,
-                source_type=stype,
-            )
-            matched_ben = (
-                ben_repo.find_match(
-                    tax_id=extracted.vendor_tax_id,
-                    account=extracted.beneficiary_account,
-                    name=extracted.vendor_name,
-                )
-                if extracted
-                else None
-            )
-            agreements = agr_repo.find_by_beneficiary(matched_ben.id) if matched_ben else []
-
-            ctx = EvaluationContext(
-                today=date.today(),
-                beneficiary=matched_ben,
-                agreement=agreements[0] if agreements else None,
-                previous_invoices=inv_repo.list_previous_extractions(),
-                spent_in_period=dec_repo.sum_spent_between(),
-            )
-            result = evaluate(extracted, rules, ctx)
-            counts[result.outcome] += 1
-
-            failed_ids = [c.rule_id for c in result.checks if c.status.value == "failed"]
-            if result.outcome == Outcome.pay and failed_ids:
-                unsafe_pays += 1
-
-            amt_str = f"{result.amount_base_currency:.2f}" if result.amount_base_currency is not None else "N/A"
-            print(f"{fpath.name:<25} | {result.outcome.value:<10} | {amt_str:<12} | {', '.join(failed_ids) or 'Ninguna'}")
-
-        print("-" * 80)
-        print(
-            f"Resumen: PAY={counts[Outcome.pay]} | ESCALATE={counts[Outcome.escalate]} | BLOCK={counts[Outcome.block]}"
-        )
-        print(f"Violaciones de invariante I1 (Pagos con reglas fallidas): {unsafe_pays}")
-        if unsafe_pays > 0:
-            sys.exit(1)
+    total = len(cases)
+    correct = total - len(mismatches)
+    autonomous = sum(v for (want, got), v in outcomes.items() if want == got and got != "escalate")
+    print("\n" + "-" * 80)
+    print(f"Coinciden con expected.json: {correct}/{total} ({correct / total:.0%})")
+    print(f"Autonomía (pagar o frenar correctamente, sin persona): {autonomous}/{total} ({autonomous / total:.0%})")
+    print(f"Pagos indebidos (trampas pagadas): {len(improper_pays)} {improper_pays or ''}")
+    print(f"Pagadas antes de llegar al tope semanal (dependen del orden): {len(cap_dependent)}")
+    print(f"Lecturas: {dict(sources)}")
+    print(f"Facturas con algún dato leído distinto: {len(reading_errors)}")
+    for file, diffs in reading_errors:
+        print(f"   {file}: {diffs}")
+    print(f"Tiempo: {time.monotonic() - started:.0f} s")
+    return 1 if improper_pays else 0
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())
