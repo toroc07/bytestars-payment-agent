@@ -41,13 +41,13 @@ Detalle del reto y criterios de éxito: `docs/PROJECT.md`.
 | `backend/app/schemas/` | Modelos Pydantic = contrato de datos | **Compartida** |
 | `backend/app/ports.py` | Interfaces de repositorios (cuando se cree) | **Compartida** |
 | `contracts/` | OpenAPI exportado + ejemplos JSON para mocks | **Compartida** |
-| `dataset/` | Facturas simuladas, empresa ficticia, escenarios esperados | **Compartida** |
+| `dataset/` | Facturas simuladas, empresa ficticia y sus reglas (por definir) | Dev C |
 | `docs/` | Documentación | **Compartida** |
 
 "Dueño" = quien revisa los PRs de esa zona, no exclusividad. Si necesitas cambiar la zona de la otra persona:
 PR pequeño + aviso. **Zonas compartidas: ambos aprueban.**
 
-Roles confirmados: **Dev A** = frontend + agente + motor de decisiones; **Dev B** = backend (API) + base de datos.
+Roles confirmados: **Dev A** = frontend + agente + motor de decisiones; **Dev B** = backend (API) + base de datos; **Dev C** = dataset y reglas de la empresa ficticia (aún sin definir: no inventes reglas, facturas ni datos de ejemplo).
 El motor de decisiones es de Dev A pero **Dev B ayuda con él**: el reparto de reglas/tareas concretas lo acuerdan entre ellos y se anota en `docs/PROGRESS.md` (columna de responsable). Quien implemente una regla la deja con sus tests; el dueño del motor (Dev A) revisa el PR.
 
 ## 4. Qué leer según la tarea

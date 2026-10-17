@@ -2,7 +2,7 @@
 <!-- 1-3 líneas -->
 
 ## Zona(s) tocada(s)
-- [ ] frontend  - [ ] engine  - [ ] agent/llm  - [ ] api  - [ ] db  - [ ] **compartida** (schemas / contracts / dataset / docs → requiere aprobación de ambos)
+- [ ] frontend  - [ ] engine  - [ ] agent/llm  - [ ] api  - [ ] db  - [ ] dataset (Dev C)  - [ ] **compartida** (schemas / contracts / docs → requiere aprobación de Dev A y Dev B)
 
 ## Checklist
 - [ ] No toqué la zona de la otra persona (o la avisé)

@@ -3,6 +3,7 @@
 Cada persona (y agente) edita **solo sus filas**. Estados: `pendiente` · `en curso` · `listo` · `bloqueado`.
 Roles confirmados: **Dev A** = frontend + agente + motor de decisiones · **Dev B** = backend (API) + base de datos.
 Dev B también ayuda con el motor de decisiones: al repartir tareas del motor, anotar en la columna de responsable quién hace cada regla.
+**Dev C** (tercer integrante) = dataset y reglas de la empresa ficticia (facturas simuladas, resultados esperados). Nada de eso está definido aún.
 
 ## M0 · Contrato (compartido)
 | Tarea | Responsable | Estado | Notas |
@@ -12,7 +13,7 @@ Dev B también ayuda con el motor de decisiones: al repartir tareas del motor, a
 | Implementar modelos Pydantic en `backend/app/schemas/` | Dev B | pendiente | según `DATA_MODEL.md` |
 | Definir `backend/app/ports.py` | Dev B | pendiente | según sección Ports de `DATA_MODEL.md` |
 | Crear JSON de ejemplo en `contracts/examples/` | Dev A | pendiente | lista en `API_CONTRACT.md` |
-| Dataset base (`company.json`, `scenarios.json`) | ambos | pendiente | ver `dataset/README.md` |
+| Definir formato del dataset y reglas de la empresa ficticia | Dev C | pendiente | ver `dataset/README.md`; acordar formato con Dev A y Dev B |
 
 ## Frontend (Dev A)
 | Tarea | Estado | Notas |
@@ -28,7 +29,8 @@ Dev B también ayuda con el motor de decisiones: al repartir tareas del motor, a
 ## Motor, agente y LLM (Dev A; Dev B ayuda en el motor)
 | Tarea | Estado | Notas |
 |---|---|---|
-| Motor de reglas R01–R10 + tests | pendiente | `DECISION_ENGINE.md`. Responsable por regla: _(por repartir entre Dev A y Dev B)_ |
+| Definir catálogo de reglas y sus campos en `RuleSet` | pendiente | con Dev C; documentar en `DECISION_ENGINE.md` y `DATA_MODEL.md` |
+| Implementar motor de reglas + tests | pendiente | responsable por regla: _(por repartir entre Dev A y Dev B)_ |
 | Property tests de invariantes | pendiente | |
 | Repositorios falsos en memoria para tests | pendiente | |
 | Pipeline del agente | pendiente | |
@@ -47,12 +49,11 @@ Dev B también ayuda con el motor de decisiones: al repartir tareas del motor, a
 | Seed y reset con el dataset | pendiente | |
 | Exportar `contracts/openapi.json` | pendiente | |
 
-## Dataset (compartido)
+## Dataset y reglas de la empresa ficticia (Dev C)
+Tareas por definir por Dev C (empresa ficticia, reglas, beneficiarios, acuerdos, facturas simuladas, resultados esperados). Agregar sus filas aquí.
 | Tarea | Estado | Notas |
 |---|---|---|
-| Empresa ficticia, beneficiarios, acuerdos | pendiente | |
-| Escenarios y resultados esperados | pendiente | |
-| Generar facturas PDF / imagen / texto | pendiente | |
+| _(por definir)_ | pendiente | |
 
 ## Deploy
 | Tarea | Estado | Notas |

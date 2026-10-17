@@ -7,7 +7,7 @@
    - Frontend con mocks (`VITE_USE_MOCKS=true`) desde `contracts/examples/`: no necesita backend.
    - Motor/agente con repositorios falsos en memoria (en `backend/tests/`): no necesitan base de datos.
    - API/DB con datos del `dataset/`: no necesitan LLM.
-4. **Zonas compartidas** (`schemas`, `ports`, `contracts`, `dataset`, `docs`): cambio pequeño, PR propio, **aprueban ambos**.
+4. **Zonas compartidas** (`schemas`, `ports`, `contracts`, `docs`): cambio pequeño, PR propio, **aprueban Dev A y Dev B**. El `dataset/` es de Dev C (cambios de formato se acuerdan con los tres).
 5. **Contrato primero:** si necesitas un campo o endpoint nuevo, escríbelo en el doc, avisa a la otra persona, y recién entonces impleméntalo.
 
 ## Ramas
@@ -30,10 +30,10 @@
 | Migraciones Alembic | **solo Dev B** crea revisiones (cadena lineal) |
 | `backend/app/main.py` (registro de routers) | **solo Dev B** |
 | `contracts/openapi.json` | se regenera con el script de exportación; no se edita a mano |
-| `dataset/scenarios.json` | agregar escenarios al final, sin reordenar |
+| Archivos del `dataset/` | solo Dev C; el resto propone cambios por PR |
 
 ## Hitos (orden sugerido; detalle y estado en `docs/PROGRESS.md`)
-- **M0 · Contrato:** esquemas, ports, ejemplos JSON y dataset base acordados.
+- **M0 · Contrato:** esquemas, ports, ejemplos JSON y formato del dataset acordados con Dev C.
 - **M1 · En paralelo, desacoplado:** frontend con mocks · motor de reglas + tests · modelos de BD y API con datos del dataset.
 - **M2 · Integración:** frontend contra API real · agente con repositorios reales.
 - **M3 · LLM:** extracción PDF/imagen/texto + explicación + fallback + caché; evaluación del dataset.
