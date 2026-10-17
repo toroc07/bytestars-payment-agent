@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 
@@ -56,7 +56,7 @@ def get_summary(
 ) -> SummaryResponse:
     invoices = inv_repo.list_all()
     rules = rule_repo.get_current()
-    window_start = datetime.now(timezone.utc) - timedelta(days=rules.period_days)
+    window_start = datetime.now(UTC) - timedelta(days=rules.period_days)
     spent = dec_repo.sum_spent_between(start_dt=window_start)
 
     paid_count = sum(1 for i in invoices if i.status in (InvoiceStatus.paid, InvoiceStatus.approved))

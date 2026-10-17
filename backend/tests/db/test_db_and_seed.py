@@ -25,7 +25,6 @@ from app.schemas import (
 )
 
 
-
 @pytest.fixture()
 def db_session():
     engine = create_engine(
@@ -125,6 +124,7 @@ def test_last_paid_for_vendor_and_vendor_sum(db_session):
     inv_repo = SqlInvoiceRepository(db_session)
     dec_repo = SqlDecisionRepository(db_session)
     import datetime
+
     from app.schemas import ExtractedInvoice
 
     t1 = datetime.datetime.now(datetime.UTC) - datetime.timedelta(days=2)

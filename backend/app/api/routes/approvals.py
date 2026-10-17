@@ -1,5 +1,5 @@
 import uuid
-from datetime import UTC, date, datetime, timedelta, timezone
+from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -150,7 +150,7 @@ def reevaluate_invoice(
             else None
         )
         agreements = agr_repo.find_by_beneficiary(matched_ben.id) if matched_ben else []
-        window_start = datetime.now(timezone.utc) - timedelta(days=rules.period_days)
+        window_start = datetime.now(UTC) - timedelta(days=rules.period_days)
         v_name = matched_ben.name if matched_ben else (extracted.vendor_name if extracted else None)
         v_tax = matched_ben.tax_id if matched_ben else (extracted.vendor_tax_id if extracted else None)
 

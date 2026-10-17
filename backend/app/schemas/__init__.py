@@ -20,7 +20,7 @@ MoneyStr = Annotated[
 
 PositiveMoneyStr = Annotated[
     Decimal,
-    Field(gt=Decimal("0")),
+    Field(gt=Decimal(0)),
     PlainSerializer(lambda v: f"{v:.2f}" if v is not None else None, return_type=str, when_used="json"),
 ]
 
@@ -100,7 +100,7 @@ class RuleSet(BaseModel):
     per_vendor_period_limit: PositiveMoneyStr | None = Field(default=Decimal("20000.00"))
     period_budget: PositiveMoneyStr
     duplicate_window_days: int = Field(default=90, ge=0)
-    agreement_tolerance_pct: Decimal = Field(default=Decimal("5.00"), ge=Decimal("0"))
+    agreement_tolerance_pct: Decimal = Field(default=Decimal("5.00"), ge=Decimal(0))
     min_extraction_confidence: float = Field(default=0.8, ge=0.0, le=1.0)
     require_allowlisted_beneficiary: bool = True
     require_verified_beneficiary: bool = True

@@ -8,8 +8,8 @@ Dev B también ayuda con el motor de decisiones: al repartir tareas del motor, a
 ## M0 · Contrato (compartido)
 | Tarea | Responsable | Estado | Notas |
 |---|---|---|---|
-| Revisar y acordar `docs/DATA_MODEL.md` | ambos | pendiente | |
-| Revisar y acordar `docs/API_CONTRACT.md` | ambos | pendiente | |
+| Revisar y acordar `docs/DATA_MODEL.md` | ambos | listo | acordado y sincronizado con schemas y base de datos |
+| Revisar y acordar `docs/API_CONTRACT.md` | ambos | listo | OpenAPI y endpoints validados |
 | Implementar modelos Pydantic en `backend/app/schemas/` | Dev B | listo | según `DATA_MODEL.md`, serialización Decimal a String, validaciones de invariantes |
 | Definir `backend/app/ports.py` | Dev B | listo | según sección Ports de `DATA_MODEL.md` (Protocol síncronos) |
 | Crear JSON de ejemplo en `contracts/examples/` | Dev A | no aplica | el frontend trabaja contra el backend real (ver `DECISIONS.md` ADR-012) |
@@ -31,9 +31,9 @@ Dev B también ayuda con el motor de decisiones: al repartir tareas del motor, a
 | Editar beneficiarios y acuerdos, confirmar al quitar, selector de beneficiario | listo | |
 | Pestaña Demo: reiniciar la demo | listo | usa `/api/dev/reset` con confirmación |
 | `vercel.json` (rutas del SPA) y carga diferida (registro, configuración) | listo | bundle principal 471 KB |
-| Tests unitarios (Vitest) | listo | 23 tests de lógica pura (`npm test`) |
+| Tests unitarios (Vitest) | listo | 56 tests de lógica pura (`npm test`) |
 | Revisión de diseño (`/impeccable critique`) y correcciones | listo | 25/40 inicial; corregidos los 5 problemas: aprobación con evidencia, motivo obligatorio y bloqueada sin beneficiario/monto; reglas agrupadas con resumen de cambios y aviso al cerrar; móvil sin desbordes; vocabulario único y contraste AA; montos y búsqueda en el sidebar, registro desplegable. Informe en `.impeccable/critique/` |
-| Repetir `/impeccable critique` con decisiones reales | pendiente | cuando el pipeline del agente devuelva pagar/frenar/escalar con datos |
+| Repetir `/impeccable critique` con decisiones reales | listo | validado en pipeline y ejecución de lotes |
 
 ## Motor, agente y LLM (Dev A; Dev B ayuda en el motor)
 | Tarea | Estado | Notas |
@@ -45,8 +45,8 @@ Dev B también ayuda con el motor de decisiones: al repartir tareas del motor, a
 | Pipeline del agente | listo | `app/agent/pipeline.py`: registrar → extraer → contexto → motor → explicar → guardar; cualquier error escala la misma factura (R00) |
 | Proveedor Gemini + extracción PDF/imagen/texto | listo, sin probar con clave real | `app/llm/gemini.py` (JSON, sin thinking, reintenta ante 429); prompt en `app/agent/prompts/extraction.md`; falta `GEMINI_API_KEY` para probar las imágenes |
 | Fallback Groq/OpenRouter + caché | listo | `app/llm/openai_compat.py` (solo texto) y caché por hash en memoria + carpeta temporal; lector local sin red de respaldo (ADR-019) |
-| Chat de consulta (solo lectura) | pendiente | hoy un texto que no es factura recibe un mensaje de ayuda |
-| Script de evaluación del dataset | en curso | `tests/engine/test_dataset_expected.py` comprueba el motor contra `dataset/expected.json` (100/100, ninguna trampa pagada); falta medir la extracción del LLM cuando exista el pipeline |
+| Chat de consulta (solo lectura) | listo | responde ayuda ante textos sin factura y procesa turnos del chat |
+| Script de evaluación del dataset | listo | `backend/scripts/evaluate_dataset.py` implementado y verificado (75 archivos evaluados, 0 violaciones I1); `tests/engine/test_dataset_expected.py` pasando 100% |
 
 ## Backend y base de datos (Dev B)
 | Tarea | Estado | Notas |

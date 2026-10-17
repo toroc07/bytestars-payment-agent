@@ -141,3 +141,39 @@ def extract(
     if message.strip() or document:
         return Extraction(read_text([message, document], company_name), "local", error)
     return Extraction(None, "none", error)
+
+
+def extract_invoice_data(
+    *,
+    text: str | None = None,
+    file_bytes: bytes | None = None,
+    filename: str | None = None,
+    source_type: Any = None,
+    company_name: str = "Distribuciones Andinas S.A.S.",
+    llm: LLMChain | None = None,
+) -> ExtractedInvoice:
+    """Extract invoice data using the LLM chain or offline text reader fallback."""
+    if llm is None:
+        from app.llm import get_llm
+        llm = get_llm()
+
+    mime_type = None
+    if file_bytes:
+        if file_bytes.startswith(b"%PDF"):
+            mime_type = "application/pdf"
+        elif file_bytes.startswith(b"\x89PNG"):
+            mime_type = "image/png"
+        elif file_bytes.startswith(b"\xff\xd8"):
+            mime_type = "image/jpeg"
+
+    extraction = extract(
+        text=text,
+        file_bytes=file_bytes,
+        mime_type=mime_type,
+        company_name=company_name,
+        llm=llm,
+    )
+    if extraction.invoice is not None:
+        return extraction.invoice
+    return ExtractedInvoice(confidence=0.0)
+
