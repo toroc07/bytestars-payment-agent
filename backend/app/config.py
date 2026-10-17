@@ -9,7 +9,7 @@ class Settings(BaseSettings):
     LLM_PROVIDER_ORDER: str = "gemini,groq,openrouter"
     LLM_CACHE: bool = True
     GEMINI_API_KEY: str = ""
-    GEMINI_MODEL: str = "gemini-3.8-flash,gemini-3.5-flash,gemini-3.5-flash-lite"
+    GEMINI_MODEL: str = "gemini-2.5-flash,gemini-2.0-flash,gemini-1.5-flash"
     GROQ_API_KEY: str = ""
     OPENROUTER_API_KEY: str = ""
 

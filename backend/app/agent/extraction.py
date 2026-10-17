@@ -49,7 +49,20 @@ def pdf_text(data: bytes) -> str:
         import pdfplumber
 
         with pdfplumber.open(io.BytesIO(data)) as pdf:
-            return "\n".join(page.extract_text() or "" for page in pdf.pages[:5]).strip()
+            pages_text = []
+            for page in pdf.pages[:5]:
+                try:
+                    clean_page = page.filter(
+                        lambda obj: obj.get("object_type") != "char"
+                        or (obj.get("matrix") and obj["matrix"][1] == 0 and obj["matrix"][2] == 0)
+                    )
+                    txt = clean_page.extract_text()
+                except Exception:  # noqa: BLE001 - pdfplumber filter can fail on unusual char dicts
+                    txt = None
+                txt = txt or page.extract_text() or ""
+                if txt:
+                    pages_text.append(txt)
+            return "\n".join(pages_text).strip()
     except Exception:  # noqa: BLE001 - a broken PDF just has no text; the LLM may still read it
         return ""
 
@@ -99,6 +112,17 @@ def _code(value: Any, length: int) -> str | None:
     return text if re.fullmatch(rf"[A-Z]{{{length}}}", text) else None
 
 
+def _currency_code(value: Any) -> str | None:
+    text = (_text(value, 10) or "").upper().strip()
+    if text in ("US$", "USD"):
+        return "USD"
+    if text in ("COP", "EUR", "GBP", "MXN"):
+        return text
+    if text == "$":
+        return "USD"
+    return text if re.fullmatch(r"[A-Z]{3}", text) else None
+
+
 def coerce(data: dict[str, Any]) -> ExtractedInvoice:
     """Field by field: anything malformed becomes None (and the engine escalates), never an error."""
     account = re.sub(r"\D", "", _text(data.get("beneficiary_account"), 40) or "") or None
@@ -114,7 +138,7 @@ def coerce(data: dict[str, Any]) -> ExtractedInvoice:
         beneficiary_account=account,
         vendor_country=_code(data.get("vendor_country"), 2),
         amount=_money(data.get("amount")),
-        currency=_code(data.get("currency"), 3),
+        currency=_currency_code(data.get("currency")),
         issue_date=_date(data.get("issue_date")),
         due_date=_date(data.get("due_date")),
         description=_text(data.get("description")),
