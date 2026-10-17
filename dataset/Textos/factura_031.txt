@@ -5,10 +5,10 @@ NIT: 830.082.649-1
 Fecha de emisión: 05/09/2026
 Orden de compra: OC-2026-0409
 Detalle:
-- 6 x Ronda de supervisión adicional (a $95.000 c/u)
-- 2 x Instalación de cámara CCTV por punto (a $320.000 c/u)
-Subtotal: $1.210.000
-IVA 19%: $229.900
-Total: $1.439.900
+- 6 x Ronda de supervisión adicional (a US$25.00 c/u)
+- 2 x Instalación de cámara CCTV por punto (a US$80.00 c/u)
+Subtotal: US$310.00
+IVA 19%: US$58.90
+Total: US$368.90
 Consignar a Corriente Banco de Occidente No. 90663776548
 [11/09/2026, 13:51] Cuentas por Pagar - Distribuciones Andinas: Recibido, gracias. Lo radicamos.

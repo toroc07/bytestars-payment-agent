@@ -1094,7 +1094,7 @@
           "verified": {
             "type": "boolean",
             "title": "Verified",
-            "default": true
+            "default": false
           },
           "sanctioned": {
             "type": "boolean",
@@ -1774,7 +1774,7 @@
               }
             ],
             "title": "Per Vendor Period Limit",
-            "default": "10000.00"
+            "default": "20000.00"
           },
           "period_budget": {
             "anyOf": [
@@ -1947,7 +1947,7 @@
               }
             ],
             "title": "Per Vendor Period Limit",
-            "default": "10000.00"
+            "default": "20000.00"
           },
           "period_budget": {
             "type": "string",

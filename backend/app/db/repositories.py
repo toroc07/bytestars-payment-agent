@@ -43,7 +43,7 @@ class SqlRuleSetRepository:
         if not row:
             default_rules = RuleSet(
                 version=1,
-                company_name="Nimbus Labs Inc.",
+                company_name="Distribuciones Andinas S.A.S.",
                 base_currency="USD",
                 fx_rates={
                     "USD": Decimal("1.00"),
@@ -54,12 +54,12 @@ class SqlRuleSetRepository:
                 },
                 allowed_currencies=["USD", "EUR", "COP", "MXN", "BRL"],
                 approval_threshold=Decimal("5000.00"),
-                per_payment_limit=Decimal("20000.00"),
+                per_payment_limit=Decimal("10000.00"),
                 period="weekly",
                 period_days=7,
-                period_limit=Decimal("10000.00"),
-                per_vendor_period_limit=Decimal("10000.00"),
-                period_budget=Decimal("15000.00"),
+                period_limit=Decimal("50000.00"),
+                per_vendor_period_limit=Decimal("20000.00"),
+                period_budget=Decimal("50000.00"),
                 duplicate_window_days=90,
                 agreement_tolerance_pct=Decimal("5.00"),
                 min_extraction_confidence=0.8,
@@ -68,7 +68,7 @@ class SqlRuleSetRepository:
                 block_sanctioned=True,
                 sanctioned_countries=["KP", "IR", "SY", "CU", "RU"],
                 review_on_vendor_changes=True,
-                required_fields=["invoice_number", "vendor_name", "amount", "currency", "due_date"],
+                required_fields=["vendor_name", "invoice_number", "amount", "issue_date", "description"],
                 retention_years=5,
                 severity_overrides={},
             )

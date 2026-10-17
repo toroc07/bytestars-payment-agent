@@ -1,9 +1,17 @@
-from datetime import date, datetime
+from datetime import UTC, date, datetime
 from decimal import Decimal
 from enum import Enum
 from typing import Annotated, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, PlainSerializer, field_validator, model_validator
+from pydantic import AfterValidator, BaseModel, ConfigDict, Field, PlainSerializer, field_validator, model_validator
+
+
+def _as_utc(value: datetime) -> datetime:
+    """SQLite drops the offset: read naive timestamps as UTC so the API always sends one."""
+    return value.replace(tzinfo=UTC) if value.tzinfo is None else value.astimezone(UTC)
+
+
+UtcDatetime = Annotated[datetime, AfterValidator(_as_utc)]
 
 MoneyStr = Annotated[
     Decimal,
@@ -73,7 +81,7 @@ class Invoice(BaseModel):
     raw_text: str | None = None
     extracted: ExtractedInvoice | None = None
     status: InvoiceStatus
-    received_at: datetime
+    received_at: UtcDatetime
 
 
 class RuleSet(BaseModel):
@@ -89,7 +97,7 @@ class RuleSet(BaseModel):
     period: Literal["weekly", "monthly"] = "weekly"
     period_days: int = Field(default=7, ge=1)
     period_limit: PositiveMoneyStr
-    per_vendor_period_limit: PositiveMoneyStr | None = Field(default=Decimal("10000.00"))
+    per_vendor_period_limit: PositiveMoneyStr | None = Field(default=Decimal("20000.00"))
     period_budget: PositiveMoneyStr
     duplicate_window_days: int = Field(default=90, ge=0)
     agreement_tolerance_pct: Decimal = Field(default=Decimal("5.00"), ge=Decimal("0"))
@@ -100,7 +108,7 @@ class RuleSet(BaseModel):
     sanctioned_countries: list[str] = Field(default_factory=lambda: ["KP", "IR", "SY", "CU", "RU"])
     review_on_vendor_changes: bool = True
     required_fields: list[str] = Field(
-        default_factory=lambda: ["invoice_number", "vendor_name", "amount", "currency", "due_date"]
+        default_factory=lambda: ["vendor_name", "invoice_number", "amount", "issue_date", "description"]
     )
     retention_years: int = Field(default=5, ge=1)
     severity_overrides: dict[str, Literal["block", "escalate"]] = Field(default_factory=dict)
@@ -125,7 +133,8 @@ class Beneficiary(BaseModel):
     account: str | None = None
     country: str | None = Field(default=None, min_length=2, max_length=2)
     allowed: bool = True
-    verified: bool = True
+    # Verification is a human step (rule R04): a new vendor starts unverified.
+    verified: bool = False
     sanctioned: bool = False
     owners: list[str] = Field(default_factory=list)
 
@@ -190,7 +199,7 @@ class Decision(BaseModel):
     amount_base_currency: MoneyStr | None = None
     approver: str | None = None
     comment: str | None = None
-    created_at: datetime
+    created_at: UtcDatetime
 
 
 class ApprovalRequest(BaseModel):
@@ -214,7 +223,7 @@ class ChatMessage(BaseModel):
     content: str
     invoice_id: str | None = None
     decision: Decision | None = None
-    created_at: datetime
+    created_at: UtcDatetime
 
 
 class ConversationSummary(BaseModel):
@@ -223,7 +232,7 @@ class ConversationSummary(BaseModel):
     invoice_id: str | None = None
     invoice_status: InvoiceStatus | None = None
     last_outcome: Outcome | None = None
-    updated_at: datetime
+    updated_at: UtcDatetime
 
 
 class CreateConversationRequest(BaseModel):

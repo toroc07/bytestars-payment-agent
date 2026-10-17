@@ -4,10 +4,10 @@ NIT: 900.231.584-5
 Fecha de emisión: 24/09/2026
 Orden de compra: OC-2026-0424
 Detalle:
-- 45 x Resma papel carta x500 hojas (a $14.500 c/u)
-- 40 x Archivador AZ tamaño oficio (a $9.800 c/u)
-Subtotal: $1.044.500
-IVA 19%: $198.455
-Total: $1.242.955
+- 45 x Resma papel carta x500 hojas (a US$4.00 c/u)
+- 40 x Archivador AZ tamaño oficio (a US$2.00 c/u)
+Subtotal: US$260.00
+IVA 19%: US$49.40
+Total: US$309.40
 Consignar a Ahorros Bancolombia No. 71091652208
 [26/09/2026, 12:22] Cuentas por Pagar - Distribuciones Andinas: Recibido, gracias. Lo radicamos.

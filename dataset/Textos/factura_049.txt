@@ -4,10 +4,10 @@ NIT: 830.082.649-1
 Fecha de emisión: 19/09/2026
 Orden de compra: OC-2026-0432
 Detalle:
-- 6 x Monitoreo de alarma mensual (a $180.000 c/u)
-- 1 x Instalación de cámara CCTV por punto (a $320.000 c/u)
-Subtotal: $1.400.000
-IVA 19%: $266.000
-Total: $1.666.000
+- 6 x Monitoreo de alarma mensual (a US$45.00 c/u)
+- 1 x Instalación de cámara CCTV por punto (a US$80.00 c/u)
+Subtotal: US$350.00
+IVA 19%: US$66.50
+Total: US$416.50
 Consignar a Corriente Banco de Occidente No. 90663776548
 [19/09/2026, 13:31] Cuentas por Pagar - Distribuciones Andinas: Recibido, gracias. Lo radicamos.

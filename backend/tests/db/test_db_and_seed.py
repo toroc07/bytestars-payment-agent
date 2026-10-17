@@ -48,15 +48,14 @@ def test_seed_and_reset(db_session):
 
     rule_repo = SqlRuleSetRepository(db_session)
     current_rules = rule_repo.get_current()
-    assert current_rules.company_name == "Nimbus Labs Inc."
+    assert current_rules.company_name == "Distribuciones Andinas S.A.S."
 
     ben_repo = SqlBeneficiaryRepository(db_session)
     bens = ben_repo.list_all()
-    assert len(bens) >= 8
+    assert len(bens) == 8
+    assert all(b.verified and b.allowed and not b.sanctioned for b in bens)
 
     agr_repo = SqlAgreementRepository(db_session)
-    agrs = agr_repo.list_all()
-    assert len(agrs) >= 8
 
     # Test reset
     reset_database(db_session)

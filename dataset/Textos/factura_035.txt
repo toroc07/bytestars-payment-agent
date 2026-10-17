@@ -4,9 +4,9 @@ NIT: 830.082.649-1
 Fecha de emisión: 12/09/2026
 Orden de compra: OC-2026-0428
 Detalle:
-- 1 x Monitoreo de alarma mensual (a $180.000 c/u)
-Subtotal: $180.000
-IVA 19%: $34.200
-Total: $214.200
+- 1 x Monitoreo de alarma mensual (a US$45.00 c/u)
+Subtotal: US$45.00
+IVA 19%: US$8.55
+Total: US$53.55
 Consignar a Corriente Banco de Occidente No. 90663776548
 [14/09/2026, 12:16] Cuentas por Pagar - Distribuciones Andinas: Recibido, gracias. Lo radicamos.

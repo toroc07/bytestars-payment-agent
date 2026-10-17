@@ -1,0 +1,2108 @@
+{
+  "status": "propuesta: calculada con el motor y revisada a mano; Dev C debe validarla",
+  "company": "Distribuciones Andinas S.A.S.",
+  "rule_set_version": 1,
+  "order": "factura_001 a factura_100 en una sola sesión (dentro de la misma ventana de 7 días)",
+  "assumptions": [
+    "La extracción lee exactamente los datos de expected_extraction (confianza ≥ 0,8) y el país CO.",
+    "La base arranca con dataset/company.json y sin facturas previas.",
+    "El gasto de la ventana suma solo facturas pagadas; las escaladas no cuentan hasta que una persona las aprueba.",
+    "Los resultados con caso 'tope_semanal' dependen del orden y de procesar todo en la misma semana."
+  ],
+  "totals": {
+    "pay": 62,
+    "block": 18,
+    "escalate": 20,
+    "cases": {
+      "normal": 62,
+      "proveedor_no_permitido": 6,
+      "suplantacion": 2,
+      "duplicado": 10,
+      "cambio_de_cuenta": 2,
+      "tope_semanal": 18
+    }
+  },
+  "invoices": [
+    {
+      "file": "Imagenes/factura_001.png",
+      "format": "image",
+      "expected_extraction": {
+        "invoice_number": "PCB-531",
+        "vendor_name": "Publicidad Creativa Bogotá S.A.S.",
+        "vendor_tax_id": "800.199.036-1",
+        "beneficiary_account": "72923393128",
+        "amount": "327.25",
+        "currency": "USD",
+        "issue_date": "2026-08-25",
+        "due_date": "2026-09-24",
+        "po_reference": "OC-2026-0434",
+        "description": "Impresión de volantes x1000"
+      },
+      "expected_outcome": "pay",
+      "failed_rules": [],
+      "case": "normal",
+      "reason": "Pagar USD 327.25 a Publicidad Creativa Bogotá S.A.S.: se cumplen todas las reglas."
+    },
+    {
+      "file": "Correos/factura_002.eml",
+      "format": "email",
+      "expected_extraction": {
+        "invoice_number": "TRC-691",
+        "vendor_name": "Tecnoredes Colombia Ltda.",
+        "vendor_tax_id": "830.114.921-1",
+        "beneficiary_account": "86447545986",
+        "amount": "1035.30",
+        "currency": "USD",
+        "issue_date": "2026-08-26",
+        "due_date": "2026-09-25",
+        "po_reference": "OC-2026-0415",
+        "description": "Cable UTP Cat6 caja 305 m"
+      },
+      "expected_outcome": "pay",
+      "failed_rules": [],
+      "case": "normal",
+      "reason": "Pagar USD 1,035.30 a Tecnoredes Colombia Ltda.: se cumplen todas las reglas."
+    },
+    {
+      "file": "Correos/factura_003.eml",
+      "format": "email",
+      "expected_extraction": {
+        "invoice_number": "ATS-827",
+        "vendor_name": "Aseo Total Servicios S.A.S.",
+        "vendor_tax_id": "901.022.366-3",
+        "beneficiary_account": "81629733626",
+        "amount": "630.70",
+        "currency": "USD",
+        "issue_date": "2026-08-26",
+        "due_date": "2026-10-10",
+        "po_reference": "OC-2026-0451",
+        "description": "Kit mensual de insumos de limpieza"
+      },
+      "expected_outcome": "pay",
+      "failed_rules": [],
+      "case": "normal",
+      "reason": "Pagar USD 630.70 a Aseo Total Servicios S.A.S.: se cumplen todas las reglas."
+    },
+    {
+      "file": "PDFS/factura_004.pdf",
+      "format": "pdf",
+      "expected_extraction": {
+        "invoice_number": "ACS-532",
+        "vendor_name": "Alimentos y Catering El Sabor S.A.S.",
+        "vendor_tax_id": "901.350.127-6",
+        "beneficiary_account": "76408675855",
+        "amount": "671.16",
+        "currency": "USD",
+        "issue_date": "2026-08-26",
+        "due_date": "2026-09-25",
+        "po_reference": "OC-2026-0457",
+        "description": "Servicio de café para evento"
+      },
+      "expected_outcome": "pay",
+      "failed_rules": [],
+      "case": "normal",
+      "reason": "Pagar USD 671.16 a Alimentos y Catering El Sabor S.A.S.: se cumplen todas las reglas."
+    },
+    {
+      "file": "Imagenes/factura_005.jpg",
+      "format": "image",
+      "expected_extraction": {
+        "invoice_number": "SLM-141",
+        "vendor_name": "Servicios Logísticos Meridian S.A.S.",
+        "vendor_tax_id": "900.964.215-8",
+        "beneficiary_account": "67805849893",
+        "amount": "333.20",
+        "currency": "USD",
+        "issue_date": "2026-08-27",
+        "due_date": "2026-09-26",
+        "po_reference": "OC-2026-0999",
+        "description": "Alquiler de montacargas por día"
+      },
+      "expected_outcome": "block",
+      "failed_rules": [
+        "R03"
+      ],
+      "case": "proveedor_no_permitido",
+      "reason": "Rechazada: Proveedor no permitido: Servicios Logísticos Meridian S.A.S. no está en la lista de beneficiarios permitidos."
+    },
+    {
+      "file": "PDFS/factura_006.pdf",
+      "format": "pdf",
+      "expected_extraction": {
+        "invoice_number": "MIC-417",
+        "vendor_name": "Mantenimiento Industrial Cundinamarca S.A.S.",
+        "vendor_tax_id": "900.718.452-3",
+        "beneficiary_account": "68367326817",
+        "amount": "464.10",
+        "currency": "USD",
+        "issue_date": "2026-08-25",
+        "due_date": "2026-09-24",
+        "po_reference": "OC-2026-0471",
+        "description": "Revisión de planta eléctrica"
+      },
+      "expected_outcome": "pay",
+      "failed_rules": [],
+      "case": "normal",
+      "reason": "Pagar USD 464.10 a Mantenimiento Industrial Cundinamarca S.A.S.: se cumplen todas las reglas."
+    },
+    {
+      "file": "PDFS/factura_007.pdf",
+      "format": "pdf",
+      "expected_extraction": {
+        "invoice_number": "PCB-526",
+        "vendor_name": "Publicidad Creativa Bogotá S.A.S.",
+        "vendor_tax_id": "800.199.036-1",
+        "beneficiary_account": "72923393128",
+        "amount": "672.35",
+        "currency": "USD",
+        "issue_date": "2026-08-27",
+        "due_date": "2026-10-11",
+        "po_reference": "OC-2026-0433",
+        "description": "Edición de video corporativo"
+      },
+      "expected_outcome": "pay",
+      "failed_rules": [],
+      "case": "normal",
+      "reason": "Pagar USD 672.35 a Publicidad Creativa Bogotá S.A.S.: se cumplen todas las reglas."
+    },
+    {
+      "file": "Textos/factura_008.txt",
+      "format": "text",
+      "expected_extraction": {
+        "invoice_number": "PSN-347",
+        "vendor_name": "Papelería y Suministros del Norte S.A.S",
+        "vendor_tax_id": "901.233.780-5",
+        "beneficiary_account": "69184467518",
+        "amount": "171.36",
+        "currency": "USD",
+        "issue_date": "2026-08-29",
+        "due_date": null,
+        "po_reference": "OC-2026-0462",
+        "description": "Resma papel carta x500 hojas"
+      },
+      "expected_outcome": "block",
+      "failed_rules": [
+        "R03"
+      ],
+      "case": "suplantacion",
+      "reason": "Rechazada: Proveedor no permitido: Papelería y Suministros del Norte S.A.S no está en la lista de beneficiarios permitidos."
+    },
+    {
+      "file": "Imagenes/factura_009.jpg",
+      "format": "image",
+      "expected_extraction": {
+        "invoice_number": "TRA-533",
+        "vendor_name": "Transportes Rápido Andino S.A.",
+        "vendor_tax_id": "860.045.873-7",
+        "beneficiary_account": "14231607409",
+        "amount": "214.20",
+        "currency": "USD",
+        "issue_date": "2026-08-29",
+        "due_date": "2026-09-28",
+        "po_reference": "OC-2026-0446",
+        "description": "Bodegaje por pallet al mes"
+      },
+      "expected_outcome": "pay",
+      "failed_rules": [],
+      "case": "normal",
+      "reason": "Pagar USD 214.20 a Transportes Rápido Andino S.A.: se cumplen todas las reglas."
+    },
+    {
+      "file": "Textos/factura_010.txt",
+      "format": "text",
+      "expected_extraction": {
+        "invoice_number": "ATS-842",
+        "vendor_name": "Aseo Total Servicios S.A.S.",
+        "vendor_tax_id": "901.022.366-3",
+        "beneficiary_account": "81629733626",
+        "amount": "1487.50",
+        "currency": "USD",
+        "issue_date": "2026-08-27",
+        "due_date": null,
+        "po_reference": "OC-2026-0482",
+        "description": "Fumigación de instalaciones"
+      },
+      "expected_outcome": "pay",
+      "failed_rules": [],
+      "case": "normal",
+      "reason": "Pagar USD 1,487.50 a Aseo Total Servicios S.A.S.: se cumplen todas las reglas."
+    },
+    {
+      "file": "Correos/factura_011.eml",
+      "format": "email",
+      "expected_extraction": {
+        "invoice_number": "ATS-811",
+        "vendor_name": "Aseo Total Servicios S.A.S.",
+        "vendor_tax_id": "901.022.366-3",
+        "beneficiary_account": "81629733626",
+        "amount": "511.70",
+        "currency": "USD",
+        "issue_date": "2026-08-29",
+        "due_date": "2026-10-13",
+        "po_reference": "OC-2026-0411",
+        "description": "Fumigación de instalaciones"
+      },
+      "expected_outcome": "pay",
+      "failed_rules": [],
+      "case": "normal",
+      "reason": "Pagar USD 511.70 a Aseo Total Servicios S.A.S.: se cumplen todas las reglas."
+    },
+    {
+      "file": "Imagenes/factura_012.jpg",
+      "format": "image",
+      "expected_extraction": {
+        "invoice_number": "SIG-494",
+        "vendor_name": "Seguridad Integral Guardianes Ltda.",
+        "vendor_tax_id": "830.082.649-1",
+        "beneficiary_account": "90663776548",
+        "amount": "3653.30",
+        "currency": "USD",
+        "issue_date": "2026-08-28",
+        "due_date": "2026-10-12",
+        "po_reference": "OC-2026-0484",
+        "description": "Servicio de vigilancia 24h mensual"
+      },
+      "expected_outcome": "pay",
+      "failed_rules": [],
+      "case": "normal",
+      "reason": "Pagar USD 3,653.30 a Seguridad Integral Guardianes Ltda.: se cumplen todas las reglas."
+    },
+    {
+      "file": "Imagenes/factura_013.jpg",
+      "format": "image",
+      "expected_extraction": {
+        "invoice_number": "SIG-460",
+        "vendor_name": "Seguridad Integral Guardianes Ltda.",
+        "vendor_tax_id": "830.082.649-1",
+        "beneficiary_account": "90663776548",
+        "amount": "797.30",
+        "currency": "USD",
+        "issue_date": "2026-08-28",
+        "due_date": "2026-10-12",
+        "po_reference": "OC-2026-0418",
+        "description": "Instalación de cámara CCTV por punto"
+      },
+      "expected_outcome": "pay",
+      "failed_rules": [],
+      "case": "normal",
+      "reason": "Pagar USD 797.30 a Seguridad Integral Guardianes Ltda.: se cumplen todas las reglas."
+    },
+    {
+      "file": "Imagenes/factura_014.jpg",
+      "format": "image",
+      "expected_extraction": {
+        "invoice_number": "PCB-545",
+        "vendor_name": "Publicidad Creativa Bogotá S.A.S.",
+        "vendor_tax_id": "800.199.036-1",
+        "beneficiary_account": "72923393128",
+        "amount": "672.35",
+        "currency": "USD",
+        "issue_date": "2026-08-28",
+        "due_date": "2026-10-12",
+        "po_reference": "OC-2026-0433",
+        "description": "Edición de video corporativo"
+      },
+      "expected_outcome": "block",
+      "failed_rules": [
+        "R02"
+      ],
+      "case": "duplicado",
+      "reason": "Rechazada: Duplicada: Publicidad Creativa Bogotá S.A.S. ya cobró USD 672.35 por la orden OC-2026-0433 en la factura PCB-526; esta repite el cobro con otro número."
+    },
+    {
+      "file": "PDFS/factura_015.pdf",
+      "format": "pdf",
+      "expected_extraction": {
+        "invoice_number": "CDE-107",
+        "vendor_name": "Comercializadora Delta Express S.A.S.",
+        "vendor_tax_id": "901.587.432-6",
+        "beneficiary_account": "62690944157",
+        "amount": "856.80",
+        "currency": "USD",
+        "issue_date": "2026-08-31",
+        "due_date": "2026-09-30",
+        "po_reference": "No aplica",
+        "description": "Equipos de cómputo reacondicionados"
+      },
+      "expected_outcome": "block",
+      "failed_rules": [
+        "R03"
+      ],
+      "case": "proveedor_no_permitido",
+      "reason": "Rechazada: Proveedor no permitido: Comercializadora Delta Express S.A.S. no está en la lista de beneficiarios permitidos."
+    },
+    {
+      "file": "Correos/factura_016.eml",
+      "format": "email",
+      "expected_extraction": {
+        "invoice_number": "ATS-832",
+        "vendor_name": "Aseo Total Servicios S.A.S.",
+        "vendor_tax_id": "901.022.366-3",
+        "beneficiary_account": "81629733626",
+        "amount": "452.20",
+        "currency": "USD",
+        "issue_date": "2026-08-30",
+        "due_date": "2026-09-29",
+        "po_reference": "OC-2026-0473",
+        "description": "Kit mensual de insumos de limpieza"
+      },
+      "expected_outcome": "pay",
+      "failed_rules": [],
+      "case": "normal",
+      "reason": "Pagar USD 452.20 a Aseo Total Servicios S.A.S.: se cumplen todas las reglas."
+    },
+    {
+      "file": "Textos/factura_017.txt",
+      "format": "text",
+      "expected_extraction": {
+        "invoice_number": "TRC-701",
+        "vendor_name": "Tecnoredes Colombia Ltda.",
+        "vendor_tax_id": "830.114.921-1",
+        "beneficiary_account": "86447545986",
+        "amount": "678.30",
+        "currency": "USD",
+        "issue_date": "2026-08-30",
+        "due_date": null,
+        "po_reference": "OC-2026-0444",
+        "description": "Punto de red certificado"
+      },
+      "expected_outcome": "pay",
+      "failed_rules": [],
+      "case": "normal",
+      "reason": "Pagar USD 678.30 a Tecnoredes Colombia Ltda.: se cumplen todas las reglas."
+    },
+    {
+      "file": "Correos/factura_018.eml",
+      "format": "email",
+      "expected_extraction": {
+        "invoice_number": "MIC-378",
+        "vendor_name": "Mantenimiento Industrial Cundinamarca S.A.S.",
+        "vendor_tax_id": "900.718.452-3",
+        "beneficiary_account": "68367326817",
+        "amount": "283.22",
+        "currency": "USD",
+        "issue_date": "2026-08-31",
+        "due_date": "2026-09-30",
+        "po_reference": "OC-2026-0407",
+        "description": "Mano de obra técnica por hora"
+      },
+      "expected_outcome": "pay",
+      "failed_rules": [],
+      "case": "normal",
+      "reason": "Pagar USD 283.22 a Mantenimiento Industrial Cundinamarca S.A.S.: se cumplen todas las reglas."
+    },
+    {
+      "file": "Correos/factura_019.eml",
+      "format": "email",
+      "expected_extraction": {
+        "invoice_number": "SIG-497",
+        "vendor_name": "Seguridad Integral Guardianes Ltda.",
+        "vendor_tax_id": "830.082.649-1",
+        "beneficiary_account": "90663776548",
+        "amount": "797.30",
+        "currency": "USD",
+        "issue_date": "2026-08-29",
+        "due_date": "2026-10-13",
+        "po_reference": "OC-2026-0418",
+        "description": "Instalación de cámara CCTV por punto"
+      },
+      "expected_outcome": "block",
+      "failed_rules": [
+        "R02"
+      ],
+      "case": "duplicado",
+      "reason": "Rechazada: Duplicada: Seguridad Integral Guardianes Ltda. ya cobró USD 797.30 por la orden OC-2026-0418 en la factura SIG-460; esta repite el cobro con otro número."
+    },
+    {
+      "file": "Imagenes/factura_020.png",
+      "format": "image",
+      "expected_extraction": {
+        "invoice_number": "SLM-139",
+        "vendor_name": "Servicios Logísticos Meridian S.A.S.",
+        "vendor_tax_id": "900.964.215-8",
+        "beneficiary_account": "67805849893",
+        "amount": "880.60",
+        "currency": "USD",
+        "issue_date": "2026-09-03",
+        "due_date": "2026-10-18",
+        "po_reference": "OC-2026-0999",
+        "description": "Alquiler de montacargas por día"
+      },
+      "expected_outcome": "block",
+      "failed_rules": [
+        "R03"
+      ],
+      "case": "proveedor_no_permitido",
+      "reason": "Rechazada: Proveedor no permitido: Servicios Logísticos Meridian S.A.S. no está en la lista de beneficiarios permitidos."
+    },
+    {
+      "file": "PDFS/factura_021.pdf",
+      "format": "pdf",
+      "expected_extraction": {
+        "invoice_number": "PCB-523",
+        "vendor_name": "Publicidad Creativa Bogotá S.A.S.",
+        "vendor_tax_id": "800.199.036-1",
+        "beneficiary_account": "72923393128",
+        "amount": "124.95",
+        "currency": "USD",
+        "issue_date": "2026-09-03",
+        "due_date": "2026-10-03",
+        "po_reference": "OC-2026-0429",
+        "description": "Pendón publicitario"
+      },
+      "expected_outcome": "pay",
+      "failed_rules": [],
+      "case": "normal",
+      "reason": "Pagar USD 124.95 a Publicidad Creativa Bogotá S.A.S.: se cumplen todas las reglas."
+    },
+    {
+      "file": "PDFS/factura_022.pdf",
+      "format": "pdf",
+      "expected_extraction": {
+        "invoice_number": "SIG-454",
+        "vendor_name": "Seguridad Integral Guardianes Ltda.",
+        "vendor_tax_id": "830.082.649-1",
+        "beneficiary_account": "90663776548",
+        "amount": "368.90",
+        "currency": "USD",
+        "issue_date": "2026-09-05",
+        "due_date": "2026-10-05",
+        "po_reference": "OC-2026-0409",
+        "description": "Ronda de supervisión adicional"
+      },
+      "expected_outcome": "pay",
+      "failed_rules": [],
+      "case": "normal",
+      "reason": "Pagar USD 368.90 a Seguridad Integral Guardianes Ltda.: se cumplen todas las reglas."
+    },
+    {
+      "file": "Correos/factura_023.eml",
+      "format": "email",
+      "expected_extraction": {
+        "invoice_number": "TRC-696",
+        "vendor_name": "Tecnoredes Colombia Ltda.",
+        "vendor_tax_id": "830.114.921-1",
+        "beneficiary_account": "86447545986",
+        "amount": "547.40",
+        "currency": "USD",
+        "issue_date": "2026-09-06",
+        "due_date": "2026-10-06",
+        "po_reference": "OC-2026-0439",
+        "description": "Access point WiFi 6"
+      },
+      "expected_outcome": "pay",
+      "failed_rules": [],
+      "case": "normal",
+      "reason": "Pagar USD 547.40 a Tecnoredes Colombia Ltda.: se cumplen todas las reglas."
+    },
+    {
+      "file": "Imagenes/factura_024.jpg",
+      "format": "image",
+      "expected_extraction": {
+        "invoice_number": "TRC-727",
+        "vendor_name": "Tecnoredes Colombia Ltda.",
+        "vendor_tax_id": "830.114.921-1",
+        "beneficiary_account": "86447545986",
+        "amount": "702.10",
+        "currency": "USD",
+        "issue_date": "2026-09-03",
+        "due_date": "2026-10-03",
+        "po_reference": "OC-2026-0472",
+        "description": "Cable UTP Cat6 caja 305 m"
+      },
+      "expected_outcome": "pay",
+      "failed_rules": [],
+      "case": "normal",
+      "reason": "Pagar USD 702.10 a Tecnoredes Colombia Ltda.: se cumplen todas las reglas."
+    },
+    {
+      "file": "Textos/factura_025.txt",
+      "format": "text",
+      "expected_extraction": {
+        "invoice_number": "ATS-831",
+        "vendor_name": "Aseo Total Servicios S.A.S.",
+        "vendor_tax_id": "901.022.366-3",
+        "beneficiary_account": "81629733626",
+        "amount": "261.80",
+        "currency": "USD",
+        "issue_date": "2026-09-03",
+        "due_date": null,
+        "po_reference": "OC-2026-0466",
+        "description": "Fumigación de instalaciones"
+      },
+      "expected_outcome": "pay",
+      "failed_rules": [],
+      "case": "normal",
+      "reason": "Pagar USD 261.80 a Aseo Total Servicios S.A.S.: se cumplen todas las reglas."
+    },
+    {
+      "file": "Imagenes/factura_026.jpg",
+      "format": "image",
+      "expected_extraction": {
+        "invoice_number": "MIC-382",
+        "vendor_name": "Mantenimiento Industrial Cundinamarca S.A.S.",
+        "vendor_tax_id": "900.718.452-3",
+        "beneficiary_account": "68367326817",
+        "amount": "844.90",
+        "currency": "USD",
+        "issue_date": "2026-09-06",
+        "due_date": "2026-10-06",
+        "po_reference": "OC-2026-0422",
+        "description": "Mantenimiento preventivo aire acondicionado"
+      },
+      "expected_outcome": "pay",
+      "failed_rules": [],
+      "case": "normal",
+      "reason": "Pagar USD 844.90 a Mantenimiento Industrial Cundinamarca S.A.S.: se cumplen todas las reglas."
+    },
+    {
+      "file": "Imagenes/factura_027.png",
+      "format": "image",
+      "expected_extraction": {
+        "invoice_number": "PSN-316",
+        "vendor_name": "Papelería y Suministros del Norte S.A.S.",
+        "vendor_tax_id": "900.231.584-5",
+        "beneficiary_account": "71091652208",
+        "amount": "310.59",
+        "currency": "USD",
+        "issue_date": "2026-09-07",
+        "due_date": "2026-10-22",
+        "po_reference": "OC-2026-0410",
+        "description": "Resma papel carta x500 hojas"
+      },
+      "expected_outcome": "pay",
+      "failed_rules": [],
+      "case": "normal",
+      "reason": "Pagar USD 310.59 a Papelería y Suministros del Norte S.A.S.: se cumplen todas las reglas."
+    },
+    {
+      "file": "PDFS/factura_028.pdf",
+      "format": "pdf",
+      "expected_extraction": {
+        "invoice_number": "TRC-696",
+        "vendor_name": "Tecnoredes Colombia Ltda.",
+        "vendor_tax_id": "830.114.921-1",
+        "beneficiary_account": "86447545986",
+        "amount": "547.40",
+        "currency": "USD",
+        "issue_date": "2026-09-06",
+        "due_date": "2026-10-06",
+        "po_reference": "OC-2026-0439",
+        "description": "Access point WiFi 6"
+      },
+      "expected_outcome": "block",
+      "failed_rules": [
+        "R02"
+      ],
+      "case": "duplicado",
+      "reason": "Rechazada: Duplicada: la factura TRC-696 de Tecnoredes Colombia Ltda. ya fue registrada."
+    },
+    {
+      "file": "PDFS/factura_029.pdf",
+      "format": "pdf",
+      "expected_extraction": {
+        "invoice_number": "CDE-112",
+        "vendor_name": "Comercializadora Delta Express S.A.S.",
+        "vendor_tax_id": "901.587.432-6",
+        "beneficiary_account": "62690944157",
+        "amount": "226.10",
+        "currency": "USD",
+        "issue_date": "2026-09-09",
+        "due_date": "2026-10-24",
+        "po_reference": "No aplica",
+        "description": "Papelería surtida por lote"
+      },
+      "expected_outcome": "block",
+      "failed_rules": [
+        "R03"
+      ],
+      "case": "proveedor_no_permitido",
+      "reason": "Rechazada: Proveedor no permitido: Comercializadora Delta Express S.A.S. no está en la lista de beneficiarios permitidos."
+    },
+    {
+      "file": "Correos/factura_030.eml",
+      "format": "email",
+      "expected_extraction": {
+        "invoice_number": "SIG-477",
+        "vendor_name": "Seguridad Integral Guardianes Ltda.",
+        "vendor_tax_id": "830.082.649-1",
+        "beneficiary_account": "90663776548",
+        "amount": "440.30",
+        "currency": "USD",
+        "issue_date": "2026-09-11",
+        "due_date": "2026-10-26",
+        "po_reference": "OC-2026-0447",
+        "description": "Monitoreo de alarma mensual"
+      },
+      "expected_outcome": "pay",
+      "failed_rules": [],
+      "case": "normal",
+      "reason": "Pagar USD 440.30 a Seguridad Integral Guardianes Ltda.: se cumplen todas las reglas."
+    },
+    {
+      "file": "Textos/factura_031.txt",
+      "format": "text",
+      "expected_extraction": {
+        "invoice_number": "SIG-454",
+        "vendor_name": "Seguridad Integral Guardianes Ltda.",
+        "vendor_tax_id": "830.082.649-1",
+        "beneficiary_account": "90663776548",
+        "amount": "368.90",
+        "currency": "USD",
+        "issue_date": "2026-09-05",
+        "due_date": null,
+        "po_reference": "OC-2026-0409",
+        "description": "Ronda de supervisión adicional"
+      },
+      "expected_outcome": "block",
+      "failed_rules": [
+        "R02"
+      ],
+      "case": "duplicado",
+      "reason": "Rechazada: Duplicada: la factura SIG-454 de Seguridad Integral Guardianes Ltda. ya fue registrada."
+    },
+    {
+      "file": "Textos/factura_032.txt",
+      "format": "text",
+      "expected_extraction": {
+        "invoice_number": "ACS-519",
+        "vendor_name": "Alimentos y Catering El Sabor S.A.S.",
+        "vendor_tax_id": "901.350.127-6",
+        "beneficiary_account": "76408675855",
+        "amount": "442.68",
+        "currency": "USD",
+        "issue_date": "2026-09-10",
+        "due_date": null,
+        "po_reference": "OC-2026-0412",
+        "description": "Refrigerio por persona"
+      },
+      "expected_outcome": "pay",
+      "failed_rules": [],
+      "case": "normal",
+      "reason": "Pagar USD 442.68 a Alimentos y Catering El Sabor S.A.S.: se cumplen todas las reglas."
+    },
+    {
+      "file": "PDFS/factura_033.pdf",
+      "format": "pdf",
+      "expected_extraction": {
+        "invoice_number": "SIG-447",
+        "vendor_name": "Seguridad Integral Guardianes Ltda.",
+        "vendor_tax_id": "830.082.649-1",
+        "beneficiary_account": "90663776548",
+        "amount": "190.40",
+        "currency": "USD",
+        "issue_date": "2026-09-09",
+        "due_date": "2026-10-24",
+        "po_reference": "OC-2026-0405",
+        "description": "Instalación de cámara CCTV por punto"
+      },
+      "expected_outcome": "pay",
+      "failed_rules": [],
+      "case": "normal",
+      "reason": "Pagar USD 190.40 a Seguridad Integral Guardianes Ltda.: se cumplen todas las reglas."
+    },
+    {
+      "file": "Imagenes/factura_034.jpg",
+      "format": "image",
+      "expected_extraction": {
+        "invoice_number": "ACS-525",
+        "vendor_name": "Alimentos y Catering El Sabor S.A.S.",
+        "vendor_tax_id": "901.350.127-6",
+        "beneficiary_account": "76408675855",
+        "amount": "160.65",
+        "currency": "USD",
+        "issue_date": "2026-09-10",
+        "due_date": "2026-10-10",
+        "po_reference": "OC-2026-0442",
+        "description": "Servicio de café para evento"
+      },
+      "expected_outcome": "pay",
+      "failed_rules": [],
+      "case": "normal",
+      "reason": "Pagar USD 160.65 a Alimentos y Catering El Sabor S.A.S.: se cumplen todas las reglas."
+    },
+    {
+      "file": "Textos/factura_035.txt",
+      "format": "text",
+      "expected_extraction": {
+        "invoice_number": "SIG-469",
+        "vendor_name": "Seguridad Integral Guardianes Ltda.",
+        "vendor_tax_id": "830.082.649-1",
+        "beneficiary_account": "90663776548",
+        "amount": "53.55",
+        "currency": "USD",
+        "issue_date": "2026-09-12",
+        "due_date": null,
+        "po_reference": "OC-2026-0428",
+        "description": "Monitoreo de alarma mensual"
+      },
+      "expected_outcome": "pay",
+      "failed_rules": [],
+      "case": "normal",
+      "reason": "Pagar USD 53.55 a Seguridad Integral Guardianes Ltda.: se cumplen todas las reglas."
+    },
+    {
+      "file": "Textos/factura_036.txt",
+      "format": "text",
+      "expected_extraction": {
+        "invoice_number": "ACS-515",
+        "vendor_name": "Alimentos y Catering El Sabor S.A.S.",
+        "vendor_tax_id": "901.350.127-6",
+        "beneficiary_account": "76408675855",
+        "amount": "114.24",
+        "currency": "USD",
+        "issue_date": "2026-09-14",
+        "due_date": null,
+        "po_reference": "OC-2026-0404",
+        "description": "Almuerzo ejecutivo corporativo"
+      },
+      "expected_outcome": "pay",
+      "failed_rules": [],
+      "case": "normal",
+      "reason": "Pagar USD 114.24 a Alimentos y Catering El Sabor S.A.S.: se cumplen todas las reglas."
+    },
+    {
+      "file": "Imagenes/factura_037.png",
+      "format": "image",
+      "expected_extraction": {
+        "invoice_number": "PCB-538",
+        "vendor_name": "Publicidad Creativa Bogotá S.A.S.",
+        "vendor_tax_id": "800.199.036-1",
+        "beneficiary_account": "72923393128",
+        "amount": "238.00",
+        "currency": "USD",
+        "issue_date": "2026-09-13",
+        "due_date": "2026-10-13",
+        "po_reference": "OC-2026-0468",
+        "description": "Pendón publicitario"
+      },
+      "expected_outcome": "pay",
+      "failed_rules": [],
+      "case": "normal",
+      "reason": "Pagar USD 238.00 a Publicidad Creativa Bogotá S.A.S.: se cumplen todas las reglas."
+    },
+    {
+      "file": "Imagenes/factura_038.png",
+      "format": "image",
+      "expected_extraction": {
+        "invoice_number": "PSN-342",
+        "vendor_name": "Papelería y Suministros del Norte S.A.S.",
+        "vendor_tax_id": "900.231.584-5",
+        "beneficiary_account": "71091652208",
+        "amount": "689.01",
+        "currency": "USD",
+        "issue_date": "2026-09-13",
+        "due_date": "2026-10-13",
+        "po_reference": "OC-2026-0454",
+        "description": "Archivador AZ tamaño oficio"
+      },
+      "expected_outcome": "pay",
+      "failed_rules": [],
+      "case": "normal",
+      "reason": "Pagar USD 689.01 a Papelería y Suministros del Norte S.A.S.: se cumplen todas las reglas."
+    },
+    {
+      "file": "Correos/factura_039.eml",
+      "format": "email",
+      "expected_extraction": {
+        "invoice_number": "ATS-802",
+        "vendor_name": "Aseo Total Servicios S.A.S.",
+        "vendor_tax_id": "901.022.366-3",
+        "beneficiary_account": "81629733626",
+        "amount": "1059.10",
+        "currency": "USD",
+        "issue_date": "2026-09-14",
+        "due_date": "2026-10-14",
+        "po_reference": "OC-2026-0403",
+        "description": "Fumigación de instalaciones"
+      },
+      "expected_outcome": "pay",
+      "failed_rules": [],
+      "case": "normal",
+      "reason": "Pagar USD 1,059.10 a Aseo Total Servicios S.A.S.: se cumplen todas las reglas."
+    },
+    {
+      "file": "Textos/factura_040.txt",
+      "format": "text",
+      "expected_extraction": {
+        "invoice_number": "PSN-318",
+        "vendor_name": "Papelería y Suministros del Norte S.A.S.",
+        "vendor_tax_id": "900.231.584-5",
+        "beneficiary_account": "71091652208",
+        "amount": "357.00",
+        "currency": "USD",
+        "issue_date": "2026-09-14",
+        "due_date": null,
+        "po_reference": "OC-2026-0420",
+        "description": "Tóner HP 85A compatible"
+      },
+      "expected_outcome": "pay",
+      "failed_rules": [],
+      "case": "normal",
+      "reason": "Pagar USD 357.00 a Papelería y Suministros del Norte S.A.S.: se cumplen todas las reglas."
+    },
+    {
+      "file": "Imagenes/factura_041.png",
+      "format": "image",
+      "expected_extraction": {
+        "invoice_number": "SLM-147",
+        "vendor_name": "Servicios Logísticos Meridian S.A.S.",
+        "vendor_tax_id": "900.964.215-8",
+        "beneficiary_account": "67805849893",
+        "amount": "101.15",
+        "currency": "USD",
+        "issue_date": "2026-09-15",
+        "due_date": "2026-10-15",
+        "po_reference": "OC-2026-0999",
+        "description": "Embalaje industrial por lote"
+      },
+      "expected_outcome": "block",
+      "failed_rules": [
+        "R03"
+      ],
+      "case": "proveedor_no_permitido",
+      "reason": "Rechazada: Proveedor no permitido: Servicios Logísticos Meridian S.A.S. no está en la lista de beneficiarios permitidos."
+    },
+    {
+      "file": "PDFS/factura_042.pdf",
+      "format": "pdf",
+      "expected_extraction": {
+        "invoice_number": "TRC-681",
+        "vendor_name": "Tecnoredes Colombia Ltda.",
+        "vendor_tax_id": "830.114.921-1",
+        "beneficiary_account": "86447545986",
+        "amount": "1201.90",
+        "currency": "USD",
+        "issue_date": "2026-09-14",
+        "due_date": "2026-10-14",
+        "po_reference": "OC-2026-0401",
+        "description": "Switch administrable 24 puertos"
+      },
+      "expected_outcome": "pay",
+      "failed_rules": [],
+      "case": "normal",
+      "reason": "Pagar USD 1,201.90 a Tecnoredes Colombia Ltda.: se cumplen todas las reglas."
+    },
+    {
+      "file": "Textos/factura_043.txt",
+      "format": "text",
+      "expected_extraction": {
+        "invoice_number": "MIC-382",
+        "vendor_name": "Mantenimiento Industrial Cundinamarca S.A.S.",
+        "vendor_tax_id": "900.718.452-3",
+        "beneficiary_account": "68367326817",
+        "amount": "844.90",
+        "currency": "USD",
+        "issue_date": "2026-09-06",
+        "due_date": null,
+        "po_reference": "OC-2026-0422",
+        "description": "Mantenimiento preventivo aire acondicionado"
+      },
+      "expected_outcome": "block",
+      "failed_rules": [
+        "R02"
+      ],
+      "case": "duplicado",
+      "reason": "Rechazada: Duplicada: la factura MIC-382 de Mantenimiento Industrial Cundinamarca S.A.S. ya fue registrada."
+    },
+    {
+      "file": "Correos/factura_044.eml",
+      "format": "email",
+      "expected_extraction": {
+        "invoice_number": "SIG-500",
+        "vendor_name": "Seguridad Integral Guardianes Ltda.",
+        "vendor_tax_id": "830.082.649-1",
+        "beneficiary_account": "90663776548",
+        "amount": "190.40",
+        "currency": "USD",
+        "issue_date": "2026-09-10",
+        "due_date": "2026-10-25",
+        "po_reference": "OC-2026-0405",
+        "description": "Instalación de cámara CCTV por punto"
+      },
+      "expected_outcome": "block",
+      "failed_rules": [
+        "R02"
+      ],
+      "case": "duplicado",
+      "reason": "Rechazada: Duplicada: Seguridad Integral Guardianes Ltda. ya cobró USD 190.40 por la orden OC-2026-0405 en la factura SIG-447; esta repite el cobro con otro número."
+    },
+    {
+      "file": "Textos/factura_045.txt",
+      "format": "text",
+      "expected_extraction": {
+        "invoice_number": "PCB-535",
+        "vendor_name": "Publicidad Creativa Bogotá S.A.S.",
+        "vendor_tax_id": "800.199.036-1",
+        "beneficiary_account": "72923393128",
+        "amount": "440.30",
+        "currency": "USD",
+        "issue_date": "2026-09-14",
+        "due_date": null,
+        "po_reference": "OC-2026-0452",
+        "description": "Diseño de pieza gráfica"
+      },
+      "expected_outcome": "pay",
+      "failed_rules": [],
+      "case": "normal",
+      "reason": "Pagar USD 440.30 a Publicidad Creativa Bogotá S.A.S.: se cumplen todas las reglas."
+    },
+    {
+      "file": "Textos/factura_046.txt",
+      "format": "text",
+      "expected_extraction": {
+        "invoice_number": "ATS-818",
+        "vendor_name": "Aseo Total Servicios S.A.S.",
+        "vendor_tax_id": "901.022.366-3",
+        "beneficiary_account": "81629733626",
+        "amount": "809.20",
+        "currency": "USD",
+        "issue_date": "2026-09-16",
+        "due_date": null,
+        "po_reference": "OC-2026-0416",
+        "description": "Kit mensual de insumos de limpieza"
+      },
+      "expected_outcome": "pay",
+      "failed_rules": [],
+      "case": "normal",
+      "reason": "Pagar USD 809.20 a Aseo Total Servicios S.A.S.: se cumplen todas las reglas."
+    },
+    {
+      "file": "PDFS/factura_047.pdf",
+      "format": "pdf",
+      "expected_extraction": {
+        "invoice_number": "PSN-328",
+        "vendor_name": "Papelería y Suministros del Norte S.A.S.",
+        "vendor_tax_id": "900.231.584-5",
+        "beneficiary_account": "71091652208",
+        "amount": "107.10",
+        "currency": "USD",
+        "issue_date": "2026-09-18",
+        "due_date": "2026-11-02",
+        "po_reference": "OC-2026-0425",
+        "description": "Archivador AZ tamaño oficio"
+      },
+      "expected_outcome": "pay",
+      "failed_rules": [],
+      "case": "normal",
+      "reason": "Pagar USD 107.10 a Papelería y Suministros del Norte S.A.S.: se cumplen todas las reglas."
+    },
+    {
+      "file": "Imagenes/factura_048.png",
+      "format": "image",
+      "expected_extraction": {
+        "invoice_number": "MIC-394",
+        "vendor_name": "Mantenimiento Industrial Cundinamarca S.A.S.",
+        "vendor_tax_id": "900.718.452-3",
+        "beneficiary_account": "68367326817",
+        "amount": "1063.86",
+        "currency": "USD",
+        "issue_date": "2026-09-19",
+        "due_date": "2026-10-19",
+        "po_reference": "OC-2026-0430",
+        "description": "Mantenimiento preventivo aire acondicionado"
+      },
+      "expected_outcome": "pay",
+      "failed_rules": [],
+      "case": "normal",
+      "reason": "Pagar USD 1,063.86 a Mantenimiento Industrial Cundinamarca S.A.S.: se cumplen todas las reglas."
+    },
+    {
+      "file": "Textos/factura_049.txt",
+      "format": "text",
+      "expected_extraction": {
+        "invoice_number": "SIG-472",
+        "vendor_name": "Seguridad Integral Guardianes Ltda.",
+        "vendor_tax_id": "830.082.649-1",
+        "beneficiary_account": "90663776548",
+        "amount": "416.50",
+        "currency": "USD",
+        "issue_date": "2026-09-19",
+        "due_date": null,
+        "po_reference": "OC-2026-0432",
+        "description": "Monitoreo de alarma mensual"
+      },
+      "expected_outcome": "pay",
+      "failed_rules": [],
+      "case": "normal",
+      "reason": "Pagar USD 416.50 a Seguridad Integral Guardianes Ltda.: se cumplen todas las reglas."
+    },
+    {
+      "file": "PDFS/factura_050.pdf",
+      "format": "pdf",
+      "expected_extraction": {
+        "invoice_number": "CDE-118",
+        "vendor_name": "Comercializadora Delta Express S.A.S.",
+        "vendor_tax_id": "901.587.432-6",
+        "beneficiary_account": "62690944157",
+        "amount": "452.20",
+        "currency": "USD",
+        "issue_date": "2026-09-17",
+        "due_date": "2026-10-17",
+        "po_reference": "No aplica",
+        "description": "Papelería surtida por lote"
+      },
+      "expected_outcome": "block",
+      "failed_rules": [
+        "R03"
+      ],
+      "case": "proveedor_no_permitido",
+      "reason": "Rechazada: Proveedor no permitido: Comercializadora Delta Express S.A.S. no está en la lista de beneficiarios permitidos."
+    },
+    {
+      "file": "Correos/factura_051.eml",
+      "format": "email",
+      "expected_extraction": {
+        "invoice_number": "MIC-412",
+        "vendor_name": "Mantenimiento Industrial Cundinamarca S.A.S.",
+        "vendor_tax_id": "900.718.452-3",
+        "beneficiary_account": "68367326817",
+        "amount": "821.10",
+        "currency": "USD",
+        "issue_date": "2026-09-17",
+        "due_date": "2026-10-17",
+        "po_reference": "OC-2026-0469",
+        "description": "Cambio de filtros industriales"
+      },
+      "expected_outcome": "pay",
+      "failed_rules": [],
+      "case": "normal",
+      "reason": "Pagar USD 821.10 a Mantenimiento Industrial Cundinamarca S.A.S.: se cumplen todas las reglas."
+    },
+    {
+      "file": "Imagenes/factura_052.jpg",
+      "format": "image",
+      "expected_extraction": {
+        "invoice_number": "ATS-826",
+        "vendor_name": "Aseo Total Servicios S.A.S.",
+        "vendor_tax_id": "901.022.366-3",
+        "beneficiary_account": "81629733626",
+        "amount": "856.80",
+        "currency": "USD",
+        "issue_date": "2026-09-18",
+        "due_date": "2026-11-02",
+        "po_reference": "OC-2026-0450",
+        "description": "Fumigación de instalaciones"
+      },
+      "expected_outcome": "pay",
+      "failed_rules": [],
+      "case": "normal",
+      "reason": "Pagar USD 856.80 a Aseo Total Servicios S.A.S.: se cumplen todas las reglas."
+    },
+    {
+      "file": "Correos/factura_053.eml",
+      "format": "email",
+      "expected_extraction": {
+        "invoice_number": "TRA-526",
+        "vendor_name": "Transportes Rápido Andino S.A.",
+        "vendor_tax_id": "860.045.873-7",
+        "beneficiary_account": "14231607409",
+        "amount": "928.20",
+        "currency": "USD",
+        "issue_date": "2026-09-20",
+        "due_date": "2026-10-20",
+        "po_reference": "OC-2026-0435",
+        "description": "Flete Bogotá - Cali tractomula"
+      },
+      "expected_outcome": "pay",
+      "failed_rules": [],
+      "case": "normal",
+      "reason": "Pagar USD 928.20 a Transportes Rápido Andino S.A.: se cumplen todas las reglas."
+    },
+    {
+      "file": "PDFS/factura_054.pdf",
+      "format": "pdf",
+      "expected_extraction": {
+        "invoice_number": "TRA-553",
+        "vendor_name": "Transportes Rápido Andino S.A.",
+        "vendor_tax_id": "860.045.873-7",
+        "beneficiary_account": "14231607409",
+        "amount": "4044.81",
+        "currency": "USD",
+        "issue_date": "2026-09-18",
+        "due_date": "2026-11-02",
+        "po_reference": "OC-2026-0479",
+        "description": "Cargue y descargue"
+      },
+      "expected_outcome": "pay",
+      "failed_rules": [],
+      "case": "normal",
+      "reason": "Pagar USD 4,044.81 a Transportes Rápido Andino S.A.: se cumplen todas las reglas."
+    },
+    {
+      "file": "PDFS/factura_055.pdf",
+      "format": "pdf",
+      "expected_extraction": {
+        "invoice_number": "SIG-476",
+        "vendor_name": "Seguridad Integral Guardianes Ltda.",
+        "vendor_tax_id": "830.082.649-1",
+        "beneficiary_account": "90663776548",
+        "amount": "380.80",
+        "currency": "USD",
+        "issue_date": "2026-09-20",
+        "due_date": "2026-10-20",
+        "po_reference": "OC-2026-0441",
+        "description": "Ronda de supervisión adicional"
+      },
+      "expected_outcome": "pay",
+      "failed_rules": [],
+      "case": "normal",
+      "reason": "Pagar USD 380.80 a Seguridad Integral Guardianes Ltda.: se cumplen todas las reglas."
+    },
+    {
+      "file": "Imagenes/factura_056.jpg",
+      "format": "image",
+      "expected_extraction": {
+        "invoice_number": "ATS-823",
+        "vendor_name": "Aseo Total Servicios S.A.S.",
+        "vendor_tax_id": "901.022.366-3",
+        "beneficiary_account": "81629733626",
+        "amount": "580.72",
+        "currency": "USD",
+        "issue_date": "2026-09-21",
+        "due_date": "2026-10-21",
+        "po_reference": "OC-2026-0438",
+        "description": "Dispensador de jabón"
+      },
+      "expected_outcome": "pay",
+      "failed_rules": [],
+      "case": "normal",
+      "reason": "Pagar USD 580.72 a Aseo Total Servicios S.A.S.: se cumplen todas las reglas."
+    },
+    {
+      "file": "PDFS/factura_057.pdf",
+      "format": "pdf",
+      "expected_extraction": {
+        "invoice_number": "TRA-554",
+        "vendor_name": "Transportes Rápido Andino S.A.",
+        "vendor_tax_id": "860.045.873-7",
+        "beneficiary_account": "14231607409",
+        "amount": "3105.90",
+        "currency": "USD",
+        "issue_date": "2026-09-22",
+        "due_date": "2026-10-22",
+        "po_reference": "OC-2026-0483",
+        "description": "Flete Bogotá - Cali tractomula"
+      },
+      "expected_outcome": "pay",
+      "failed_rules": [],
+      "case": "normal",
+      "reason": "Pagar USD 3,105.90 a Transportes Rápido Andino S.A.: se cumplen todas las reglas."
+    },
+    {
+      "file": "PDFS/factura_058.pdf",
+      "format": "pdf",
+      "expected_extraction": {
+        "invoice_number": "TRA-535",
+        "vendor_name": "Transportes Rápido Andino S.A.",
+        "vendor_tax_id": "860.045.873-7",
+        "beneficiary_account": "14231607409",
+        "amount": "928.20",
+        "currency": "USD",
+        "issue_date": "2026-09-22",
+        "due_date": "2026-10-22",
+        "po_reference": "OC-2026-0453",
+        "description": "Flete Bogotá - Cali tractomula"
+      },
+      "expected_outcome": "pay",
+      "failed_rules": [],
+      "case": "normal",
+      "reason": "Pagar USD 928.20 a Transportes Rápido Andino S.A.: se cumplen todas las reglas."
+    },
+    {
+      "file": "Imagenes/factura_059.png",
+      "format": "image",
+      "expected_extraction": {
+        "invoice_number": "ACS-518",
+        "vendor_name": "Alimentos y Catering El Sabor S.A.S.",
+        "vendor_tax_id": "901.350.127-6",
+        "beneficiary_account": "76408675855",
+        "amount": "135.66",
+        "currency": "USD",
+        "issue_date": "2026-09-23",
+        "due_date": "2026-10-23",
+        "po_reference": "OC-2026-0406",
+        "description": "Almuerzo ejecutivo corporativo"
+      },
+      "expected_outcome": "pay",
+      "failed_rules": [],
+      "case": "normal",
+      "reason": "Pagar USD 135.66 a Alimentos y Catering El Sabor S.A.S.: se cumplen todas las reglas."
+    },
+    {
+      "file": "Textos/factura_060.txt",
+      "format": "text",
+      "expected_extraction": {
+        "invoice_number": "PCB-544",
+        "vendor_name": "Publicidad Creativa Bogotá S.A.S.",
+        "vendor_tax_id": "800.199.036-1",
+        "beneficiary_account": "72923393128",
+        "amount": "464.10",
+        "currency": "USD",
+        "issue_date": "2026-09-21",
+        "due_date": null,
+        "po_reference": "OC-2026-0474",
+        "description": "Diseño de pieza gráfica"
+      },
+      "expected_outcome": "pay",
+      "failed_rules": [],
+      "case": "normal",
+      "reason": "Pagar USD 464.10 a Publicidad Creativa Bogotá S.A.S.: se cumplen todas las reglas."
+    },
+    {
+      "file": "PDFS/factura_061.pdf",
+      "format": "pdf",
+      "expected_extraction": {
+        "invoice_number": "MIC-407",
+        "vendor_name": "Mantenimiento Industrial Cundinamarca S.A.S.",
+        "vendor_tax_id": "900.718.452-3",
+        "beneficiary_account": "68367326817",
+        "amount": "373.66",
+        "currency": "USD",
+        "issue_date": "2026-09-21",
+        "due_date": "2026-11-05",
+        "po_reference": "OC-2026-0467",
+        "description": "Revisión de planta eléctrica"
+      },
+      "expected_outcome": "pay",
+      "failed_rules": [],
+      "case": "normal",
+      "reason": "Pagar USD 373.66 a Mantenimiento Industrial Cundinamarca S.A.S.: se cumplen todas las reglas."
+    },
+    {
+      "file": "Textos/factura_062.txt",
+      "format": "text",
+      "expected_extraction": {
+        "invoice_number": "ACS-528",
+        "vendor_name": "Alimentos y Catering El Sabor S.A.S.",
+        "vendor_tax_id": "901.350.127-6",
+        "beneficiary_account": "76408675855",
+        "amount": "844.90",
+        "currency": "USD",
+        "issue_date": "2026-09-23",
+        "due_date": null,
+        "po_reference": "OC-2026-0456",
+        "description": "Servicio de café para evento"
+      },
+      "expected_outcome": "pay",
+      "failed_rules": [],
+      "case": "normal",
+      "reason": "Pagar USD 844.90 a Alimentos y Catering El Sabor S.A.S.: se cumplen todas las reglas."
+    },
+    {
+      "file": "Correos/factura_063.eml",
+      "format": "email",
+      "expected_extraction": {
+        "invoice_number": "TRC-708",
+        "vendor_name": "Tecnoredes Colombia Ltda.",
+        "vendor_tax_id": "830.114.921-1",
+        "beneficiary_account": "86447545986",
+        "amount": "1130.50",
+        "currency": "USD",
+        "issue_date": "2026-09-21",
+        "due_date": "2026-10-21",
+        "po_reference": "OC-2026-0455",
+        "description": "Cable UTP Cat6 caja 305 m"
+      },
+      "expected_outcome": "pay",
+      "failed_rules": [],
+      "case": "normal",
+      "reason": "Pagar USD 1,130.50 a Tecnoredes Colombia Ltda.: se cumplen todas las reglas."
+    },
+    {
+      "file": "Textos/factura_064.txt",
+      "format": "text",
+      "expected_extraction": {
+        "invoice_number": "ATS-824",
+        "vendor_name": "Aseo Total Servicios S.A.S.",
+        "vendor_tax_id": "901.022.366-3",
+        "beneficiary_account": "81629733626",
+        "amount": "556.92",
+        "currency": "USD",
+        "issue_date": "2026-09-21",
+        "due_date": null,
+        "po_reference": "OC-2026-0448",
+        "description": "Dispensador de jabón"
+      },
+      "expected_outcome": "pay",
+      "failed_rules": [],
+      "case": "normal",
+      "reason": "Pagar USD 556.92 a Aseo Total Servicios S.A.S.: se cumplen todas las reglas."
+    },
+    {
+      "file": "PDFS/factura_065.pdf",
+      "format": "pdf",
+      "expected_extraction": {
+        "invoice_number": "PSN-341",
+        "vendor_name": "Papelería y Suministros del Norte S.A.S.",
+        "vendor_tax_id": "900.231.584-5",
+        "beneficiary_account": "71091652208",
+        "amount": "516.46",
+        "currency": "USD",
+        "issue_date": "2026-09-22",
+        "due_date": "2026-10-22",
+        "po_reference": "OC-2026-0437",
+        "description": "Archivador AZ tamaño oficio"
+      },
+      "expected_outcome": "pay",
+      "failed_rules": [],
+      "case": "normal",
+      "reason": "Pagar USD 516.46 a Papelería y Suministros del Norte S.A.S.: se cumplen todas las reglas."
+    },
+    {
+      "file": "Imagenes/factura_066.png",
+      "format": "image",
+      "expected_extraction": {
+        "invoice_number": "PCB-535",
+        "vendor_name": "Publicidad Creativa Bogotá S.A.S.",
+        "vendor_tax_id": "800.199.036-1",
+        "beneficiary_account": "72923393128",
+        "amount": "440.30",
+        "currency": "USD",
+        "issue_date": "2026-09-14",
+        "due_date": "2026-10-14",
+        "po_reference": "OC-2026-0452",
+        "description": "Diseño de pieza gráfica"
+      },
+      "expected_outcome": "block",
+      "failed_rules": [
+        "R02"
+      ],
+      "case": "duplicado",
+      "reason": "Rechazada: Duplicada: la factura PCB-535 de Publicidad Creativa Bogotá S.A.S. ya fue registrada."
+    },
+    {
+      "file": "Imagenes/factura_067.png",
+      "format": "image",
+      "expected_extraction": {
+        "invoice_number": "PCB-514",
+        "vendor_name": "Publicidad Creativa Bogotá S.A.S.",
+        "vendor_tax_id": "800.199.036-1",
+        "beneficiary_account": "72923393128",
+        "amount": "702.10",
+        "currency": "USD",
+        "issue_date": "2026-09-22",
+        "due_date": "2026-10-22",
+        "po_reference": "OC-2026-0402",
+        "description": "Diseño de pieza gráfica"
+      },
+      "expected_outcome": "pay",
+      "failed_rules": [],
+      "case": "normal",
+      "reason": "Pagar USD 702.10 a Publicidad Creativa Bogotá S.A.S.: se cumplen todas las reglas."
+    },
+    {
+      "file": "PDFS/factura_068.pdf",
+      "format": "pdf",
+      "expected_extraction": {
+        "invoice_number": "TRC-687",
+        "vendor_name": "Tecnoredes Colombia Ltda.",
+        "vendor_tax_id": "830.114.921-1",
+        "beneficiary_account": "86447545986",
+        "amount": "809.20",
+        "currency": "USD",
+        "issue_date": "2026-09-23",
+        "due_date": "2026-10-23",
+        "po_reference": "OC-2026-0413",
+        "description": "Switch administrable 24 puertos"
+      },
+      "expected_outcome": "pay",
+      "failed_rules": [],
+      "case": "normal",
+      "reason": "Pagar USD 809.20 a Tecnoredes Colombia Ltda.: se cumplen todas las reglas."
+    },
+    {
+      "file": "PDFS/factura_069.pdf",
+      "format": "pdf",
+      "expected_extraction": {
+        "invoice_number": "TRA-546",
+        "vendor_name": "Transportes Rápido Andino S.A.",
+        "vendor_tax_id": "860.045.873-7",
+        "beneficiary_account": "14231607409",
+        "amount": "2249.10",
+        "currency": "USD",
+        "issue_date": "2026-09-23",
+        "due_date": "2026-10-23",
+        "po_reference": "OC-2026-0475",
+        "description": "Flete Bogotá - Medellín camión sencillo"
+      },
+      "expected_outcome": "pay",
+      "failed_rules": [],
+      "case": "normal",
+      "reason": "Pagar USD 2,249.10 a Transportes Rápido Andino S.A.: se cumplen todas las reglas."
+    },
+    {
+      "file": "PDFS/factura_070.pdf",
+      "format": "pdf",
+      "expected_extraction": {
+        "invoice_number": "TRA-512",
+        "vendor_name": "Transportes Rápido Andino S.A.",
+        "vendor_tax_id": "860.045.873-7",
+        "beneficiary_account": "14231607409",
+        "amount": "1142.40",
+        "currency": "USD",
+        "issue_date": "2026-09-25",
+        "due_date": "2026-10-25",
+        "po_reference": "OC-2026-0417",
+        "description": "Cargue y descargue"
+      },
+      "expected_outcome": "pay",
+      "failed_rules": [],
+      "case": "normal",
+      "reason": "Pagar USD 1,142.40 a Transportes Rápido Andino S.A.: se cumplen todas las reglas."
+    },
+    {
+      "file": "Imagenes/factura_071.png",
+      "format": "image",
+      "expected_extraction": {
+        "invoice_number": "TRC-711",
+        "vendor_name": "Tecnoredes Colombia Ltda.",
+        "vendor_tax_id": "830.114.921-1",
+        "beneficiary_account": "86447545986",
+        "amount": "999.60",
+        "currency": "USD",
+        "issue_date": "2026-09-26",
+        "due_date": "2026-10-26",
+        "po_reference": "OC-2026-0458",
+        "description": "Access point WiFi 6"
+      },
+      "expected_outcome": "pay",
+      "failed_rules": [],
+      "case": "normal",
+      "reason": "Pagar USD 999.60 a Tecnoredes Colombia Ltda.: se cumplen todas las reglas."
+    },
+    {
+      "file": "Textos/factura_072.txt",
+      "format": "text",
+      "expected_extraction": {
+        "invoice_number": "PSN-323",
+        "vendor_name": "Papelería y Suministros del Norte S.A.S.",
+        "vendor_tax_id": "900.231.584-5",
+        "beneficiary_account": "71091652208",
+        "amount": "309.40",
+        "currency": "USD",
+        "issue_date": "2026-09-24",
+        "due_date": null,
+        "po_reference": "OC-2026-0424",
+        "description": "Resma papel carta x500 hojas"
+      },
+      "expected_outcome": "pay",
+      "failed_rules": [],
+      "case": "normal",
+      "reason": "Pagar USD 309.40 a Papelería y Suministros del Norte S.A.S.: se cumplen todas las reglas."
+    },
+    {
+      "file": "Textos/factura_073.txt",
+      "format": "text",
+      "expected_extraction": {
+        "invoice_number": "ATS-838",
+        "vendor_name": "Aseo Total Servicios S.A.S.",
+        "vendor_tax_id": "901.022.366-3",
+        "beneficiary_account": "81629733626",
+        "amount": "2927.40",
+        "currency": "USD",
+        "issue_date": "2026-09-26",
+        "due_date": null,
+        "po_reference": "OC-2026-0478",
+        "description": "Servicio de aseo mensual por operario"
+      },
+      "expected_outcome": "pay",
+      "failed_rules": [],
+      "case": "normal",
+      "reason": "Pagar USD 2,927.40 a Aseo Total Servicios S.A.S.: se cumplen todas las reglas."
+    },
+    {
+      "file": "PDFS/factura_074.pdf",
+      "format": "pdf",
+      "expected_extraction": {
+        "invoice_number": "SIG-467",
+        "vendor_name": "Seguridad Integral Guardianes Ltda.",
+        "vendor_tax_id": "830.082.649-1",
+        "beneficiary_account": "90663776548",
+        "amount": "725.90",
+        "currency": "USD",
+        "issue_date": "2026-09-26",
+        "due_date": "2026-10-26",
+        "po_reference": "OC-2026-0421",
+        "description": "Monitoreo de alarma mensual"
+      },
+      "expected_outcome": "pay",
+      "failed_rules": [],
+      "case": "normal",
+      "reason": "Pagar USD 725.90 a Seguridad Integral Guardianes Ltda.: se cumplen todas las reglas."
+    },
+    {
+      "file": "Correos/factura_075.eml",
+      "format": "email",
+      "expected_extraction": {
+        "invoice_number": "ACS-533",
+        "vendor_name": "Alimentos y Catering El Sabor S.A.S.",
+        "vendor_tax_id": "901.350.127-6",
+        "beneficiary_account": "48325995592",
+        "amount": "414.12",
+        "currency": "USD",
+        "issue_date": "2026-09-25",
+        "due_date": "2026-11-09",
+        "po_reference": "OC-2026-0463",
+        "description": "Montaje de buffet"
+      },
+      "expected_outcome": "escalate",
+      "failed_rules": [
+        "R11"
+      ],
+      "case": "cambio_de_cuenta",
+      "reason": "Escalada a una persona: Revisión humana: la cuenta bancaria no coincide con la registrada; la cuenta bancaria cambió respecto al último pago."
+    },
+    {
+      "file": "Textos/factura_076.txt",
+      "format": "text",
+      "expected_extraction": {
+        "invoice_number": "ATS-807",
+        "vendor_name": "Aseo Total Servicios S.A.S.",
+        "vendor_tax_id": "901.022.366-3",
+        "beneficiary_account": "81629733626",
+        "amount": "1201.90",
+        "currency": "USD",
+        "issue_date": "2026-09-25",
+        "due_date": null,
+        "po_reference": "OC-2026-0408",
+        "description": "Kit mensual de insumos de limpieza"
+      },
+      "expected_outcome": "pay",
+      "failed_rules": [],
+      "case": "normal",
+      "reason": "Pagar USD 1,201.90 a Aseo Total Servicios S.A.S.: se cumplen todas las reglas."
+    },
+    {
+      "file": "Textos/factura_077.txt",
+      "format": "text",
+      "expected_extraction": {
+        "invoice_number": "TRC-694",
+        "vendor_name": "Tecnoredes Colombia Ltda.",
+        "vendor_tax_id": "830.114.921-1",
+        "beneficiary_account": "86447545986",
+        "amount": "368.90",
+        "currency": "USD",
+        "issue_date": "2026-09-24",
+        "due_date": null,
+        "po_reference": "OC-2026-0436",
+        "description": "Switch administrable 24 puertos"
+      },
+      "expected_outcome": "pay",
+      "failed_rules": [],
+      "case": "normal",
+      "reason": "Pagar USD 368.90 a Tecnoredes Colombia Ltda.: se cumplen todas las reglas."
+    },
+    {
+      "file": "PDFS/factura_078.pdf",
+      "format": "pdf",
+      "expected_extraction": {
+        "invoice_number": "ACS-527",
+        "vendor_name": "Alimentos y Catering El Sabor S.A.S.",
+        "vendor_tax_id": "901.350.127-6",
+        "beneficiary_account": "76408675855",
+        "amount": "199.92",
+        "currency": "USD",
+        "issue_date": "2026-09-27",
+        "due_date": "2026-10-27",
+        "po_reference": "OC-2026-0449",
+        "description": "Refrigerio por persona"
+      },
+      "expected_outcome": "escalate",
+      "failed_rules": [
+        "R09"
+      ],
+      "case": "tope_semanal",
+      "reason": "Escalada a una persona: Con esta factura se pagarían USD 50,127.56 en 7 días y el tope es USD 50,000.00: queda para revisión."
+    },
+    {
+      "file": "Imagenes/factura_079.jpg",
+      "format": "image",
+      "expected_extraction": {
+        "invoice_number": "SIG-484",
+        "vendor_name": "Seguridad Integral Guardianes Ltda.",
+        "vendor_tax_id": "830.082.649-1",
+        "beneficiary_account": "90663776548",
+        "amount": "3546.20",
+        "currency": "USD",
+        "issue_date": "2026-09-26",
+        "due_date": "2026-11-10",
+        "po_reference": "OC-2026-0476",
+        "description": "Monitoreo de alarma mensual"
+      },
+      "expected_outcome": "escalate",
+      "failed_rules": [
+        "R09"
+      ],
+      "case": "tope_semanal",
+      "reason": "Escalada a una persona: Con esta factura se pagarían USD 53,473.84 en 7 días y el tope es USD 50,000.00: queda para revisión."
+    },
+    {
+      "file": "Correos/factura_080.eml",
+      "format": "email",
+      "expected_extraction": {
+        "invoice_number": "TRC-721",
+        "vendor_name": "Tecnoredes Colombia Ltda.",
+        "vendor_tax_id": "830.114.921-1",
+        "beneficiary_account": "86447545986",
+        "amount": "452.20",
+        "currency": "USD",
+        "issue_date": "2026-09-27",
+        "due_date": "2026-10-27",
+        "po_reference": "OC-2026-0465",
+        "description": "Switch administrable 24 puertos"
+      },
+      "expected_outcome": "escalate",
+      "failed_rules": [
+        "R09"
+      ],
+      "case": "tope_semanal",
+      "reason": "Escalada a una persona: Con esta factura se pagarían USD 50,379.84 en 7 días y el tope es USD 50,000.00: queda para revisión."
+    },
+    {
+      "file": "Correos/factura_081.eml",
+      "format": "email",
+      "expected_extraction": {
+        "invoice_number": "MIC-399",
+        "vendor_name": "Mantenimiento Industrial Cundinamarca S.A.S.",
+        "vendor_tax_id": "900.718.452-3",
+        "beneficiary_account": "68367326817",
+        "amount": "333.20",
+        "currency": "USD",
+        "issue_date": "2026-09-25",
+        "due_date": "2026-10-25",
+        "po_reference": "OC-2026-0431",
+        "description": "Mano de obra técnica por hora"
+      },
+      "expected_outcome": "escalate",
+      "failed_rules": [
+        "R09"
+      ],
+      "case": "tope_semanal",
+      "reason": "Escalada a una persona: Con esta factura se pagarían USD 50,260.84 en 7 días y el tope es USD 50,000.00: queda para revisión."
+    },
+    {
+      "file": "Correos/factura_082.eml",
+      "format": "email",
+      "expected_extraction": {
+        "invoice_number": "MIC-387",
+        "vendor_name": "Mantenimiento Industrial Cundinamarca S.A.S.",
+        "vendor_tax_id": "900.718.452-3",
+        "beneficiary_account": "68367326817",
+        "amount": "299.88",
+        "currency": "USD",
+        "issue_date": "2026-09-26",
+        "due_date": "2026-10-26",
+        "po_reference": "OC-2026-0423",
+        "description": "Mantenimiento preventivo aire acondicionado"
+      },
+      "expected_outcome": "escalate",
+      "failed_rules": [
+        "R09"
+      ],
+      "case": "tope_semanal",
+      "reason": "Escalada a una persona: Con esta factura se pagarían USD 50,227.52 en 7 días y el tope es USD 50,000.00: queda para revisión."
+    },
+    {
+      "file": "Correos/factura_083.eml",
+      "format": "email",
+      "expected_extraction": {
+        "invoice_number": "TRA-540",
+        "vendor_name": "Transportes Rápido Andino S.A.",
+        "vendor_tax_id": "860.045.873-7",
+        "beneficiary_account": "14231607409",
+        "amount": "332.01",
+        "currency": "USD",
+        "issue_date": "2026-09-26",
+        "due_date": "2026-10-26",
+        "po_reference": "OC-2026-0459",
+        "description": "Cargue y descargue"
+      },
+      "expected_outcome": "escalate",
+      "failed_rules": [
+        "R09"
+      ],
+      "case": "tope_semanal",
+      "reason": "Escalada a una persona: Con esta factura se pagarían USD 50,259.65 en 7 días y el tope es USD 50,000.00: queda para revisión."
+    },
+    {
+      "file": "Textos/factura_084.txt",
+      "format": "text",
+      "expected_extraction": {
+        "invoice_number": "PCB-543",
+        "vendor_name": "Publicidad Creativa Bogotá S.A.S.",
+        "vendor_tax_id": "800.199.036-1",
+        "beneficiary_account": "72923393128",
+        "amount": "767.55",
+        "currency": "USD",
+        "issue_date": "2026-09-26",
+        "due_date": null,
+        "po_reference": "OC-2026-0470",
+        "description": "Diseño de pieza gráfica"
+      },
+      "expected_outcome": "escalate",
+      "failed_rules": [
+        "R09"
+      ],
+      "case": "tope_semanal",
+      "reason": "Escalada a una persona: Con esta factura se pagarían USD 50,695.19 en 7 días y el tope es USD 50,000.00: queda para revisión."
+    },
+    {
+      "file": "PDFS/factura_085.pdf",
+      "format": "pdf",
+      "expected_extraction": {
+        "invoice_number": "TRC-736",
+        "vendor_name": "Tecnoredes Colombia Ltda.",
+        "vendor_tax_id": "830.114.921-1",
+        "beneficiary_account": "86447545986",
+        "amount": "999.60",
+        "currency": "USD",
+        "issue_date": "2026-09-27",
+        "due_date": "2026-10-27",
+        "po_reference": "OC-2026-0458",
+        "description": "Access point WiFi 6"
+      },
+      "expected_outcome": "block",
+      "failed_rules": [
+        "R02",
+        "R09"
+      ],
+      "case": "duplicado",
+      "reason": "Rechazada: Duplicada: Tecnoredes Colombia Ltda. ya cobró USD 999.60 por la orden OC-2026-0458 en la factura TRC-711; esta repite el cobro con otro número."
+    },
+    {
+      "file": "Imagenes/factura_086.png",
+      "format": "image",
+      "expected_extraction": {
+        "invoice_number": "MIC-389",
+        "vendor_name": "Mantenimiento Industrial Cundinamarca S.A.S.",
+        "vendor_tax_id": "900.718.452-3",
+        "beneficiary_account": "68367326817",
+        "amount": "257.04",
+        "currency": "USD",
+        "issue_date": "2026-09-28",
+        "due_date": "2026-11-12",
+        "po_reference": "OC-2026-0426",
+        "description": "Mano de obra técnica por hora"
+      },
+      "expected_outcome": "escalate",
+      "failed_rules": [
+        "R09"
+      ],
+      "case": "tope_semanal",
+      "reason": "Escalada a una persona: Con esta factura se pagarían USD 50,184.68 en 7 días y el tope es USD 50,000.00: queda para revisión."
+    },
+    {
+      "file": "Imagenes/factura_087.png",
+      "format": "image",
+      "expected_extraction": {
+        "invoice_number": "SIG-490",
+        "vendor_name": "Seguridad Integral Guardianes Ltda.",
+        "vendor_tax_id": "830.082.649-1",
+        "beneficiary_account": "90663776548",
+        "amount": "3694.95",
+        "currency": "USD",
+        "issue_date": "2026-09-29",
+        "due_date": "2026-10-29",
+        "po_reference": "OC-2026-0480",
+        "description": "Instalación de cámara CCTV por punto"
+      },
+      "expected_outcome": "escalate",
+      "failed_rules": [
+        "R09"
+      ],
+      "case": "tope_semanal",
+      "reason": "Escalada a una persona: Con esta factura se pagarían USD 53,622.59 en 7 días y el tope es USD 50,000.00: queda para revisión."
+    },
+    {
+      "file": "Textos/factura_088.txt",
+      "format": "text",
+      "expected_extraction": {
+        "invoice_number": "PSN-349",
+        "vendor_name": "Papelería y Suministros del Norte S.A.S",
+        "vendor_tax_id": "901.233.780-5",
+        "beneficiary_account": "69184467518",
+        "amount": "397.46",
+        "currency": "USD",
+        "issue_date": "2026-09-29",
+        "due_date": null,
+        "po_reference": "OC-2026-0464",
+        "description": "Tóner HP 85A compatible"
+      },
+      "expected_outcome": "block",
+      "failed_rules": [
+        "R03",
+        "R09"
+      ],
+      "case": "suplantacion",
+      "reason": "Rechazada: Proveedor no permitido: Papelería y Suministros del Norte S.A.S no está en la lista de beneficiarios permitidos."
+    },
+    {
+      "file": "Correos/factura_089.eml",
+      "format": "email",
+      "expected_extraction": {
+        "invoice_number": "PSN-335",
+        "vendor_name": "Papelería y Suministros del Norte S.A.S.",
+        "vendor_tax_id": "900.231.584-5",
+        "beneficiary_account": "71091652208",
+        "amount": "254.66",
+        "currency": "USD",
+        "issue_date": "2026-09-29",
+        "due_date": "2026-11-13",
+        "po_reference": "OC-2026-0427",
+        "description": "Archivador AZ tamaño oficio"
+      },
+      "expected_outcome": "escalate",
+      "failed_rules": [
+        "R09"
+      ],
+      "case": "tope_semanal",
+      "reason": "Escalada a una persona: Con esta factura se pagarían USD 50,182.30 en 7 días y el tope es USD 50,000.00: queda para revisión."
+    },
+    {
+      "file": "Correos/factura_090.eml",
+      "format": "email",
+      "expected_extraction": {
+        "invoice_number": "TRC-731",
+        "vendor_name": "Tecnoredes Colombia Ltda.",
+        "vendor_tax_id": "830.114.921-1",
+        "beneficiary_account": "86447545986",
+        "amount": "2046.80",
+        "currency": "USD",
+        "issue_date": "2026-09-28",
+        "due_date": "2026-10-28",
+        "po_reference": "OC-2026-0481",
+        "description": "Access point WiFi 6"
+      },
+      "expected_outcome": "escalate",
+      "failed_rules": [
+        "R09"
+      ],
+      "case": "tope_semanal",
+      "reason": "Escalada a una persona: Con esta factura se pagarían USD 51,974.44 en 7 días y el tope es USD 50,000.00: queda para revisión."
+    },
+    {
+      "file": "Correos/factura_091.eml",
+      "format": "email",
+      "expected_extraction": {
+        "invoice_number": "TRA-529",
+        "vendor_name": "Transportes Rápido Andino S.A.",
+        "vendor_tax_id": "860.045.873-7",
+        "beneficiary_account": "14231607409",
+        "amount": "524.79",
+        "currency": "USD",
+        "issue_date": "2026-09-26",
+        "due_date": "2026-10-26",
+        "po_reference": "OC-2026-0443",
+        "description": "Flete Bogotá - Medellín camión sencillo"
+      },
+      "expected_outcome": "escalate",
+      "failed_rules": [
+        "R09"
+      ],
+      "case": "tope_semanal",
+      "reason": "Escalada a una persona: Con esta factura se pagarían USD 50,452.43 en 7 días y el tope es USD 50,000.00: queda para revisión."
+    },
+    {
+      "file": "Correos/factura_092.eml",
+      "format": "email",
+      "expected_extraction": {
+        "invoice_number": "PCB-536",
+        "vendor_name": "Publicidad Creativa Bogotá S.A.S.",
+        "vendor_tax_id": "800.199.036-1",
+        "beneficiary_account": "89113353680",
+        "amount": "249.90",
+        "currency": "USD",
+        "issue_date": "2026-09-28",
+        "due_date": "2026-10-28",
+        "po_reference": "OC-2026-0461",
+        "description": "Pendón publicitario"
+      },
+      "expected_outcome": "escalate",
+      "failed_rules": [
+        "R09",
+        "R11"
+      ],
+      "case": "cambio_de_cuenta",
+      "reason": "Escalada a una persona: Con esta factura se pagarían USD 50,177.54 en 7 días y el tope es USD 50,000.00: queda para revisión. Revisión humana: la cuenta bancaria no coincide con la registrada; la cuenta bancaria cambió respecto al último pago."
+    },
+    {
+      "file": "Correos/factura_093.eml",
+      "format": "email",
+      "expected_extraction": {
+        "invoice_number": "ATS-807",
+        "vendor_name": "Aseo Total Servicios S.A.S.",
+        "vendor_tax_id": "901.022.366-3",
+        "beneficiary_account": "81629733626",
+        "amount": "1201.90",
+        "currency": "USD",
+        "issue_date": "2026-09-25",
+        "due_date": "2026-11-09",
+        "po_reference": "OC-2026-0408",
+        "description": "Kit mensual de insumos de limpieza"
+      },
+      "expected_outcome": "block",
+      "failed_rules": [
+        "R02",
+        "R09"
+      ],
+      "case": "duplicado",
+      "reason": "Rechazada: Duplicada: la factura ATS-807 de Aseo Total Servicios S.A.S. ya fue registrada."
+    },
+    {
+      "file": "Textos/factura_094.txt",
+      "format": "text",
+      "expected_extraction": {
+        "invoice_number": "PCB-533",
+        "vendor_name": "Publicidad Creativa Bogotá S.A.S.",
+        "vendor_tax_id": "800.199.036-1",
+        "beneficiary_account": "72923393128",
+        "amount": "505.75",
+        "currency": "USD",
+        "issue_date": "2026-10-02",
+        "due_date": null,
+        "po_reference": "OC-2026-0440",
+        "description": "Diseño de pieza gráfica"
+      },
+      "expected_outcome": "escalate",
+      "failed_rules": [
+        "R09"
+      ],
+      "case": "tope_semanal",
+      "reason": "Escalada a una persona: Con esta factura se pagarían USD 50,433.39 en 7 días y el tope es USD 50,000.00: queda para revisión."
+    },
+    {
+      "file": "Textos/factura_095.txt",
+      "format": "text",
+      "expected_extraction": {
+        "invoice_number": "TRC-716",
+        "vendor_name": "Tecnoredes Colombia Ltda.",
+        "vendor_tax_id": "830.114.921-1",
+        "beneficiary_account": "86447545986",
+        "amount": "606.90",
+        "currency": "USD",
+        "issue_date": "2026-09-30",
+        "due_date": null,
+        "po_reference": "OC-2026-0460",
+        "description": "Cable UTP Cat6 caja 305 m"
+      },
+      "expected_outcome": "escalate",
+      "failed_rules": [
+        "R09"
+      ],
+      "case": "tope_semanal",
+      "reason": "Escalada a una persona: Con esta factura se pagarían USD 50,534.54 en 7 días y el tope es USD 50,000.00: queda para revisión."
+    },
+    {
+      "file": "PDFS/factura_096.pdf",
+      "format": "pdf",
+      "expected_extraction": {
+        "invoice_number": "MIC-404",
+        "vendor_name": "Mantenimiento Industrial Cundinamarca S.A.S.",
+        "vendor_tax_id": "900.718.452-3",
+        "beneficiary_account": "68367326817",
+        "amount": "1118.60",
+        "currency": "USD",
+        "issue_date": "2026-10-01",
+        "due_date": "2026-10-31",
+        "po_reference": "OC-2026-0445",
+        "description": "Cambio de filtros industriales"
+      },
+      "expected_outcome": "escalate",
+      "failed_rules": [
+        "R09"
+      ],
+      "case": "tope_semanal",
+      "reason": "Escalada a una persona: Con esta factura se pagarían USD 51,046.24 en 7 días y el tope es USD 50,000.00: queda para revisión."
+    },
+    {
+      "file": "Imagenes/factura_097.jpg",
+      "format": "image",
+      "expected_extraction": {
+        "invoice_number": "PCB-517",
+        "vendor_name": "Publicidad Creativa Bogotá S.A.S.",
+        "vendor_tax_id": "800.199.036-1",
+        "beneficiary_account": "72923393128",
+        "amount": "559.30",
+        "currency": "USD",
+        "issue_date": "2026-10-01",
+        "due_date": "2026-10-31",
+        "po_reference": "OC-2026-0414",
+        "description": "Impresión de volantes x1000"
+      },
+      "expected_outcome": "escalate",
+      "failed_rules": [
+        "R09"
+      ],
+      "case": "tope_semanal",
+      "reason": "Escalada a una persona: Con esta factura se pagarían USD 50,486.94 en 7 días y el tope es USD 50,000.00: queda para revisión."
+    },
+    {
+      "file": "Textos/factura_098.txt",
+      "format": "text",
+      "expected_extraction": {
+        "invoice_number": "MIC-423",
+        "vendor_name": "Mantenimiento Industrial Cundinamarca S.A.S.",
+        "vendor_tax_id": "900.718.452-3",
+        "beneficiary_account": "68367326817",
+        "amount": "299.88",
+        "currency": "USD",
+        "issue_date": "2026-09-27",
+        "due_date": null,
+        "po_reference": "OC-2026-0423",
+        "description": "Mantenimiento preventivo aire acondicionado"
+      },
+      "expected_outcome": "block",
+      "failed_rules": [
+        "R02",
+        "R09"
+      ],
+      "case": "duplicado",
+      "reason": "Rechazada: Duplicada: Mantenimiento Industrial Cundinamarca S.A.S. ya cobró USD 299.88 por la orden OC-2026-0423 en la factura MIC-387; esta repite el cobro con otro número."
+    },
+    {
+      "file": "Correos/factura_099.eml",
+      "format": "email",
+      "expected_extraction": {
+        "invoice_number": "TRA-519",
+        "vendor_name": "Transportes Rápido Andino S.A.",
+        "vendor_tax_id": "860.045.873-7",
+        "beneficiary_account": "14231607409",
+        "amount": "481.95",
+        "currency": "USD",
+        "issue_date": "2026-10-02",
+        "due_date": "2026-11-16",
+        "po_reference": "OC-2026-0419",
+        "description": "Flete Bogotá - Medellín camión sencillo"
+      },
+      "expected_outcome": "escalate",
+      "failed_rules": [
+        "R09"
+      ],
+      "case": "tope_semanal",
+      "reason": "Escalada a una persona: Con esta factura se pagarían USD 50,409.59 en 7 días y el tope es USD 50,000.00: queda para revisión."
+    },
+    {
+      "file": "Correos/factura_100.eml",
+      "format": "email",
+      "expected_extraction": {
+        "invoice_number": "TRC-729",
+        "vendor_name": "Tecnoredes Colombia Ltda.",
+        "vendor_tax_id": "830.114.921-1",
+        "beneficiary_account": "86447545986",
+        "amount": "1594.60",
+        "currency": "USD",
+        "issue_date": "2026-10-02",
+        "due_date": "2026-11-16",
+        "po_reference": "OC-2026-0477",
+        "description": "Access point WiFi 6"
+      },
+      "expected_outcome": "escalate",
+      "failed_rules": [
+        "R09"
+      ],
+      "case": "tope_semanal",
+      "reason": "Escalada a una persona: Con esta factura se pagarían USD 51,522.24 en 7 días y el tope es USD 50,000.00: queda para revisión."
+    }
+  ]
+}

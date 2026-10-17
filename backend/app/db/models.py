@@ -50,7 +50,7 @@ class BeneficiaryModel(Base):
     account: Mapped[str | None] = mapped_column(String(100), nullable=True, index=True)
     country: Mapped[str | None] = mapped_column(String(10), nullable=True)
     allowed: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
-    verified: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    verified: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     sanctioned: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     owners: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
 

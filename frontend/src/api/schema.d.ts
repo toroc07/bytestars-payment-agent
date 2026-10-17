@@ -373,7 +373,7 @@ export interface components {
             allowed: boolean;
             /**
              * Verified
-             * @default true
+             * @default false
              */
             verified: boolean;
             /**
@@ -587,7 +587,7 @@ export interface components {
             period_limit: number | string;
             /**
              * Per Vendor Period Limit
-             * @default 10000.00
+             * @default 20000.00
              */
             per_vendor_period_limit: number | string | null;
             /** Period Budget */
@@ -680,7 +680,7 @@ export interface components {
             period_limit: string;
             /**
              * Per Vendor Period Limit
-             * @default 10000.00
+             * @default 20000.00
              */
             per_vendor_period_limit: string | null;
             /** Period Budget */

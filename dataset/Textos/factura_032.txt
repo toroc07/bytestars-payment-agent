@@ -4,11 +4,11 @@ NIT: 901.350.127-6
 Fecha de emisión: 10/09/2026
 Orden de compra: OC-2026-0412
 Detalle:
-- 60 x Refrigerio por persona (a $9.500 c/u)
-- 12 x Almuerzo ejecutivo corporativo (a $22.000 c/u)
-- 4 x Servicio de café para evento (a $180.000 c/u)
-Subtotal: $1.554.000
-IVA 19%: $295.260
-Total: $1.849.260
+- 60 x Refrigerio por persona (a US$2.00 c/u)
+- 12 x Almuerzo ejecutivo corporativo (a US$6.00 c/u)
+- 4 x Servicio de café para evento (a US$45.00 c/u)
+Subtotal: US$372.00
+IVA 19%: US$70.68
+Total: US$442.68
 Consignar a Ahorros Banco Popular No. 76408675855
 [11/09/2026, 13:40] Cuentas por Pagar - Distribuciones Andinas: Recibido, gracias. Lo radicamos.

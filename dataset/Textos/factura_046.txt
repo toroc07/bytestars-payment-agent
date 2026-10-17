@@ -4,10 +4,10 @@ NIT: 901.022.366-3
 Fecha de emisión: 16/09/2026
 Orden de compra: OC-2026-0416
 Detalle:
-- 3 x Kit mensual de insumos de limpieza (a $310.000 c/u)
-- 4 x Fumigación de instalaciones (a $420.000 c/u)
-Subtotal: $2.610.000
-IVA 19%: $495.900
-Total: $3.105.900
+- 3 x Kit mensual de insumos de limpieza (a US$80.00 c/u)
+- 4 x Fumigación de instalaciones (a US$110.00 c/u)
+Subtotal: US$680.00
+IVA 19%: US$129.20
+Total: US$809.20
 Consignar a Corriente Banco de Bogotá No. 81629733626
 [17/09/2026, 16:37] Cuentas por Pagar - Distribuciones Andinas: Recibido, gracias. Lo radicamos.

@@ -55,3 +55,12 @@ Decisión (Dev B con Dev A y Dev C):
 4. **Protección de reevaluación:** `POST /api/invoices/{id}/reevaluate` devuelve 409 Conflict si la factura está en estado distinto a `blocked` o `pending_approval` para no sobreescribir decisiones humanas (pagadas, aprobadas o rechazadas).
 5. **Rate limiting:** Se mantiene exclusivamente en `/api/dev/*` para permitir la ejecución por lotes (`BatchRun` de hasta 50 facturas) en `/api/conversations` e `/api/invoices`.
 
+## ADR-017 · R11 compara el monto con lo acordado, no con el último pago
+Decisión (Dev A): la parte de monto de R11 escala solo si el monto se aleja del acuerdo del proveedor más que `agreement_tolerance_pct`. La cuenta bancaria sí se sigue comparando con el registro y con el último pago, y el NIT con el registro. Además, R02 trata como duplicado el mismo cobro reenviado con otro número (mismo proveedor, orden de compra, monto y moneda). Por qué: los proveedores facturan montos distintos cada vez. Con la lectura literal ("si el monto cambia respecto al último pago, revisión"), el dataset daba 8 pagos y 74 escaladas de 100. Con esta lectura da 62 pagos y ninguna trampa pagada. Para volver a la lectura literal basta con restaurar la comparación de monto contra `last_vendor_invoice` en `r11_vendor_changes`. **Pendiente de validar con Dev C.**
+
+## ADR-018 · Dataset en USD, allowlist inferida y resultados esperados
+Decisión (Dev A, a pedido del equipo; Dev C valida):
+1. **Montos en USD:** las 100 facturas se regeneraron con el mismo contenido y los montos de COP pasados a USD a la tasa ~4.000, con precios unitarios redondeados (menos de 20 → a 1; menos de 100 → a 5; menos de 1.000 → a 10; desde 1.000 → a 100), IVA del 19 % y totales recalculados. Las reglas de Dev C están en USD; así los límites se leen sin conversión.
+2. **Allowlist inferida:** `dataset/company.json` lista los 8 proveedores que se repiten con NIT y cuenta coherentes (verificados, no sancionados, país CO). Servicios Logísticos Meridian, Comercializadora Delta Express y la papelería con NIT 901.233.780-5 quedan fuera, porque son las trampas del set. No se inventaron dueños ni acuerdos.
+3. **Resultados esperados:** `dataset/expected.json` se calculó con el motor procesando de factura_001 a factura_100 en una sola sesión y se contrastó con una clasificación manual de las trampas. `backend/tests/engine/test_dataset_expected.py` lo vuelve a comprobar en cada corrida de tests.
+

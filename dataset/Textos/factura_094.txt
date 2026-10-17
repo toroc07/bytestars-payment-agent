@@ -4,10 +4,10 @@ NIT: 800.199.036-1
 Fecha de emisión: 02/10/2026
 Orden de compra: OC-2026-0440
 Detalle:
-- 4 x Diseño de pieza gráfica (a $320.000 c/u)
-- 3 x Pendón publicitario (a $145.000 c/u)
-Subtotal: $1.715.000
-IVA 19%: $325.850
-Total: $2.040.850
+- 4 x Diseño de pieza gráfica (a US$80.00 c/u)
+- 3 x Pendón publicitario (a US$35.00 c/u)
+Subtotal: US$425.00
+IVA 19%: US$80.75
+Total: US$505.75
 Consignar a Ahorros Davivienda No. 72923393128
 [03/10/2026, 15:11] Cuentas por Pagar - Distribuciones Andinas: Recibido, gracias. Lo radicamos.

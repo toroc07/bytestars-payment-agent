@@ -28,7 +28,7 @@ Parámetros con su valor de Dev C entre paréntesis (campos propuestos en `docs/
 | ID | Nombre | Falla cuando… | Resultado | Parámetros del `RuleSet` | Mensaje de ejemplo |
 |---|---|---|---|---|---|
 | R01 | `REQUIRED_FIELDS` | falta proveedor, número de factura, monto, fecha o concepto (o la lectura es poco confiable) | `escalate` | `required_fields`, `min_extraction_confidence` | «Factura incompleta: falta el número de factura.» |
-| R02 | `NOT_DUPLICATE` | ya existe una factura **pagada o aprobada** del mismo proveedor con el mismo número | `block` | `duplicate_window_days` | «Duplicada: FAC-1001 de DevShop ya se pagó el 2026-10-01.» |
+| R02 | `NOT_DUPLICATE` | ya hay una factura registrada del mismo proveedor con el mismo número, **o** con la misma orden de compra, monto y moneda (el mismo cobro reenviado con otro número) | `block` | `duplicate_window_days` | «Duplicada: Tecnoredes ya cobró USD 999.60 por la orden OC-2026-0458 en la factura TRC-711.» |
 | R03 | `BENEFICIARY_ALLOWED` | el proveedor no está en la lista de permitidos | `block` | `require_allowlisted_beneficiary` | «Proveedor nuevo: no está en la lista de beneficiarios permitidos.» |
 | R04 | `BENEFICIARY_VERIFIED` | el proveedor está en la lista pero no está verificado | `block` | `require_verified_beneficiary` | «Proveedor sin verificar (razón social, país, banco y dueños ≥25 %).» |
 | R05 | `NOT_SANCTIONED` | el proveedor está marcado como sancionado o su país está en la lista de sancionados | `block` | `block_sanctioned`, `sanctioned_countries` | «País sancionado: XX.» |
@@ -37,14 +37,14 @@ Parámetros con su valor de Dev C entre paréntesis (campos propuestos en `docs/
 | R08 | `APPROVAL_THRESHOLD` | monto en USD > umbral de aprobación (5.000) | `escalate` | `approval_threshold` | «USD 6,600.00 supera el umbral de USD 5,000.00: requiere aprobación.» |
 | R09 | `PERIOD_LIMIT` | pagado en los últimos `period_days` (7) + monto > límite del periodo (50.000) | `escalate` | `period_days`, `period_limit` | «Supera el tope de los últimos 7 días (USD 50,000.00): queda para revisión.» |
 | R10 | `VENDOR_PERIOD_LIMIT` | pagado al mismo proveedor en el periodo + monto > límite por proveedor (20.000) | `escalate` | `per_vendor_period_limit` | «Este proveedor superaría USD 20,000.00 en el periodo.» |
-| R11 | `VENDOR_CHANGES` | el monto o los datos bancarios difieren del último pago al mismo proveedor | `escalate` | `review_on_vendor_changes` | «La cuenta bancaria cambió respecto al último pago.» |
+| R11 | `VENDOR_CHANGES` | el NIT o la cuenta no coinciden con los registrados, la cuenta cambió respecto al último pago, o el monto se aleja de lo acordado más que la tolerancia (ADR-017) | `escalate` | `review_on_vendor_changes`, `agreement_tolerance_pct` | «La cuenta bancaria cambió respecto al último pago.» |
 
 Una regla queda `skipped` cuando no aplica (por ejemplo R10 o R11 sin pagos previos al proveedor, o R04–R05 si R03 ya falló); queda visible en el registro.
 
-**Fuera del catálogo de Dev C** (existen hoy en el `RuleSet` del backend; decidir con el equipo si se quitan o se mantienen como reglas extra): `period_budget` (presupuesto que rechaza), `agreement_tolerance_pct` (comparar con lo acordado). R11 cubre el caso del reto "factura que no cuadra" comparando con el último pago en lugar de un acuerdo.
+**Fuera del catálogo de Dev C** (existen hoy en el `RuleSet` del backend; decidir con el equipo si se quitan o se mantienen como reglas extra): `period_budget` (presupuesto que rechaza), `period_budget` todavía no lo usa ninguna regla. `agreement_tolerance_pct` lo usa R11: el caso del reto "factura que no cuadra con lo acordado" compara el monto con el acuerdo del proveedor, no con el último pago (ADR-017).
 
 ### Contexto que necesita el motor
-Además de lo actual (`today`, `beneficiary`, `previous_invoices`, `spent_in_period`): `spent_vendor_in_period` (lo pagado a ese proveedor en el periodo) y `last_payment_to_vendor` (`amount`, `currency`, `bank_account`). El beneficiario debe traer `verified`, `sanctioned` y `country`.
+`EvaluationContext`: `today`, `beneficiary` (con `verified`, `sanctioned` y `country`), `agreement`, `previous_invoices` (todas las facturas ya registradas, para R02), `last_vendor_invoice` (último pago al proveedor, para R11), `spent_in_period` y `vendor_spent_in_period` (solo facturas pagadas o aprobadas dentro de `period_days`).
 
 ## Agregación del resultado
 1. Si algún check `failed` tiene `outcome_if_failed = block` → **`block`**.

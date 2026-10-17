@@ -13,7 +13,7 @@ Dev B también ayuda con el motor de decisiones: al repartir tareas del motor, a
 | Implementar modelos Pydantic en `backend/app/schemas/` | Dev B | listo | según `DATA_MODEL.md`, serialización Decimal a String, validaciones de invariantes |
 | Definir `backend/app/ports.py` | Dev B | listo | según sección Ports de `DATA_MODEL.md` (Protocol síncronos) |
 | Crear JSON de ejemplo en `contracts/examples/` | Dev A | no aplica | el frontend trabaja contra el backend real (ver `DECISIONS.md` ADR-012) |
-| Definir formato del dataset y reglas de la empresa ficticia | Dev C | pendiente | ver `dataset/README.md`; acordar formato con Dev A y Dev B |
+| Definir formato del dataset y reglas de la empresa ficticia | Dev C | listo | `dataset/README.md`, `company.json` y `expected.json` (propuesta de Dev A, ADR-018; Dev C valida) |
 
 ## Frontend (Dev A)
 | Tarea | Estado | Notas |
@@ -39,14 +39,14 @@ Dev B también ayuda con el motor de decisiones: al repartir tareas del motor, a
 | Tarea | Estado | Notas |
 |---|---|---|
 | Definir catálogo de reglas y sus campos en `RuleSet` | listo | reglas de Dev C → R01–R11 en `DECISION_ENGINE.md`; campos propuestos en `DATA_MODEL.md` (ADR-015) |
-| Implementar motor de reglas + tests | pendiente | responsable por regla: _(por repartir entre Dev A y Dev B)_ |
-| Property tests de invariantes | pendiente | |
+| Implementar motor de reglas + tests | listo | Dev A: R01–R11 en `backend/app/engine/`, fail-closed (error interno → R00 + escalar); R02 detecta el mismo cobro reenviado con otro número y R11 compara el monto con lo acordado (ADR-017) |
+| Property tests de invariantes | listo | hypothesis: nunca `pay` con una regla fallida (I1), determinismo (I2), sin datos esenciales nunca `pay` (I4) |
 | Repositorios falsos en memoria para tests | pendiente | |
 | Pipeline del agente | pendiente | |
 | Proveedor Gemini + extracción PDF/imagen/texto | pendiente | |
 | Fallback Groq/OpenRouter + caché | pendiente | |
 | Chat de consulta (solo lectura) | pendiente | |
-| Script de evaluación del dataset | pendiente | |
+| Script de evaluación del dataset | en curso | `tests/engine/test_dataset_expected.py` comprueba el motor contra `dataset/expected.json` (100/100, ninguna trampa pagada); falta medir la extracción del LLM cuando exista el pipeline |
 
 ## Backend y base de datos (Dev B)
 | Tarea | Estado | Notas |
@@ -64,6 +64,10 @@ Tareas por definir por Dev C (empresa ficticia, reglas, beneficiarios, acuerdos,
 |---|---|---|
 | Dataset de 25 correos `.eml` y facturas | listo | Estructura en `dataset/` |
 | Políticas de la empresa (R01–R11) | listo | Definidas en `DECISION_ENGINE.md` y sincronizadas en backend |
+| Montos del dataset en USD | listo | Dev A, a pedido del equipo: las 100 facturas regeneradas con el mismo contenido (ADR-018) |
+| Empresa, allowlist y reglas en `company.json` | listo | Dev A: Distribuciones Andinas S.A.S. con 8 proveedores inferidos del dataset; **Dev C valida** |
+| Resultados esperados por factura (`expected.json`) | listo | Dev A: 62 pagar · 18 frenar · 20 escalar; **Dev C valida** las trampas y el criterio de R11 (ADR-017) |
+| Casos de monto alto (más de US$5.000 o US$10.000) | pendiente | ninguna factura del set supera el umbral de aprobación ni el límite por pago; faltan casos para R07 y R08 |
 
 ## Deploy
 | Tarea | Estado | Notas |
@@ -75,10 +79,12 @@ Tareas por definir por Dev C (empresa ficticia, reglas, beneficiarios, acuerdos,
 - ~~(Dev A → Dev B) Implementar en el backend los campos ✱ del `RuleSet` y del `Beneficiary` propuestos en `docs/DATA_MODEL.md` (reglas de Dev C) y regenerar `contracts/openapi.json`.~~ **Completado.**
 - ~~(Dev A → Dev B) Actualizar `dataset/company.json` con los valores de Dev C.~~ **Completado.**
 - ~~(Dev A → Dev B) `POST /api/invoices/{id}/reevaluate` no restringe el estado.~~ **Resuelto: devuelve 409 en facturas fuera de `blocked` o `pending_approval`.**
-- (Dev A → Dev B) **`dataset/company.json` no tiene los valores de Dev C:** `per_payment_limit` 20000 (Dev C: 10000), `period_limit` 10000 (Dev C: 50000), `per_vendor_period_limit` 10000 (Dev C: 20000); `required_fields` trae `currency` y `due_date` pero Dev C pide proveedor, número, monto, **fecha** y **concepto** (`issue_date`, `description`). El default de `per_vendor_period_limit` en el schema también es 10000.
-- (Dev A → Dev B) **`Beneficiary.verified` tiene default `true`:** un proveedor creado por la API sin ese campo queda verificado y se salta R04. Debería ser `false` (la verificación la hace una persona). El frontend ya crea los proveedores nuevos como no verificados y no sancionados.
-- (Dev A → Dev B) `period` (weekly/monthly) convive con `period_days`; si el motor usa `period_days`, quitar `period` para no mostrar dos ajustes que dicen lo mismo.
-- (Dev A → Dev B) El backend devuelve fechas sin zona horaria (`2026-10-17T03:07:07`, SQLite pierde el offset). El frontend las trata como UTC, pero lo correcto es serializarlas con `Z` / offset.
+- ~~(Dev A → Dev B) `dataset/company.json` y los defaults no tenían los valores de Dev C.~~ **Corregido por Dev A** (schemas, seed por defecto en `repositories.py` y `company.json`).
+- ~~(Dev A → Dev B) `Beneficiary.verified` tenía default `true`.~~ **Corregido por Dev A:** default `false` en schema y modelo.
+- ~~(Dev A → Dev B) Fechas sin zona horaria.~~ **Corregido por Dev A:** `UtcDatetime` en schemas serializa con offset UTC.
+- (Dev A → Dev B) `period` (weekly/monthly) convive con `period_days` y el motor solo usa `period_days`. No se quitó porque es columna NOT NULL y hace falta migración; decidir si se borra.
+- (Dev A → Dev B) `POST /api/invoices/{id}/reevaluate` usa `R01` como id del check de error; el motor usa `R00 ENGINE_ERROR` para fallos internos. Conviene unificar.
+- (Dev A → Dev C) Validar `dataset/company.json` y `dataset/expected.json` (allowlist inferida, trampas y criterio de R11 en ADR-017), y agregar facturas por encima de US$5.000 y US$10.000 para cubrir R07 y R08.
 - (Dev A → Dev B) Sugerencia: agregar `title`/`description` en español a los `Field` del `RuleSet` para que el panel de reglas no dependa del diccionario de etiquetas del frontend.
 - (Dev A → Dev C) Formatos que el frontend sabe enviar: **PDF, PNG, JPG** (como archivo) y **`.eml`, `.txt`, `.md`** (se leen y se mandan como texto). Otros formatos (`.webp`, `.heic`, `.msg`, `.docx`) se rechazan; máximo 4 MB por archivo. Las 4 carpetas del dataset se pueden cargar como lote desde la pantalla inicial (hasta 50 archivos por vez).
 

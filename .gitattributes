@@ -1,0 +1,5 @@
+# Invoice files must keep their exact bytes (no line-ending conversion).
+*.pdf binary
+*.png binary
+*.jpg binary
+*.jpeg binary

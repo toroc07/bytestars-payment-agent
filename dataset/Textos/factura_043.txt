@@ -5,10 +5,10 @@ NIT: 900.718.452-3
 Fecha de emisión: 06/09/2026
 Orden de compra: OC-2026-0422
 Detalle:
-- 1 x Mantenimiento preventivo aire acondicionado (a $280.000 c/u)
-- 4 x Revisión de planta eléctrica (a $650.000 c/u)
-Subtotal: $2.880.000
-IVA 19%: $547.200
-Total: $3.427.200
+- 1 x Mantenimiento preventivo aire acondicionado (a US$70.00 c/u)
+- 4 x Revisión de planta eléctrica (a US$160.00 c/u)
+Subtotal: US$710.00
+IVA 19%: US$134.90
+Total: US$844.90
 Consignar a Corriente Bancolombia No. 68367326817
 [16/09/2026, 12:50] Cuentas por Pagar - Distribuciones Andinas: Recibido, gracias. Lo radicamos.

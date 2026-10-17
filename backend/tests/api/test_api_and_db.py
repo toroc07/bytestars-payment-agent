@@ -93,7 +93,7 @@ def test_simultaneous_text_and_file_upload(client: TestClient):
 def test_rules_get_and_put_with_new_fields(client: TestClient):
     current = client.get("/api/rules").json()
     assert current["period_days"] == 7
-    assert current["per_vendor_period_limit"] == "10000.00"
+    assert current["per_vendor_period_limit"] == "20000.00"
     assert current["require_verified_beneficiary"] is True
     assert current["block_sanctioned"] is True
     assert "KP" in current["sanctioned_countries"]
