@@ -19,6 +19,9 @@ export const INVOICE_STATUS: Record<InvoiceStatus, StatusMeta> = {
   received: { label: 'Recibida', shape: 'dotted', tone: 'muted' },
 }
 
+/** A conversation that never carried an invoice (a question answered with help). */
+export const NO_INVOICE: StatusMeta = { label: 'Sin factura', shape: 'dotted', tone: 'muted' }
+
 export const OUTCOME: Record<Outcome, StatusMeta & { verdict: string }> = {
   pay: { label: 'Pagar', verdict: 'Pagada', shape: 'disc', tone: 'intaglio' },
   escalate: { label: 'Escalar', verdict: 'Escalada a una persona', shape: 'ring', tone: 'ochre' },

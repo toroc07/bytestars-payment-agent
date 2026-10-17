@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/cn'
 import { formatAmount, formatDate, formatTimestamp } from '@/lib/format'
 import { OUTCOME, type StatusTone } from '@/lib/status'
-import { buildThread } from '@/lib/thread'
+import { buildThread, explanationNotes } from '@/lib/thread'
 import { ApprovalDialog } from './ApprovalDialog'
 import { Guilloche } from './Guilloche'
 import { StatusGlyph } from './StatusGlyph'
@@ -315,8 +315,12 @@ function ChequeCard({
       {(decision.summary || decision.explanation) && (
         <div className="mt-3 max-w-[68ch] space-y-2 px-1 text-[0.9375rem] leading-relaxed text-ink-soft">
           {decision.summary ? <p>{decision.summary}</p> : null}
-          {decision.explanation && decision.explanation !== decision.summary ? (
-            <p>{decision.explanation}</p>
+          {explanationNotes(decision).length > 0 ? (
+            <ul className="space-y-1 text-sm text-ink-muted">
+              {explanationNotes(decision).map((note) => (
+                <li key={note}>{note}</li>
+              ))}
+            </ul>
           ) : null}
         </div>
       )}

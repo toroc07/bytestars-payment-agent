@@ -13,14 +13,16 @@ import { OUTCOME, verdictOf } from '@/lib/status'
 
 type OutcomeFilter = 'all' | Outcome
 
-/** Period spend as a tape that must not overflow: the limit escalates, the budget blocks. */
+/**
+ * Period spend as a tape against the 7-day limit (R09): past it, every new invoice escalates to a person.
+ * `period_budget` is not shown: no rule enforces it (docs/DECISION_ENGINE.md), so the UI must not claim it does.
+ */
 function PeriodTape({ summary, currency }: { summary: Summary; currency: string }) {
   const spent = Number(summary.spent_in_period)
   const limit = Number(summary.period_limit)
-  const budget = Number(summary.period_budget)
-  const scale = Math.max(spent, limit, budget, 1)
+  const scale = Math.max(spent, limit, 1)
   const pct = (n: number) => `${Math.min(100, (n / scale) * 100)}%`
-  const tone = spent > budget ? 'bg-brick' : spent > limit ? 'bg-ochre' : 'bg-intaglio'
+  const tone = spent > limit ? 'bg-ochre' : 'bg-intaglio'
   const money = (n: number) => `${currency} ${formatAmount(n, currency)}`
 
   return (
@@ -37,29 +39,23 @@ function PeriodTape({ summary, currency }: { summary: Summary; currency: string 
         className="relative mt-3 h-3 rounded-full bg-paper-deep"
         role="meter"
         aria-valuemin={0}
-        aria-valuemax={budget}
+        aria-valuemax={scale}
         aria-valuenow={spent}
-        aria-valuetext={`${money(spent)} pagados; el límite que escala es ${money(limit)} y el presupuesto que rechaza es ${money(budget)}`}
+        aria-valuetext={`${money(spent)} pagados; el límite de los últimos 7 días es ${money(limit)}`}
         aria-label="Gasto del periodo"
       >
         <div className={cn('h-full rounded-full transition-[width] duration-500', tone)} style={{ width: pct(spent) }} />
         <span className="absolute -top-1 h-5 w-0.5 bg-ochre" style={{ left: pct(limit) }} aria-hidden="true" />
-        <span className="absolute -top-1 h-5 w-0.5 bg-brick" style={{ left: pct(budget) }} aria-hidden="true" />
       </div>
       <dl className="mt-3 grid gap-x-6 gap-y-1 text-xs text-ink-muted sm:flex sm:flex-wrap">
         <div className="flex items-center gap-1.5">
           <span className="h-3 w-0.5 shrink-0 bg-ochre" aria-hidden="true" />
-          <dt>Límite (escala)</dt>
+          <dt>Límite de 7 días (escala)</dt>
           <dd className="tabular ml-auto whitespace-nowrap text-ink-soft sm:ml-0">{money(limit)}</dd>
-        </div>
-        <div className="flex items-center gap-1.5">
-          <span className="h-3 w-0.5 shrink-0 bg-brick" aria-hidden="true" />
-          <dt>Presupuesto (rechaza)</dt>
-          <dd className="tabular ml-auto whitespace-nowrap text-ink-soft sm:ml-0">{money(budget)}</dd>
         </div>
       </dl>
       <p className="mt-2 text-xs text-ink-muted">
-        Por encima del límite, el agente escala a una persona; por encima del presupuesto, rechaza el pago.
+        Cuenta lo pagado en los últimos 7 días. Por encima del límite, cada factura nueva queda para una persona.
       </p>
     </section>
   )

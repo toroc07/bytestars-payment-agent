@@ -27,3 +27,16 @@ export function buildThread(start: Decision, history: Decision[] | undefined): T
   }
   return thread
 }
+
+/**
+ * The agent's explanation comes one statement per line. The cheque already shows the verdict (which a
+ * person's endorsement can change later), every rule and the "simulated payment" notice, so the only
+ * line kept is how the invoice was read: by Gemini, the offline reader, a stored reading, or not at all.
+ */
+export function explanationNotes(decision: Pick<Decision, 'summary' | 'explanation'>): string[] {
+  if (!decision.explanation || decision.explanation === decision.summary) return []
+  return decision.explanation
+    .split('\n')
+    .map((line) => line.trim())
+    .filter((line) => line.startsWith('Datos leídos con') || line.startsWith('No se pudieron leer'))
+}

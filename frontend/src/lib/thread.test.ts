@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { Decision } from '@/api/types'
-import { buildThread } from './thread'
+import { buildThread, explanationNotes } from './thread'
 
 const decision = (id: string, created_at: string, patch: Partial<Decision> = {}): Decision => ({
   id,
@@ -40,5 +40,29 @@ describe('buildThread', () => {
   it('ignores decisions older than the one the message carries', () => {
     const older = decision('d0', '2026-10-17T09:00:00', { outcome: 'block' })
     expect(buildThread(start, [older, start]).map((e) => e.decision.id)).toEqual(['d1'])
+  })
+})
+
+describe('explanationNotes', () => {
+  it('keeps only how the invoice was read', () => {
+    const explanation = [
+      'Frenada: incumple una regla que no admite excepciones automáticas.',
+      '• R03 · Proveedor no permitido: Delta Express no está en la lista.',
+      'Reglas comprobadas: 9 cumplidas, 1 incumplidas, 1 sin aplicar.',
+      'Datos leídos con el lector local (sin IA).',
+      'No se movió dinero real: los pagos de esta demo son simulados.',
+    ].join('\n')
+    expect(explanationNotes({ summary: 'Rechazada: …', explanation })).toEqual([
+      'Datos leídos con el lector local (sin IA).',
+    ])
+    const unread = 'Pendiente de aprobación.\nNo se pudieron leer los datos de la factura.'
+    expect(explanationNotes({ summary: 'Escalada', explanation: unread })).toEqual([
+      'No se pudieron leer los datos de la factura.',
+    ])
+  })
+
+  it('returns nothing when there is no extra explanation', () => {
+    expect(explanationNotes({ summary: 'Igual', explanation: 'Igual' })).toEqual([])
+    expect(explanationNotes({ summary: 'Solo resumen', explanation: null })).toEqual([])
   })
 })

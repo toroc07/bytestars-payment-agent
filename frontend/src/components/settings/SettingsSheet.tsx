@@ -356,7 +356,8 @@ function BeneficiariesTab() {
   return (
     <div className="grid gap-6">
       <p className="text-sm leading-relaxed text-ink-soft">
-        Solo se paga sin intervención a quienes están en esta lista. Un beneficiario nuevo se escala a una persona.
+        Solo se paga sin intervención a quienes están en esta lista y verificados. La factura de un proveedor que
+        no está aquí, o que no está verificado, se rechaza; puedes agregarlo y reevaluarla.
       </p>
       {list.isPending ? (
         <Notice>Cargando beneficiarios…</Notice>

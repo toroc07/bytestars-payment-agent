@@ -49,7 +49,7 @@ export function ConversationPage() {
 
   return (
     <div className="flex h-full flex-col">
-      <div className="min-h-0 flex-1 overflow-y-auto">
+      <div className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto">
         <div className="mx-auto grid w-full max-w-[52rem] gap-6 px-4 py-6 sm:px-6 sm:py-8">
           <NextUpStrip />
           {messages.isPending ? (

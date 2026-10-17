@@ -7,7 +7,7 @@ import type { ConversationSummary } from '@/api/types'
 import { StatusGlyph } from '@/components/decision/StatusGlyph'
 import { cn } from '@/lib/cn'
 import { formatAmount, formatTimestamp } from '@/lib/format'
-import { FILTERS, INVOICE_STATUS, type SidebarFilter } from '@/lib/status'
+import { FILTERS, INVOICE_STATUS, NO_INVOICE, type SidebarFilter } from '@/lib/status'
 
 function matches(c: ConversationSummary, filter: SidebarFilter) {
   const statuses = FILTERS.find((f) => f.id === filter)?.statuses
@@ -152,7 +152,11 @@ export function Sidebar({ onNavigate, onClose }: { onNavigate?: () => void; onCl
         ) : (
           <ul className="space-y-0.5">
             {visible.map((c) => {
-              const meta = c.invoice_status ? INVOICE_STATUS[c.invoice_status] : INVOICE_STATUS.received
+              const meta = c.invoice_status
+                ? INVOICE_STATUS[c.invoice_status]
+                : c.invoice_id
+                  ? INVOICE_STATUS.received
+                  : NO_INVOICE
               const dimmed = Boolean(conversationId) && c.id !== conversationId
               const e = c.invoice_id ? invoiceById.get(c.invoice_id)?.extracted : undefined
               const amount = formatAmount(e?.amount, e?.currency)
