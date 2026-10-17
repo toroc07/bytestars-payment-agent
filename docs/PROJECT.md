@@ -36,7 +36,7 @@ Un agente funcionando sobre nuestro set de facturas, con una pantalla simple don
 ## Cómo se evalúa
 | Criterio | Qué significa | Cómo lo medimos |
 |---|---|---|
-| **Autonomía** | % de facturas del set que el agente decide correctamente sin intervención humana | Script de evaluación contra `dataset/scenarios.json` |
+| **Autonomía** | % de facturas del set que el agente decide correctamente sin intervención humana | Script de evaluación contra el dataset (formato por definir, ver `dataset/README.md`) |
 | **Seguridad** | Cero pagos aprobados fuera de reglas (**aprobar un pago indebido descalifica**) | Tests de invariantes del motor + evaluación del dataset |
 | **Explicabilidad** | Cualquiera entiende por qué se pagó/frenó/escaló leyendo el registro, sin abrir el código | Cada decisión muestra reglas evaluadas con valor observado vs esperado, en español |
 

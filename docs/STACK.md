@@ -19,7 +19,7 @@ Decisiones tomadas (ver justificación en `docs/DECISIONS.md`). Cualquier depend
 | **Agente / LLM** | `google-genai` (Gemini, principal) | respaldo: Groq / OpenRouter (texto); caché por hash |
 | Extracción de PDF | pdfplumber (+ Gemini multimodal) | texto del PDF y/o el PDF completo al modelo |
 | Imágenes | Gemini multimodal | facturas en foto/imagen |
-| **Generación de dataset** | reportlab + Pillow | PDFs e imágenes simulados |
+| **Generación de dataset** | _a decidir por Dev C_ | PDFs, imágenes y textos simulados |
 | **Tests backend** | pytest, hypothesis | invariantes de seguridad con property tests |
 | **Calidad** | ruff (Python) · eslint + prettier (front) | |
 | **Deploy** | Vercel (2 proyectos) + Neon | ver `docs/DEPLOY.md` |

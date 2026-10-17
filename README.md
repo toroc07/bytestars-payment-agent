@@ -19,7 +19,7 @@ dentro de reglas configurables, explicando cada decisión. No mueve dinero real.
 │       ├── db/          Modelos, repositorios, migraciones
 │       └── schemas/     Contrato de datos (Pydantic)
 ├── contracts/           OpenAPI exportado + ejemplos JSON (permite desarrollar el frontend sin backend)
-└── dataset/             Facturas simuladas + empresa ficticia + resultados esperados
+└── dataset/             Facturas simuladas, empresa ficticia y sus reglas (a cargo de Dev C, por definir)
 ```
 
 ## Por dónde empezar

@@ -24,22 +24,13 @@ Mapa resultado → estado de la factura: `pay→paid`, `block→blocked`, `escal
 `id`, `source_type`, `source_filename?`, `raw_text?` (**no confiable**), `extracted?` (ExtractedInvoice), `status`, `received_at`.
 
 ## RuleSet (políticas de la empresa, versionadas)
+> **Por definir.** Los campos concretos dependen de las reglas de la empresa ficticia, que **aún no están definidas** (las define la persona a cargo del dataset junto con el equipo). Solo se fija lo que exige el reto y la estructura general:
+
 | Campo | Significado |
 |---|---|
 | `version` | se incrementa en cada guardado |
-| `company_name`, `base_currency` | empresa ficticia; moneda base (USD) |
-| `fx_rates` | `{moneda: unidades de base por 1 unidad}`; tasas estáticas (determinismo) |
-| `allowed_currencies` | monedas aceptadas |
-| `approval_threshold` | sobre este monto → requiere aprobación humana (R08) |
-| `per_payment_limit` | tope duro por pago (R07) |
-| `period` | `weekly` o `monthly` |
-| `period_limit` | tope de política por periodo (R09) |
-| `period_budget` | presupuesto/saldo disponible del periodo (R10) |
-| `duplicate_window_days` | ventana para detectar duplicados (R02) |
-| `agreement_tolerance_pct` | tolerancia vs lo acordado (R05) |
-| `min_extraction_confidence` | confianza mínima de extracción (R01) |
-| `require_allowlisted_beneficiary` | exigir beneficiario en lista (R03) |
-| `severity_overrides` | `{rule_id: block|escalate}`; **nunca `pay`** (se valida) |
+| _(campos de reglas)_ | **por definir.** El reto menciona: límites por pago y por periodo, beneficiarios permitidos, aprobación humana por encima de cierto monto |
+| `severity_overrides` | `{rule_id: block|escalate}` (opcional); **nunca `pay`** (se valida) |
 
 ## Beneficiary
 `id`, `name`, `tax_id?`, `account?`, `country?`, `allowed` (bool).
@@ -48,14 +39,14 @@ Mapa resultado → estado de la factura: `pay→paid`, `block→blocked`, `escal
 `id`, `beneficiary_id`, `description`, `expected_amount` (>0), `currency`, `po_reference?`, `valid_from?`, `valid_to?`.
 
 ## RuleCheck (una regla evaluada; la lista de checks **es** la explicación)
-`rule_id` (ej. `R03`), `rule_name` (ej. `BENEFICIARY_ALLOWED`), `status`, `outcome_if_failed` (`block`|`escalate`),
+`rule_id`, `rule_name` (identificadores a definir con el catálogo de reglas), `status`, `outcome_if_failed` (`block`|`escalate`),
 `observed?`, `expected?`, `message` (español).
 
 ## EvaluationContext (entrada del motor además de factura y reglas; no se persiste)
-`today`, `beneficiary?`, `agreement?`, `previous_invoices` (lista de ExtractedInvoice), `spent_in_period` (base currency; solo `paid`+`approved`).
+Borrador, ajustable según las reglas que se definan: `today`, `beneficiary?`, `agreement?`, `previous_invoices` (lista de ExtractedInvoice, para duplicados), `spent_in_period` (solo `paid`+`approved`).
 
 ## EngineResult (salida pura del motor; no se persiste)
-`outcome`, `checks`, `summary` (español, por plantilla), `amount_base_currency?`.
+`outcome`, `checks`, `summary` (español, por plantilla), `amount_base_currency?` (si se define una moneda base).
 **Invariante:** `outcome = pay` ⇒ ningún check `failed`.
 
 ## Decision (registro persistido, append-only)
