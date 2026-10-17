@@ -45,17 +45,31 @@ class SqlRuleSetRepository:
                 version=1,
                 company_name="Nimbus Labs Inc.",
                 base_currency="USD",
-                fx_rates={"USD": Decimal(1), "EUR": Decimal("1.10"), "COP": Decimal("0.00025"), "MXN": Decimal("0.055"), "BRL": Decimal("0.19")},
+                fx_rates={
+                    "USD": Decimal("1.00"),
+                    "EUR": Decimal("1.10"),
+                    "COP": Decimal("0.00025"),
+                    "MXN": Decimal("0.055"),
+                    "BRL": Decimal("0.19"),
+                },
                 allowed_currencies=["USD", "EUR", "COP", "MXN", "BRL"],
                 approval_threshold=Decimal("5000.00"),
                 per_payment_limit=Decimal("20000.00"),
-                period="monthly",
+                period="weekly",
+                period_days=7,
                 period_limit=Decimal("10000.00"),
+                per_vendor_period_limit=Decimal("10000.00"),
                 period_budget=Decimal("15000.00"),
                 duplicate_window_days=90,
                 agreement_tolerance_pct=Decimal("5.00"),
                 min_extraction_confidence=0.8,
                 require_allowlisted_beneficiary=True,
+                require_verified_beneficiary=True,
+                block_sanctioned=True,
+                sanctioned_countries=["KP", "IR", "SY", "CU", "RU"],
+                review_on_vendor_changes=True,
+                required_fields=["invoice_number", "vendor_name", "amount", "currency", "due_date"],
+                retention_years=5,
                 severity_overrides={},
             )
             return self.save_new_version(default_rules)
@@ -75,12 +89,20 @@ class SqlRuleSetRepository:
             approval_threshold=rule_set.approval_threshold,
             per_payment_limit=rule_set.per_payment_limit,
             period=rule_set.period,
+            period_days=rule_set.period_days,
             period_limit=rule_set.period_limit,
+            per_vendor_period_limit=rule_set.per_vendor_period_limit,
             period_budget=rule_set.period_budget,
             duplicate_window_days=rule_set.duplicate_window_days,
             agreement_tolerance_pct=rule_set.agreement_tolerance_pct,
             min_extraction_confidence=rule_set.min_extraction_confidence,
             require_allowlisted_beneficiary=rule_set.require_allowlisted_beneficiary,
+            require_verified_beneficiary=rule_set.require_verified_beneficiary,
+            block_sanctioned=rule_set.block_sanctioned,
+            sanctioned_countries=rule_set.sanctioned_countries,
+            review_on_vendor_changes=rule_set.review_on_vendor_changes,
+            required_fields=rule_set.required_fields,
+            retention_years=rule_set.retention_years,
             severity_overrides=rule_set.severity_overrides,
         )
         self.db.add(model)
@@ -99,12 +121,20 @@ class SqlRuleSetRepository:
             approval_threshold=Decimal(str(row.approval_threshold)),
             per_payment_limit=Decimal(str(row.per_payment_limit)),
             period=row.period,
+            period_days=row.period_days,
             period_limit=Decimal(str(row.period_limit)),
+            per_vendor_period_limit=Decimal(str(row.per_vendor_period_limit)) if row.per_vendor_period_limit is not None else None,
             period_budget=Decimal(str(row.period_budget)),
             duplicate_window_days=row.duplicate_window_days,
             agreement_tolerance_pct=Decimal(str(row.agreement_tolerance_pct)),
             min_extraction_confidence=row.min_extraction_confidence,
             require_allowlisted_beneficiary=row.require_allowlisted_beneficiary,
+            require_verified_beneficiary=row.require_verified_beneficiary,
+            block_sanctioned=row.block_sanctioned,
+            sanctioned_countries=row.sanctioned_countries or [],
+            review_on_vendor_changes=row.review_on_vendor_changes,
+            required_fields=row.required_fields or [],
+            retention_years=row.retention_years,
             severity_overrides=row.severity_overrides or {},
         )
 
@@ -140,7 +170,7 @@ class SqlBeneficiaryRepository:
         if name and name.strip():
             target = _normalize_name(name)
             for row in self.db.execute(select(BeneficiaryModel)).scalars().all():
-                if _normalize_name(row.name) == target:
+                if _normalize_name(row.name) == target or (row.legal_name and _normalize_name(row.legal_name) == target):
                     return Beneficiary.model_validate(row)
         return None
 
@@ -148,10 +178,14 @@ class SqlBeneficiaryRepository:
         existing = self.db.get(BeneficiaryModel, beneficiary.id)
         if existing:
             existing.name = beneficiary.name
+            existing.legal_name = beneficiary.legal_name
             existing.tax_id = beneficiary.tax_id
             existing.account = beneficiary.account
             existing.country = beneficiary.country
             existing.allowed = beneficiary.allowed
+            existing.verified = beneficiary.verified
+            existing.sanctioned = beneficiary.sanctioned
+            existing.owners = beneficiary.owners
             model = existing
         else:
             model = BeneficiaryModel(**beneficiary.model_dump())
@@ -250,6 +284,30 @@ class SqlInvoiceRepository:
         rows = self.db.execute(stmt).scalars().all()
         return [ExtractedInvoice.model_validate(r.extracted) for r in rows if r.extracted]
 
+    def get_last_paid_for_vendor(
+        self,
+        vendor_name: str | None = None,
+        vendor_tax_id: str | None = None,
+        exclude_invoice_id: str | None = None,
+    ) -> ExtractedInvoice | None:
+        stmt = (
+            select(InvoiceModel)
+            .where(InvoiceModel.status.in_([InvoiceStatus.paid.value, InvoiceStatus.approved.value]))
+            .where(InvoiceModel.extracted.is_not(None))
+            .order_by(desc(InvoiceModel.received_at))
+        )
+        if exclude_invoice_id:
+            stmt = stmt.where(InvoiceModel.id != exclude_invoice_id)
+
+        norm_name = _normalize_name(vendor_name) if vendor_name else None
+        for row in self.db.execute(stmt).scalars().all():
+            ext = ExtractedInvoice.model_validate(row.extracted)
+            if vendor_tax_id and ext.vendor_tax_id and ext.vendor_tax_id.strip() == vendor_tax_id.strip():
+                return ext
+            if norm_name and ext.vendor_name and _normalize_name(ext.vendor_name) == norm_name:
+                return ext
+        return None
+
     @staticmethod
     def _to_schema(row: InvoiceModel) -> Invoice:
         return Invoice(
@@ -321,6 +379,8 @@ class SqlDecisionRepository:
         self,
         start_dt: datetime | None = None,
         end_dt: datetime | None = None,
+        vendor_name: str | None = None,
+        vendor_tax_id: str | None = None,
     ) -> Decimal:
         stmt = select(InvoiceModel).where(
             InvoiceModel.status.in_([InvoiceStatus.paid.value, InvoiceStatus.approved.value])
@@ -330,9 +390,20 @@ class SqlDecisionRepository:
         if end_dt:
             stmt = stmt.where(InvoiceModel.received_at <= end_dt)
 
+        norm_name = _normalize_name(vendor_name) if vendor_name else None
         invoices = self.db.execute(stmt).scalars().all()
         total = Decimal("0.00")
         for inv in invoices:
+            if vendor_name or vendor_tax_id:
+                if not inv.extracted:
+                    continue
+                ext_tax = inv.extracted.get("vendor_tax_id")
+                ext_name = inv.extracted.get("vendor_name")
+                tax_match = bool(vendor_tax_id and ext_tax and ext_tax.strip() == vendor_tax_id.strip())
+                name_match = bool(norm_name and ext_name and _normalize_name(ext_name) == norm_name)
+                if not (tax_match or name_match):
+                    continue
+
             latest_dec = self.db.execute(
                 select(DecisionModel)
                 .where(DecisionModel.invoice_id == inv.id)

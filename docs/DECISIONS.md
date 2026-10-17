@@ -46,3 +46,12 @@ Decisión (Dev A): "se rechaza" = `block` (en la UI, "Rechazada por el agente"; 
 
 ## ADR-014 · Primitivos de UI propios sobre Radix en lugar del CLI de shadcn
 Decisión: los componentes de `src/components/ui` se escribieron a mano con `radix-ui` siguiendo el patrón de shadcn. Por qué: el tema es propio (no el de shadcn) y las versiones nuevas del stack (Vite 8, TS 6) hacían innecesario el paso por el CLI.
+
+## ADR-016 · Incorporación de políticas de Dev C, soporte .eml simultáneo y guardia de reevaluación
+Decisión (Dev B con Dev A y Dev C):
+1. **Reglas y beneficiarios ampliados:** `RuleSet` incorpora `period_days` (ventana móvil), `per_vendor_period_limit`, `require_verified_beneficiary`, `block_sanctioned`, `sanctioned_countries`, `review_on_vendor_changes`, `required_fields` y `retention_years`. `Beneficiary` agrega `legal_name`, `verified`, `sanctioned` y `owners`.
+2. **Consultas de historial por proveedor:** `InvoiceRepository.get_last_paid_for_vendor` para detectar cambios bancarios o de monto, y `DecisionRepository.sum_spent_between` con filtro de proveedor para control del límite por proveedor en el periodo.
+3. **Entrada simultánea texto + adjunto:** `POST /api/conversations/{id}/messages` persiste `raw_text` (cuerpo/encabezados de correo) y `source_filename` (PDF/imagen adjunto) a la vez en la factura.
+4. **Protección de reevaluación:** `POST /api/invoices/{id}/reevaluate` devuelve 409 Conflict si la factura está en estado distinto a `blocked` o `pending_approval` para no sobreescribir decisiones humanas (pagadas, aprobadas o rechazadas).
+5. **Rate limiting:** Se mantiene exclusivamente en `/api/dev/*` para permitir la ejecución por lotes (`BatchRun` de hasta 50 facturas) en `/api/conversations` e `/api/invoices`.
+

@@ -12,7 +12,7 @@ MoneyStr = Annotated[
 
 PositiveMoneyStr = Annotated[
     Decimal,
-    Field(gt=Decimal(0)),
+    Field(gt=Decimal("0")),
     PlainSerializer(lambda v: f"{v:.2f}" if v is not None else None, return_type=str, when_used="json"),
 ]
 
@@ -54,6 +54,7 @@ class ExtractedInvoice(BaseModel):
     vendor_name: str | None = None
     vendor_tax_id: str | None = None
     beneficiary_account: str | None = None
+    vendor_country: str | None = Field(default=None, min_length=2, max_length=2)
     amount: PositiveMoneyStr | None = None
     currency: str | None = Field(default=None, min_length=3, max_length=3)
     issue_date: date | None = None
@@ -85,13 +86,23 @@ class RuleSet(BaseModel):
     allowed_currencies: list[str]
     approval_threshold: PositiveMoneyStr
     per_payment_limit: PositiveMoneyStr
-    period: Literal["weekly", "monthly"]
+    period: Literal["weekly", "monthly"] = "weekly"
+    period_days: int = Field(default=7, ge=1)
     period_limit: PositiveMoneyStr
+    per_vendor_period_limit: PositiveMoneyStr | None = Field(default=Decimal("10000.00"))
     period_budget: PositiveMoneyStr
-    duplicate_window_days: int = Field(ge=0)
-    agreement_tolerance_pct: Decimal = Field(ge=Decimal(0))
-    min_extraction_confidence: float = Field(ge=0.0, le=1.0)
+    duplicate_window_days: int = Field(default=90, ge=0)
+    agreement_tolerance_pct: Decimal = Field(default=Decimal("5.00"), ge=Decimal("0"))
+    min_extraction_confidence: float = Field(default=0.8, ge=0.0, le=1.0)
     require_allowlisted_beneficiary: bool = True
+    require_verified_beneficiary: bool = True
+    block_sanctioned: bool = True
+    sanctioned_countries: list[str] = Field(default_factory=lambda: ["KP", "IR", "SY", "CU", "RU"])
+    review_on_vendor_changes: bool = True
+    required_fields: list[str] = Field(
+        default_factory=lambda: ["invoice_number", "vendor_name", "amount", "currency", "due_date"]
+    )
+    retention_years: int = Field(default=5, ge=1)
     severity_overrides: dict[str, Literal["block", "escalate"]] = Field(default_factory=dict)
 
     @field_validator("severity_overrides", mode="before")
@@ -109,10 +120,14 @@ class Beneficiary(BaseModel):
 
     id: str
     name: str
+    legal_name: str | None = None
     tax_id: str | None = None
     account: str | None = None
-    country: str | None = None
+    country: str | None = Field(default=None, min_length=2, max_length=2)
     allowed: bool = True
+    verified: bool = True
+    sanctioned: bool = False
+    owners: list[str] = Field(default_factory=list)
 
 
 class Agreement(BaseModel):
@@ -143,7 +158,9 @@ class EvaluationContext(BaseModel):
     beneficiary: Beneficiary | None = None
     agreement: Agreement | None = None
     previous_invoices: list[ExtractedInvoice] = Field(default_factory=list)
+    last_vendor_invoice: ExtractedInvoice | None = None
     spent_in_period: MoneyStr = Decimal("0.00")
+    vendor_spent_in_period: MoneyStr = Decimal("0.00")
 
 
 class EngineResult(BaseModel):
@@ -226,3 +243,4 @@ class SummaryResponse(BaseModel):
     spent_in_period: MoneyStr
     period_limit: MoneyStr
     period_budget: MoneyStr
+

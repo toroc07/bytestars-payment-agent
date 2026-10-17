@@ -45,6 +45,12 @@ class InvoiceRepository(Protocol):
     def list_all(self, status: InvoiceStatus | None = None) -> list[Invoice]: ...
     def update(self, invoice: Invoice) -> Invoice: ...
     def list_previous_extractions(self, exclude_invoice_id: str | None = None) -> list[ExtractedInvoice]: ...
+    def get_last_paid_for_vendor(
+        self,
+        vendor_name: str | None = None,
+        vendor_tax_id: str | None = None,
+        exclude_invoice_id: str | None = None,
+    ) -> ExtractedInvoice | None: ...
 
 
 class DecisionRepository(Protocol):
@@ -61,6 +67,8 @@ class DecisionRepository(Protocol):
         self,
         start_dt: datetime | None = None,
         end_dt: datetime | None = None,
+        vendor_name: str | None = None,
+        vendor_tax_id: str | None = None,
     ) -> Decimal: ...
 
 
@@ -76,3 +84,4 @@ class ConversationRepository(Protocol):
     ) -> None: ...
     def get_messages(self, conversation_id: str) -> list[ChatMessage]: ...
     def add_message(self, message: ChatMessage) -> ChatMessage: ...
+

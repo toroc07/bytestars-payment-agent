@@ -1,4 +1,4 @@
-from datetime import UTC, date, datetime
+from datetime import date, datetime, timezone
 from decimal import Decimal
 
 from sqlalchemy import JSON, Boolean, Date, DateTime, Float, ForeignKey, Integer, Numeric, String, Text
@@ -8,7 +8,7 @@ from app.db.session import Base
 
 
 def utcnow() -> datetime:
-    return datetime.now(UTC)
+    return datetime.now(timezone.utc)
 
 
 class RuleSetModel(Base):
@@ -21,13 +21,21 @@ class RuleSetModel(Base):
     allowed_currencies: Mapped[list] = mapped_column(JSON, nullable=False)
     approval_threshold: Mapped[Decimal] = mapped_column(Numeric(18, 2), nullable=False)
     per_payment_limit: Mapped[Decimal] = mapped_column(Numeric(18, 2), nullable=False)
-    period: Mapped[str] = mapped_column(String(20), nullable=False)
+    period: Mapped[str] = mapped_column(String(20), nullable=False, default="weekly")
+    period_days: Mapped[int] = mapped_column(Integer, nullable=False, default=7)
     period_limit: Mapped[Decimal] = mapped_column(Numeric(18, 2), nullable=False)
+    per_vendor_period_limit: Mapped[Decimal | None] = mapped_column(Numeric(18, 2), nullable=True)
     period_budget: Mapped[Decimal] = mapped_column(Numeric(18, 2), nullable=False)
-    duplicate_window_days: Mapped[int] = mapped_column(Integer, nullable=False)
-    agreement_tolerance_pct: Mapped[Decimal] = mapped_column(Numeric(8, 2), nullable=False)
-    min_extraction_confidence: Mapped[float] = mapped_column(Float, nullable=False)
+    duplicate_window_days: Mapped[int] = mapped_column(Integer, nullable=False, default=90)
+    agreement_tolerance_pct: Mapped[Decimal] = mapped_column(Numeric(8, 2), nullable=False, default=Decimal("5.00"))
+    min_extraction_confidence: Mapped[float] = mapped_column(Float, nullable=False, default=0.8)
     require_allowlisted_beneficiary: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    require_verified_beneficiary: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    block_sanctioned: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    sanctioned_countries: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    review_on_vendor_changes: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    required_fields: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    retention_years: Mapped[int] = mapped_column(Integer, nullable=False, default=5)
     severity_overrides: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
@@ -37,10 +45,14 @@ class BeneficiaryModel(Base):
 
     id: Mapped[str] = mapped_column(String(64), primary_key=True)
     name: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    legal_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
     tax_id: Mapped[str | None] = mapped_column(String(100), nullable=True, index=True)
     account: Mapped[str | None] = mapped_column(String(100), nullable=True, index=True)
     country: Mapped[str | None] = mapped_column(String(10), nullable=True)
     allowed: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    verified: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    sanctioned: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    owners: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
 
 
 class AgreementModel(Base):
@@ -104,3 +116,4 @@ class MessageModel(Base):
     invoice_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
     decision_id: Mapped[str | None] = mapped_column(String(64), ForeignKey("decisions.id"), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+

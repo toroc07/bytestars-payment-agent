@@ -358,6 +358,8 @@ export interface components {
             id: string;
             /** Name */
             name: string;
+            /** Legal Name */
+            legal_name?: string | null;
             /** Tax Id */
             tax_id?: string | null;
             /** Account */
@@ -369,6 +371,18 @@ export interface components {
              * @default true
              */
             allowed: boolean;
+            /**
+             * Verified
+             * @default true
+             */
+            verified: boolean;
+            /**
+             * Sanctioned
+             * @default false
+             */
+            sanctioned: boolean;
+            /** Owners */
+            owners?: string[];
         };
         /** Body_send_message_api_conversations__conversation_id__messages_post */
         Body_send_message_api_conversations__conversation_id__messages_post: {
@@ -463,6 +477,8 @@ export interface components {
             vendor_tax_id?: string | null;
             /** Beneficiary Account */
             beneficiary_account?: string | null;
+            /** Vendor Country */
+            vendor_country?: string | null;
             /** Amount */
             amount?: string | null;
             /** Currency */
@@ -558,24 +574,68 @@ export interface components {
             per_payment_limit: number | string;
             /**
              * Period
+             * @default weekly
              * @enum {string}
              */
             period: "weekly" | "monthly";
+            /**
+             * Period Days
+             * @default 7
+             */
+            period_days: number;
             /** Period Limit */
             period_limit: number | string;
+            /**
+             * Per Vendor Period Limit
+             * @default 10000.00
+             */
+            per_vendor_period_limit: number | string | null;
             /** Period Budget */
             period_budget: number | string;
-            /** Duplicate Window Days */
+            /**
+             * Duplicate Window Days
+             * @default 90
+             */
             duplicate_window_days: number;
-            /** Agreement Tolerance Pct */
+            /**
+             * Agreement Tolerance Pct
+             * @default 5.00
+             */
             agreement_tolerance_pct: number | string;
-            /** Min Extraction Confidence */
+            /**
+             * Min Extraction Confidence
+             * @default 0.8
+             */
             min_extraction_confidence: number;
             /**
              * Require Allowlisted Beneficiary
              * @default true
              */
             require_allowlisted_beneficiary: boolean;
+            /**
+             * Require Verified Beneficiary
+             * @default true
+             */
+            require_verified_beneficiary: boolean;
+            /**
+             * Block Sanctioned
+             * @default true
+             */
+            block_sanctioned: boolean;
+            /** Sanctioned Countries */
+            sanctioned_countries?: string[];
+            /**
+             * Review On Vendor Changes
+             * @default true
+             */
+            review_on_vendor_changes: boolean;
+            /** Required Fields */
+            required_fields?: string[];
+            /**
+             * Retention Years
+             * @default 5
+             */
+            retention_years: number;
             /** Severity Overrides */
             severity_overrides?: {
                 [key: string]: "block" | "escalate";
@@ -607,24 +667,68 @@ export interface components {
             per_payment_limit: string;
             /**
              * Period
+             * @default weekly
              * @enum {string}
              */
             period: "weekly" | "monthly";
+            /**
+             * Period Days
+             * @default 7
+             */
+            period_days: number;
             /** Period Limit */
             period_limit: string;
+            /**
+             * Per Vendor Period Limit
+             * @default 10000.00
+             */
+            per_vendor_period_limit: string | null;
             /** Period Budget */
             period_budget: string;
-            /** Duplicate Window Days */
+            /**
+             * Duplicate Window Days
+             * @default 90
+             */
             duplicate_window_days: number;
-            /** Agreement Tolerance Pct */
+            /**
+             * Agreement Tolerance Pct
+             * @default 5.00
+             */
             agreement_tolerance_pct: string;
-            /** Min Extraction Confidence */
+            /**
+             * Min Extraction Confidence
+             * @default 0.8
+             */
             min_extraction_confidence: number;
             /**
              * Require Allowlisted Beneficiary
              * @default true
              */
             require_allowlisted_beneficiary: boolean;
+            /**
+             * Require Verified Beneficiary
+             * @default true
+             */
+            require_verified_beneficiary: boolean;
+            /**
+             * Block Sanctioned
+             * @default true
+             */
+            block_sanctioned: boolean;
+            /** Sanctioned Countries */
+            sanctioned_countries?: string[];
+            /**
+             * Review On Vendor Changes
+             * @default true
+             */
+            review_on_vendor_changes: boolean;
+            /** Required Fields */
+            required_fields?: string[];
+            /**
+             * Retention Years
+             * @default 5
+             */
+            retention_years: number;
             /** Severity Overrides */
             severity_overrides?: {
                 [key: string]: "block" | "escalate";

@@ -1,5 +1,5 @@
 import uuid
-from datetime import UTC, date, datetime
+from datetime import UTC, date, datetime, timedelta, timezone
 from decimal import Decimal
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -128,6 +128,11 @@ def reevaluate_invoice(
     invoice = inv_repo.get(invoice_id)
     if not invoice:
         raise HTTPException(status_code=404, detail="Factura no encontrada")
+    if invoice.status not in (InvoiceStatus.blocked, InvoiceStatus.pending_approval):
+        raise HTTPException(
+            status_code=409,
+            detail=f"Solo se pueden reevaluar facturas en estado 'blocked' o 'pending_approval' (estado actual: '{invoice.status.value}')",
+        )
 
     rules = rule_repo.get_current()
     extracted = invoice.extracted
@@ -145,13 +150,26 @@ def reevaluate_invoice(
             else None
         )
         agreements = agr_repo.find_by_beneficiary(matched_ben.id) if matched_ben else []
+        window_start = datetime.now(timezone.utc) - timedelta(days=rules.period_days)
+        v_name = matched_ben.name if matched_ben else (extracted.vendor_name if extracted else None)
+        v_tax = matched_ben.tax_id if matched_ben else (extracted.vendor_tax_id if extracted else None)
+
         ctx = EvaluationContext(
             today=date.today(),
             beneficiary=matched_ben,
             agreement=agreements[0] if agreements else None,
             previous_invoices=inv_repo.list_previous_extractions(exclude_invoice_id=invoice.id),
-            spent_in_period=dec_repo.sum_spent_between(),
+            last_vendor_invoice=inv_repo.get_last_paid_for_vendor(
+                vendor_name=v_name, vendor_tax_id=v_tax, exclude_invoice_id=invoice.id
+            ),
+            spent_in_period=dec_repo.sum_spent_between(start_dt=window_start),
+            vendor_spent_in_period=dec_repo.sum_spent_between(
+                start_dt=window_start, vendor_name=v_name, vendor_tax_id=v_tax
+            )
+            if (v_name or v_tax)
+            else Decimal("0.00"),
         )
+
         engine_res = evaluate(extracted, rules, ctx)
         outcome = engine_res.outcome
         checks = engine_res.checks

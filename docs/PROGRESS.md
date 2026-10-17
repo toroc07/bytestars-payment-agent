@@ -52,17 +52,18 @@ Dev B también ayuda con el motor de decisiones: al repartir tareas del motor, a
 | Tarea | Estado | Notas |
 |---|---|---|
 | Proyecto FastAPI base + `/health` + CORS | listo | `app/main.py`, lifespan con inicialización DB, config y CORS |
-| Modelos SQLAlchemy + migraciones | listo | Modelos en `app/db/models.py` para todas las entidades |
-| Repositorios (implementan `ports`) | listo | Repositorios SQL síncronos en `app/db/repositories.py` (Decision append-only) |
-| Rutas de la API | listo | Rutas en `app/api/routes/` con validación 409, fail-closed y rate limits |
-| Seed y reset con el dataset | listo | `app/db/seed.py` carga empresa, beneficiarios y acuerdos |
-| Exportar `contracts/openapi.json` | listo | Exportado vía `scripts/export_openapi.py` (2000 líneas) |
+| Modelos SQLAlchemy + migraciones | listo | Modelos en `app/db/models.py` actualizados con reglas de Dev C |
+| Repositorios (implementan `ports`) | listo | `app/db/repositories.py` con historial por proveedor y gasto en ventana móvil |
+| Rutas de la API | listo | Rutas en `app/api/routes/` con soporte multipart simultáneo, 409 en reevaluación indebida y rate limits solo en demo |
+| Seed y reset con el dataset | listo | `dataset/company.json` y `app/db/seed.py` sincronizados con nuevas políticas y atributos |
+| Exportar `contracts/openapi.json` | listo | Exportado y sincronizado con tipos frontend (`gen:api`) |
 
 ## Dataset y reglas de la empresa ficticia (Dev C)
 Tareas por definir por Dev C (empresa ficticia, reglas, beneficiarios, acuerdos, facturas simuladas, resultados esperados). Agregar sus filas aquí.
 | Tarea | Estado | Notas |
 |---|---|---|
-| _(por definir)_ | pendiente | |
+| Dataset de 25 correos `.eml` y facturas | listo | Estructura en `dataset/` |
+| Políticas de la empresa (R01–R11) | listo | Definidas en `DECISION_ENGINE.md` y sincronizadas en backend |
 
 ## Deploy
 | Tarea | Estado | Notas |
@@ -71,10 +72,10 @@ Tareas por definir por Dev C (empresa ficticia, reglas, beneficiarios, acuerdos,
 | Confirmar créditos/free tier de Gemini | pendiente | lo revisa quien tiene Google AI Pro |
 
 ## Bloqueos y preguntas abiertas
-- (Dev A → Dev B) Implementar en el backend los campos ✱ del `RuleSet` y del `Beneficiary` propuestos en `docs/DATA_MODEL.md` (reglas de Dev C) y regenerar `contracts/openapi.json`. El panel de configuración del frontend los mostrará solo, ya con etiquetas en español. Decidir juntos si se quitan `period_budget`, `agreement_tolerance_pct` y `period`.
-- (Dev A → Dev B) Actualizar `dataset/company.json` con los valores de Dev C (límite por pago 10,000; umbral 5,000; 7 días / 50,000; 20,000 por proveedor).
+- ~~(Dev A → Dev B) Implementar en el backend los campos ✱ del `RuleSet` y del `Beneficiary` propuestos en `docs/DATA_MODEL.md` (reglas de Dev C) y regenerar `contracts/openapi.json`.~~ **Completado.**
+- ~~(Dev A → Dev B) Actualizar `dataset/company.json` con los valores de Dev C.~~ **Completado.**
+- ~~(Dev A → Dev B) `POST /api/invoices/{id}/reevaluate` no restringe el estado.~~ **Resuelto: devuelve 409 en facturas fuera de `blocked` o `pending_approval`.**
 - (Dev A → Dev B) El backend devuelve fechas sin zona horaria (`2026-10-17T03:07:07`, SQLite pierde el offset). El frontend las trata como UTC, pero lo correcto es serializarlas con `Z` / offset.
 - (Dev A → Dev B) Sugerencia: agregar `title`/`description` en español a los `Field` del `RuleSet` para que el panel de reglas no dependa del diccionario de etiquetas del frontend.
-- (Equipo) `dataset/company.json` lo creó Dev B con datos que estaban en una propuesta descartada; falta acordar con Dev C si se mantiene.
-- (Dev A → Dev B) `POST /api/invoices/{id}/reevaluate` no restringe el estado: hoy permite reevaluar una factura pagada, aprobada o **rechazada por una persona**, y el agente pasaría por encima de esa decisión humana. El frontend solo lo ofrece en `blocked` y `pending_approval`; el backend debería devolver 409 en los demás estados.
 - (Dev A → Dev C) Formatos que el frontend sabe enviar: **PDF, PNG, JPG** (como archivo) y **`.eml`, `.txt`, `.md`** (se leen y se mandan como texto). Otros formatos (`.webp`, `.heic`, `.msg`, `.docx`) se rechazan; máximo 4 MB por archivo. Las 4 carpetas del dataset se pueden cargar como lote desde la pantalla inicial (hasta 50 archivos por vez).
+

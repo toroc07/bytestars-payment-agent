@@ -1,3 +1,5 @@
+from datetime import datetime, timedelta, timezone
+
 from fastapi import APIRouter, Depends, HTTPException, Query
 
 from app.api.deps import get_decision_repo, get_invoice_repo, get_rule_repo
@@ -54,7 +56,8 @@ def get_summary(
 ) -> SummaryResponse:
     invoices = inv_repo.list_all()
     rules = rule_repo.get_current()
-    spent = dec_repo.sum_spent_between()
+    window_start = datetime.now(timezone.utc) - timedelta(days=rules.period_days)
+    spent = dec_repo.sum_spent_between(start_dt=window_start)
 
     paid_count = sum(1 for i in invoices if i.status in (InvoiceStatus.paid, InvoiceStatus.approved))
     blocked_count = sum(1 for i in invoices if i.status in (InvoiceStatus.blocked, InvoiceStatus.rejected))

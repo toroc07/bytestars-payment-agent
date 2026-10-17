@@ -1040,6 +1040,17 @@
             "type": "string",
             "title": "Name"
           },
+          "legal_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Legal Name"
+          },
           "tax_id": {
             "anyOf": [
               {
@@ -1065,7 +1076,9 @@
           "country": {
             "anyOf": [
               {
-                "type": "string"
+                "type": "string",
+                "maxLength": 2,
+                "minLength": 2
               },
               {
                 "type": "null"
@@ -1077,6 +1090,23 @@
             "type": "boolean",
             "title": "Allowed",
             "default": true
+          },
+          "verified": {
+            "type": "boolean",
+            "title": "Verified",
+            "default": true
+          },
+          "sanctioned": {
+            "type": "boolean",
+            "title": "Sanctioned",
+            "default": false
+          },
+          "owners": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Owners"
           }
         },
         "type": "object",
@@ -1395,6 +1425,19 @@
             ],
             "title": "Beneficiary Account"
           },
+          "vendor_country": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 2,
+                "minLength": 2
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vendor Country"
+          },
           "amount": {
             "anyOf": [
               {
@@ -1696,7 +1739,14 @@
               "weekly",
               "monthly"
             ],
-            "title": "Period"
+            "title": "Period",
+            "default": "weekly"
+          },
+          "period_days": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Period Days",
+            "default": 7
           },
           "period_limit": {
             "anyOf": [
@@ -1709,6 +1759,22 @@
               }
             ],
             "title": "Period Limit"
+          },
+          "per_vendor_period_limit": {
+            "anyOf": [
+              {
+                "type": "number",
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Per Vendor Period Limit",
+            "default": "10000.00"
           },
           "period_budget": {
             "anyOf": [
@@ -1725,7 +1791,8 @@
           "duplicate_window_days": {
             "type": "integer",
             "minimum": 0.0,
-            "title": "Duplicate Window Days"
+            "title": "Duplicate Window Days",
+            "default": 90
           },
           "agreement_tolerance_pct": {
             "anyOf": [
@@ -1737,18 +1804,55 @@
                 "type": "string"
               }
             ],
-            "title": "Agreement Tolerance Pct"
+            "title": "Agreement Tolerance Pct",
+            "default": "5.00"
           },
           "min_extraction_confidence": {
             "type": "number",
             "maximum": 1.0,
             "minimum": 0.0,
-            "title": "Min Extraction Confidence"
+            "title": "Min Extraction Confidence",
+            "default": 0.8
           },
           "require_allowlisted_beneficiary": {
             "type": "boolean",
             "title": "Require Allowlisted Beneficiary",
             "default": true
+          },
+          "require_verified_beneficiary": {
+            "type": "boolean",
+            "title": "Require Verified Beneficiary",
+            "default": true
+          },
+          "block_sanctioned": {
+            "type": "boolean",
+            "title": "Block Sanctioned",
+            "default": true
+          },
+          "sanctioned_countries": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Sanctioned Countries"
+          },
+          "review_on_vendor_changes": {
+            "type": "boolean",
+            "title": "Review On Vendor Changes",
+            "default": true
+          },
+          "required_fields": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Required Fields"
+          },
+          "retention_years": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Retention Years",
+            "default": 5
           },
           "severity_overrides": {
             "additionalProperties": {
@@ -1769,12 +1873,8 @@
           "allowed_currencies",
           "approval_threshold",
           "per_payment_limit",
-          "period",
           "period_limit",
-          "period_budget",
-          "duplicate_window_days",
-          "agreement_tolerance_pct",
-          "min_extraction_confidence"
+          "period_budget"
         ],
         "title": "RuleSet"
       },
@@ -1824,11 +1924,30 @@
               "weekly",
               "monthly"
             ],
-            "title": "Period"
+            "title": "Period",
+            "default": "weekly"
+          },
+          "period_days": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Period Days",
+            "default": 7
           },
           "period_limit": {
             "type": "string",
             "title": "Period Limit"
+          },
+          "per_vendor_period_limit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Per Vendor Period Limit",
+            "default": "10000.00"
           },
           "period_budget": {
             "type": "string",
@@ -1837,22 +1956,60 @@
           "duplicate_window_days": {
             "type": "integer",
             "minimum": 0.0,
-            "title": "Duplicate Window Days"
+            "title": "Duplicate Window Days",
+            "default": 90
           },
           "agreement_tolerance_pct": {
             "type": "string",
-            "title": "Agreement Tolerance Pct"
+            "title": "Agreement Tolerance Pct",
+            "default": "5.00"
           },
           "min_extraction_confidence": {
             "type": "number",
             "maximum": 1.0,
             "minimum": 0.0,
-            "title": "Min Extraction Confidence"
+            "title": "Min Extraction Confidence",
+            "default": 0.8
           },
           "require_allowlisted_beneficiary": {
             "type": "boolean",
             "title": "Require Allowlisted Beneficiary",
             "default": true
+          },
+          "require_verified_beneficiary": {
+            "type": "boolean",
+            "title": "Require Verified Beneficiary",
+            "default": true
+          },
+          "block_sanctioned": {
+            "type": "boolean",
+            "title": "Block Sanctioned",
+            "default": true
+          },
+          "sanctioned_countries": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Sanctioned Countries"
+          },
+          "review_on_vendor_changes": {
+            "type": "boolean",
+            "title": "Review On Vendor Changes",
+            "default": true
+          },
+          "required_fields": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Required Fields"
+          },
+          "retention_years": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Retention Years",
+            "default": 5
           },
           "severity_overrides": {
             "additionalProperties": {
@@ -1873,12 +2030,8 @@
           "allowed_currencies",
           "approval_threshold",
           "per_payment_limit",
-          "period",
           "period_limit",
-          "period_budget",
-          "duplicate_window_days",
-          "agreement_tolerance_pct",
-          "min_extraction_confidence"
+          "period_budget"
         ],
         "title": "RuleSet"
       },
