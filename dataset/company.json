@@ -1,0 +1,45 @@
+{
+  "rule_set": {
+    "version": 1,
+    "company_name": "Nimbus Labs Inc.",
+    "base_currency": "USD",
+    "fx_rates": {
+      "USD": "1.00",
+      "EUR": "1.10",
+      "COP": "0.00025",
+      "MXN": "0.055",
+      "BRL": "0.19"
+    },
+    "allowed_currencies": ["USD", "EUR", "COP", "MXN", "BRL"],
+    "approval_threshold": "5000.00",
+    "per_payment_limit": "20000.00",
+    "period": "monthly",
+    "period_limit": "10000.00",
+    "period_budget": "15000.00",
+    "duplicate_window_days": 90,
+    "agreement_tolerance_pct": "5.00",
+    "min_extraction_confidence": 0.8,
+    "require_allowlisted_beneficiary": true,
+    "severity_overrides": {}
+  },
+  "beneficiaries": [
+    {"id": "ben-devshop", "name": "DevShop Latam S.A.S.", "tax_id": "CO-900123456", "account": "CO-ACC-001", "country": "CO", "allowed": true},
+    {"id": "ben-cloudly", "name": "Cloudly Hosting Inc.", "tax_id": "US-123456789", "account": "US-ACC-002", "country": "US", "allowed": true},
+    {"id": "ben-estudio-mx", "name": "Estudio Diseño MX", "tax_id": "MX-EDM900101", "account": "MX-ACC-003", "country": "MX", "allowed": true},
+    {"id": "ben-legal", "name": "Legal Partners LLP", "tax_id": "US-987654321", "account": "US-ACC-004", "country": "US", "allowed": true},
+    {"id": "ben-datainsights", "name": "Data Insights Ltda.", "tax_id": "BR-11223344", "account": "BR-ACC-005", "country": "BR", "allowed": true},
+    {"id": "ben-berlin", "name": "Berlin Analytics GmbH", "tax_id": "DE-55667788", "account": "DE-ACC-006", "country": "DE", "allowed": true},
+    {"id": "ben-andina", "name": "Andina Creativa S.A.S.", "tax_id": "CO-900654321", "account": "CO-ACC-007", "country": "CO", "allowed": true},
+    {"id": "ben-kansai", "name": "Kansai Robotics KK", "tax_id": "JP-44556677", "account": "JP-ACC-008", "country": "JP", "allowed": true}
+  ],
+  "agreements": [
+    {"id": "agr-devshop", "beneficiary_id": "ben-devshop", "description": "Desarrollo web mensual", "expected_amount": "1200.00", "currency": "USD", "po_reference": "PO-2026-01"},
+    {"id": "agr-cloudly", "beneficiary_id": "ben-cloudly", "description": "Hosting", "expected_amount": "3400.00", "currency": "USD", "po_reference": "PO-2026-02"},
+    {"id": "agr-estudio-mx", "beneficiary_id": "ben-estudio-mx", "description": "Retainer de diseño", "expected_amount": "120000.00", "currency": "MXN", "po_reference": "PO-2026-03"},
+    {"id": "agr-legal", "beneficiary_id": "ben-legal", "description": "Asesoría legal", "expected_amount": "25000.00", "currency": "USD", "po_reference": "PO-2026-04"},
+    {"id": "agr-datainsights", "beneficiary_id": "ben-datainsights", "description": "Reportes mensuales", "expected_amount": "1500.00", "currency": "USD", "po_reference": "PO-2026-05"},
+    {"id": "agr-berlin", "beneficiary_id": "ben-berlin", "description": "Analítica", "expected_amount": "2000.00", "currency": "EUR", "po_reference": "PO-2026-06"},
+    {"id": "agr-andina", "beneficiary_id": "ben-andina", "description": "Producción creativa", "expected_amount": "8000000.00", "currency": "COP", "po_reference": "PO-2026-07"},
+    {"id": "agr-kansai", "beneficiary_id": "ben-kansai", "description": "Prototipos", "expected_amount": "300000.00", "currency": "JPY", "po_reference": "PO-2026-08"}
+  ]
+}
