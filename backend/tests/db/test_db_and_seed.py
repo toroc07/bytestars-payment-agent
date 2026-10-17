@@ -219,3 +219,26 @@ def test_llm_cache_keeps_the_first_reading_and_survives_reset(db_session):
     assert cache.get("k1") == {"invoice_number": "ATS-842"} and cache.get("k2") is None
     reset_database(db_session)
     assert cache.get("k1") == {"invoice_number": "ATS-842"}
+
+
+def test_seed_uses_the_build_copy_when_the_dataset_folder_is_not_deployed(db_session, tmp_path, monkeypatch):
+    import shutil
+
+    from app.db import seed
+
+    copy = tmp_path / "seed_data" / "company.json"
+    copy.parent.mkdir()
+    shutil.copyfile(seed.COMPANY_JSON_CANDIDATES[0], copy)
+    monkeypatch.setattr(seed, "COMPANY_JSON_CANDIDATES", [tmp_path / "missing" / "company.json", copy])
+    assert seed.find_company_json() == copy
+    assert seed_database(db_session) > 0
+
+
+def test_settings_use_tmp_sqlite_on_vercel_without_database_url(monkeypatch):
+    from app.config import Settings
+
+    monkeypatch.setenv("VERCEL", "1")
+    monkeypatch.delenv("DATABASE_URL", raising=False)
+    assert Settings(_env_file=None).DATABASE_URL == "sqlite:////tmp/local.db"
+    monkeypatch.setenv("DATABASE_URL", "postgresql://user:pass@neon.example/db")
+    assert Settings(_env_file=None).DATABASE_URL == "postgresql://user:pass@neon.example/db"

@@ -136,3 +136,13 @@ def test_reevaluate_endpoint(client: TestClient):
     assert reeval_after_approval.status_code == 409
 
 
+
+
+def test_reset_refuses_to_wipe_without_company_json(client: TestClient, monkeypatch):
+    from app.api.routes import dev
+
+    monkeypatch.setattr(dev, "find_company_json", lambda: None)
+    before = client.get("/api/beneficiaries").json()
+    res = client.post("/api/dev/reset")
+    assert res.status_code == 503
+    assert client.get("/api/beneficiaries").json() == before

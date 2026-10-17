@@ -1,3 +1,6 @@
+import os
+
+from pydantic import model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -14,6 +17,13 @@ class Settings(BaseSettings):
     OPENROUTER_API_KEY: str = ""
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+
+    @model_validator(mode="after")
+    def writable_sqlite_on_vercel(self) -> "Settings":
+        """Vercel's disk is read-only except /tmp. Without Neon the API still starts, with a throwaway DB."""
+        if os.environ.get("VERCEL") and self.DATABASE_URL == "sqlite:///./local.db":
+            self.DATABASE_URL = "sqlite:////tmp/local.db"
+        return self
 
     @property
     def cors_origins_list(self) -> list[str]:

@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 
 from app.config import settings
-from app.db.seed import reset_database, seed_database
+from app.db.seed import find_company_json, reset_database, seed_database
 from app.db.session import get_db
 
 router = APIRouter(prefix="/api/dev", tags=["dev"])
@@ -35,6 +35,8 @@ def seed_endpoint(request: Request, db: Session = Depends(get_db)) -> dict[str, 
 @router.post("/reset")
 def reset_endpoint(request: Request, db: Session = Depends(get_db)) -> dict[str, bool]:
     _check_rate_limit(request)
+    if find_company_json() is None:  # resetting now would leave the demo without company, rules or vendors
+        raise HTTPException(status_code=503, detail="No se encontró company.json: la demo no se reinició.")
     reset_database(db)
     seed_database(db)
     return {"ok": True}

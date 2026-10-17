@@ -20,8 +20,15 @@ from app.db.repositories import (
 )
 from app.schemas import Agreement, Beneficiary, RuleSet
 
-REPO_ROOT = Path(__file__).resolve().parents[3]
-COMPANY_JSON = REPO_ROOT / "dataset" / "company.json"
+BACKEND_ROOT = Path(__file__).resolve().parents[2]
+REPO_ROOT = BACKEND_ROOT.parent
+# In the repo the company lives in dataset/. On Vercel only backend/ is deployed, so the build step
+# (scripts/vercel_build.py) copies it to backend/seed_data/.
+COMPANY_JSON_CANDIDATES = [REPO_ROOT / "dataset" / "company.json", BACKEND_ROOT / "seed_data" / "company.json"]
+
+
+def find_company_json() -> Path | None:
+    return next((path for path in COMPANY_JSON_CANDIDATES if path.exists()), None)
 
 
 def reset_database(db: Session) -> None:
@@ -36,10 +43,11 @@ def reset_database(db: Session) -> None:
 
 
 def seed_database(db: Session) -> int:
-    if not COMPANY_JSON.exists():
+    company_json = find_company_json()
+    if company_json is None:
         return 0
 
-    data = json.loads(COMPANY_JSON.read_text(encoding="utf-8"))
+    data = json.loads(company_json.read_text(encoding="utf-8"))
     rule_repo = SqlRuleSetRepository(db)
     ben_repo = SqlBeneficiaryRepository(db)
     agr_repo = SqlAgreementRepository(db)

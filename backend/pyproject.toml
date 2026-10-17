@@ -11,3 +11,11 @@ ignore = [
 [tool.pytest.ini_options]
 pythonpath = ["."]
 testpaths = ["tests"]
+
+[tool.vercel]
+# FastAPI instance for Vercel's zero-config Python runtime (docs/DEPLOY.md).
+entrypoint = "app.main:app"
+
+[tool.vercel.scripts]
+# Copies ../dataset/company.json into backend/seed_data/ (only backend/ is deployed).
+build = "python scripts/vercel_build.py"

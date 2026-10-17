@@ -37,3 +37,6 @@ graphify-out/
 Thumbs.db
 .idea/
 .vscode/
+
+# Backend: seed copied by the Vercel build (scripts/vercel_build.py)
+backend/seed_data/
