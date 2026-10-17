@@ -242,3 +242,12 @@ def test_settings_use_tmp_sqlite_on_vercel_without_database_url(monkeypatch):
     assert Settings(_env_file=None).DATABASE_URL == "sqlite:////tmp/local.db"
     monkeypatch.setenv("DATABASE_URL", "postgresql://user:pass@neon.example/db")
     assert Settings(_env_file=None).DATABASE_URL == "postgresql://user:pass@neon.example/db"
+
+
+def test_postgres_urls_use_the_installed_psycopg2_driver():
+    from app.db.session import _normalize_db_url
+
+    neon = "postgresql://user:pass@ep-x-pooler.neon.tech/neondb?sslmode=require&channel_binding=require"
+    assert _normalize_db_url(neon).startswith("postgresql+psycopg2://user:pass@ep-x-pooler")
+    assert _normalize_db_url("postgres://u:p@h/db") == "postgresql+psycopg2://u:p@h/db"
+    assert _normalize_db_url("sqlite:///./local.db") == "sqlite:///./local.db"

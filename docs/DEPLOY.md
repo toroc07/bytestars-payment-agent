@@ -47,7 +47,7 @@ Las keys viven **solo** en las variables de entorno de Vercel. Nunca en el repo 
 - **Dependencias:** solo `backend/requirements.txt`. Python 3.12 por `backend/.python-version`. **No debe haber `pyproject.toml` ni `uv.lock` en `backend/`:** si hay un `pyproject.toml`, Vercel lo prefiere y corre `uv lock`, que falla sin una tabla `[project]`. La configuración de ruff está en `ruff.toml` y la de pytest en `pytest.ini`.
 - **Build:** `buildCommand` en `backend/vercel.json` ejecuta `backend/scripts/vercel_build.py`, que copia `dataset/company.json` a `backend/seed_data/` (ignorado por git), porque solo se despliega `backend/`. Si no encuentra el archivo, **el build falla**: activar en el proyecto *Settings → Build and Deployment → Root Directory → "Include files outside the root directory in the Build Step"*.
 - **Función:** `backend/vercel.json` fija `maxDuration` en 300 s, el máximo del plan Hobby (una imagen con Gemini tardó 49 s en la primera prueba en Vercel), y deja fuera del paquete los tests.
-- **Base de datos:** sin `DATABASE_URL`, el backend usa SQLite en `/tmp` (la demo arranca, pero se pierde en cada instancia nueva). Con Neon, las tablas (incluida `llm_cache`) se crean solas al arrancar.
+- **Base de datos:** la cadena de Neon (`postgresql://...`) se convierte a `postgresql+psycopg2://` en `app/db/session.py`, porque SQLAlchemy 2.1 usaría `psycopg` 3, que no está instalado. Probado contra Neon (Postgres 18) con el flujo completo. Sin `DATABASE_URL`, el backend usa SQLite en `/tmp` (la demo arranca, pero se pierde en cada instancia nueva). Con Neon, las tablas (incluida `llm_cache`) se crean solas al arrancar.
 - **Reinicio seguro:** `/api/dev/reset` responde 503 y no borra nada si no encuentra `company.json`.
 
 ## Checklist de despliegue

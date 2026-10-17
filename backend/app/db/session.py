@@ -7,8 +7,11 @@ from app.config import settings
 
 
 def _normalize_db_url(url: str) -> str:
-    if url.startswith("postgres://"):
-        return url.replace("postgres://", "postgresql+psycopg2://", 1)
+    # SQLAlchemy 2.1 picks psycopg (v3) for a bare "postgresql://", but requirements.txt installs psycopg2.
+    # Neon hands out "postgresql://...", Heroku-style URLs use "postgres://": pin both to psycopg2.
+    for prefix in ("postgresql://", "postgres://"):
+        if url.startswith(prefix):
+            return "postgresql+psycopg2://" + url[len(prefix):]
     return url
 
 
