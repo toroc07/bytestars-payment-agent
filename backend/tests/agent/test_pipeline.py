@@ -90,13 +90,34 @@ def test_image_without_llm_escalates_without_inventing_data(repos):
     assert response.invoice.extracted is None and len(repos.invoices) == 1
 
 
-def test_pdf_with_text_layer_is_sent_as_text(repos):
-    provider = FakeProvider(answer=None, files=True)
+def test_complete_text_pdf_spends_no_llm_quota(repos):
+    provider = FakeProvider(answer=CLEAN)
     pdf = (DATASET / "PDFS" / "factura_004.pdf").read_bytes()
     response = send(repos, None, pdf, llm=chain(provider), source_type=SourceType.pdf)
-    assert provider.requests[0].file_bytes is None and "ACS-532" in provider.requests[0].text
+    assert provider.requests == []
     assert response.invoice.extracted.vendor_tax_id == "901.350.127-6"
     assert response.assistant_message.decision.outcome == Outcome.pay
+    assert "lector local" in repos.decisions[0].explanation
+
+
+def test_incomplete_text_goes_to_the_llm_as_text(repos):
+    provider = FakeProvider(answer=CLEAN)
+    send(repos, "Factura No. ATS-842 por US$1,487.50", llm=chain(provider))
+    assert len(provider.requests) == 1 and provider.requests[0].file_bytes is None
+
+
+def test_image_goes_to_the_llm_as_a_file(repos):
+    provider = FakeProvider(answer=CLEAN)
+    image = (DATASET / "Imagenes" / "factura_001.png").read_bytes()
+    send(repos, None, image, llm=chain(provider), source_type=SourceType.image)
+    assert provider.requests[0].file_bytes == image and provider.requests[0].mime_type == "image/png"
+
+
+def test_exhausted_model_falls_to_the_next_one(repos):
+    first, second = FakeProvider("gemini-a", answer=None), FakeProvider("gemini-b", answer=CLEAN)
+    response = send(repos, "Factura No. ATS-842 por US$1,487.50", llm=chain(first, second))
+    assert response.assistant_message.decision.outcome == Outcome.pay
+    assert "Gemini (gemini-b)" in repos.decisions[0].explanation
 
 
 def test_email_asking_for_a_new_account_escalates(repos):

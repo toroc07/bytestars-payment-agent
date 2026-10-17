@@ -1,7 +1,10 @@
 """Step 3 of the pipeline: document -> ExtractedInvoice. The LLM only reads; its output is re-validated here.
 
-Order: LLM chain (Gemini -> Groq/OpenRouter -> cache) and, if nothing answers, the offline text reader.
-A PDF with a text layer is sent as text (cheaper, and the text-only backups can read it).
+Order (ADR-019):
+1. Text only (chat, email body, PDF with a text layer): the offline reader. If it finds every key field,
+   that reading is used and no LLM quota is spent.
+2. Otherwise the LLM chain (cache -> Gemini models -> Groq/OpenRouter). A PDF with text goes as text.
+3. If no LLM answers, the offline reading (even if incomplete; the engine escalates what is missing).
 """
 
 import io
@@ -19,6 +22,9 @@ from app.schemas import ExtractedInvoice
 PROMPT = (Path(__file__).parent / "prompts" / "extraction.md").read_text(encoding="utf-8")
 MAX_TEXT_CHARS = 20_000
 MAX_FIELD_CHARS = 200
+# What the offline reading must contain to be used without asking the LLM.
+COMPLETE_FIELDS = ("invoice_number", "vendor_name", "vendor_tax_id", "beneficiary_account", "amount", "currency",
+                   "issue_date", "description")
 INVOICE_HINTS = re.compile(r"factura|\bNIT\b|total|US\$|\bUSD\b|\bCOP\b|\$\s?\d", re.IGNORECASE)
 
 
@@ -27,6 +33,10 @@ class Extraction:
     invoice: ExtractedInvoice | None
     source: str  # provider name, "cache", "local" or "none"
     error: str | None = None
+
+
+def is_complete(invoice: ExtractedInvoice) -> bool:
+    return all(getattr(invoice, field) not in (None, "") for field in COMPLETE_FIELDS)
 
 
 def looks_like_invoice(text: str | None) -> bool:
@@ -124,6 +134,9 @@ def extract(
     message = text or ""
     document = pdf_text(file_bytes) if file_bytes and mime_type == "application/pdf" else ""
     send_file = file_bytes is not None and not document  # images and scanned PDFs go as files
+    local = read_text([message, document], company_name) if (message.strip() or document) else None
+    if local is not None and not send_file and is_complete(local):
+        return Extraction(local, "local")
     request = LLMRequest(
         system=PROMPT.format(company_name=company_name),
         text=_document_block(message, document),
@@ -138,42 +151,6 @@ def extract(
         error = str(exc)
     except Exception as exc:  # noqa: BLE001 - fail-closed: fall back, the engine escalates what is missing
         error = f"{type(exc).__name__}"
-    if message.strip() or document:
-        return Extraction(read_text([message, document], company_name), "local", error)
+    if local is not None:
+        return Extraction(local, "local", error)
     return Extraction(None, "none", error)
-
-
-def extract_invoice_data(
-    *,
-    text: str | None = None,
-    file_bytes: bytes | None = None,
-    filename: str | None = None,
-    source_type: Any = None,
-    company_name: str = "Distribuciones Andinas S.A.S.",
-    llm: LLMChain | None = None,
-) -> ExtractedInvoice:
-    """Extract invoice data using the LLM chain or offline text reader fallback."""
-    if llm is None:
-        from app.llm import get_llm
-        llm = get_llm()
-
-    mime_type = None
-    if file_bytes:
-        if file_bytes.startswith(b"%PDF"):
-            mime_type = "application/pdf"
-        elif file_bytes.startswith(b"\x89PNG"):
-            mime_type = "image/png"
-        elif file_bytes.startswith(b"\xff\xd8"):
-            mime_type = "image/jpeg"
-
-    extraction = extract(
-        text=text,
-        file_bytes=file_bytes,
-        mime_type=mime_type,
-        company_name=company_name,
-        llm=llm,
-    )
-    if extraction.invoice is not None:
-        return extraction.invoice
-    return ExtractedInvoice(confidence=0.0)
-

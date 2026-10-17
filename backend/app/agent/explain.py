@@ -3,7 +3,6 @@
 from app.schemas import CheckStatus, EngineResult, ExtractedInvoice, Outcome
 
 SOURCE_LABELS = {
-    "gemini": "Gemini",
     "groq": "Groq",
     "openrouter": "OpenRouter",
     "cache": "una lectura guardada",
@@ -29,6 +28,7 @@ def explain(result: EngineResult, invoice: ExtractedInvoice | None, source: str,
     if invoice is None:
         lines.append("No se pudieron leer los datos de la factura" + (f" ({error})." if error else "."))
     else:
-        lines.append(f"Datos leídos con {SOURCE_LABELS.get(source, source)}.")
+        label = f"Gemini ({source})" if source.startswith("gemini") else SOURCE_LABELS.get(source, source)
+        lines.append(f"Datos leídos con {label}.")
     lines.append("No se movió dinero real: los pagos de esta demo son simulados.")
     return "\n".join(lines)
