@@ -102,6 +102,12 @@ def test_sanctioned_country_is_rejected_even_without_beneficiary():
     assert result.outcome == Outcome.block and {"R03", "R05"} <= set(failed_ids(result))
 
 
+def test_missing_currency_escalates_instead_of_skipping_the_limits():
+    result = evaluate(invoice(currency=None), RULES, ctx())
+    assert result.outcome == Outcome.escalate and failed_ids(result) == ["R06"]
+    assert result.amount_base_currency is None
+
+
 def test_unknown_currency_escalates():
     result = evaluate(invoice(currency="JPY"), RULES, ctx())
     assert result.outcome == Outcome.escalate and failed_ids(result) == ["R06"]

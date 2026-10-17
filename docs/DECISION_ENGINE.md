@@ -32,7 +32,7 @@ Parámetros con su valor de Dev C entre paréntesis (campos propuestos en `docs/
 | R03 | `BENEFICIARY_ALLOWED` | el proveedor no está en la lista de permitidos | `block` | `require_allowlisted_beneficiary` | «Proveedor nuevo: no está en la lista de beneficiarios permitidos.» |
 | R04 | `BENEFICIARY_VERIFIED` | el proveedor está en la lista pero no está verificado | `block` | `require_verified_beneficiary` | «Proveedor sin verificar (razón social, país, banco y dueños ≥25 %).» |
 | R05 | `NOT_SANCTIONED` | el proveedor está marcado como sancionado o su país está en la lista de sancionados | `block` | `block_sanctioned`, `sanctioned_countries` | «País sancionado: XX.» |
-| R06 | `CURRENCY_CONVERTIBLE` | la moneda no tiene tasa de cambio a USD | `escalate` | `fx_rates`, `allowed_currencies` | «No hay tasa para JPY: no se pueden comprobar los límites.» |
+| R06 | `CURRENCY_CONVERTIBLE` | falta la moneda, no está permitida o no tiene tasa de cambio a USD (sin moneda no se pueden comprobar los límites) | `escalate` | `fx_rates`, `allowed_currencies` | «No hay tasa para JPY: no se pueden comprobar los límites.» |
 | R07 | `PER_PAYMENT_LIMIT` | monto en USD > límite por pago (10.000) | `block` | `per_payment_limit` | «USD 12,500.00 supera el límite por pago de USD 10,000.00.» |
 | R08 | `APPROVAL_THRESHOLD` | monto en USD > umbral de aprobación (5.000) | `escalate` | `approval_threshold` | «USD 6,600.00 supera el umbral de USD 5,000.00: requiere aprobación.» |
 | R09 | `PERIOD_LIMIT` | pagado en los últimos `period_days` (7) + monto > límite del periodo (50.000) | `escalate` | `period_days`, `period_limit` | «Supera el tope de los últimos 7 días (USD 50,000.00): queda para revisión.» |

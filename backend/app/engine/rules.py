@@ -202,7 +202,10 @@ def r05_not_sanctioned(f: Facts) -> RuleCheck:
 def r06_currency_convertible(f: Facts) -> RuleCheck:
     cur = (f.invoice.currency or "").upper()
     if not cur:
-        return check("R06", "CURRENCY_CONVERTIBLE", SKIPPED, "escalate", "No hay moneda para convertir.")
+        # Without a currency there is no amount in USD, so every limit (R07-R10) would be skipped: fail-closed.
+        return check("R06", "CURRENCY_CONVERTIBLE", FAILED, "escalate",
+                     "No se sabe en qué moneda está la factura: no se pueden comprobar los límites.",
+                     observed="moneda desconocida", expected=f"una de {', '.join(sorted(f.rules.allowed_currencies))}")
     allowed = {c.upper() for c in f.rules.allowed_currencies}
     no_rate = f.invoice.amount is not None and f.amount_base is None
     if cur not in allowed or no_rate:
