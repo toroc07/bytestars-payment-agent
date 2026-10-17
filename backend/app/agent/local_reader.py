@@ -157,16 +157,20 @@ def _vendor_name(text: str, company_name: str) -> str | None:
     return None
 
 
-def _currency(raw: str, full_text: str = "") -> str:
+def _currency(raw: str, full_text: str = "") -> str | None:
     s = raw.strip().upper()
     if s in ("US$", "USD"):
         return "USD"
     if s in ("COP", "EUR", "GBP", "MXN"):
         return s
     if s == "$":
+        # A bare "$" is pesos in Colombia and dollars elsewhere: only the text can say which. Guessing
+        # wrong pays thousands of times the amount ($4.500 COP read as US$4,500), so unknown stays None.
         if re.search(r"\b(?:COP|PESOS?)\b", full_text, re.IGNORECASE):
             return "COP"
-        return "USD"
+        if re.search(r"\bUSD\b|US\$|\bd[oó]lar(?:es)?\b", full_text, re.IGNORECASE):
+            return "USD"
+        return None
     return s
 
 

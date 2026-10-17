@@ -164,3 +164,47 @@ def test_coerce_rejects_weird_values():
                       "beneficiary_account": "Ahorros 7640-8675", "confidence": 7})
     assert invoice.amount is None and invoice.currency is None and invoice.vendor_country is None
     assert invoice.po_reference is None and invoice.beneficiary_account == "76408675" and invoice.confidence == 1.0
+
+
+COP_CHAT = (
+    "[02/10/2026, 09:00] Sandra Torres (Aseo Total Servicios S.A.S.): Factura No. ATS-900\nNIT: 901.022.366-3\n"
+    "Fecha de emisión: 01/10/2026\nDetalle:\n- 1 x Kit mensual de insumos de limpieza (a $4.500 c/u)\n"
+    "Total: $4.500\nConsignar a Corriente Banco de Bogotá No. 81629733626"
+)
+
+
+def test_bare_dollar_sign_is_never_guessed_as_usd(repos):
+    response = send(repos, COP_CHAT)  # $4.500 in pesos is ~US$1; read as US$4,500 it would overpay
+    assert response.invoice.extracted.currency is None
+    assert response.assistant_message.decision.outcome != Outcome.pay
+
+
+def test_bare_dollar_sign_with_pesos_in_the_text_is_cop(repos):
+    response = send(repos, COP_CHAT + "\nValor en pesos colombianos.")
+    assert response.invoice.extracted.currency == "COP"
+    assert response.assistant_message.decision.amount_base_currency == Decimal("1.12")  # 4,500 x 0.00025
+
+
+def test_llm_dollar_sign_currency_becomes_unknown():
+    assert coerce({"currency": "$"}).currency is None and coerce({"currency": "US$"}).currency == "USD"
+
+
+def test_unknown_gemini_model_is_skipped_after_a_404():
+    from app.llm.base import LLMError, LLMRequest
+    from app.llm.gemini import GeminiProvider
+
+    class NotFound(Exception):
+        code = 404
+
+    class Models:
+        def generate_content(self, **_kwargs):
+            raise NotFound("model not found")
+
+    class Client:
+        models = Models()
+
+    provider = GeminiProvider("key", "gemini-0-retired", client=Client())
+    request = LLMRequest(system="s", text="t")
+    with pytest.raises(LLMError):
+        provider.generate_json(request)
+    assert provider.supports(request) is False

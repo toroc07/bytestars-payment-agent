@@ -119,7 +119,7 @@ def _currency_code(value: Any) -> str | None:
     if text in ("COP", "EUR", "GBP", "MXN"):
         return text
     if text == "$":
-        return "USD"
+        return None  # ambiguous: pesos or dollars; the engine escalates an unknown currency
     return text if re.fullmatch(r"[A-Z]{3}", text) else None
 
 
