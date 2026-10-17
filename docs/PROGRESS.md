@@ -74,8 +74,8 @@ Tareas por definir por Dev C (empresa ficticia, reglas, beneficiarios, acuerdos,
 ## Deploy
 | Tarea | Estado | Notas |
 |---|---|---|
-| Base de datos en Neon (crear, conectar al proyecto api, migraciones y seed) | pendiente | **Dev B**; `DEPLOY.md` pasos 1 y 3 |
-| Proyectos Vercel api y web (variables, CORS, prueba con el dataset) | pendiente | **Dev A**; `DEPLOY.md` pasos 2, 4, 5 y 6 |
+| Base de datos en Neon (crear, conectar al proyecto api, migraciones y seed) | en curso | **Dev B**; usar la cadena con pooling (`-pooler`); las tablas se crean al arrancar; sembrar con `POST /api/dev/seed` (`DEPLOY.md` paso 7) |
+| Proyectos Vercel api y web (variables, CORS, prueba con el dataset) | en curso | **Dev A**; configuración lista en el repo (entrada sin reescrituras, build que copia `company.json`, `maxDuration` 60 s, Python 3.12, SQLite en `/tmp` sin Neon); falta crear los proyectos (`DEPLOY.md`, checklist) |
 | Confirmar créditos/free tier de Gemini | listo | gratis: 20 lecturas al día por modelo y proyecto; se encadenan 3 modelos (ADR-019); `gemini-2.5-flash` ya no se ofrece a cuentas nuevas |
 
 ## Bloqueos y preguntas abiertas

@@ -42,13 +42,28 @@ Las keys viven **solo** en las variables de entorno de Vercel. Nunca en el repo 
 - Solo datos ficticios (el free tier de Gemini puede usar los datos para entrenar).
 - Verificar en AI Studio los límites vigentes del free tier antes del día de la demo, y tener la caché precargada con el dataset como plan B.
 
-## Checklist de despliegue
-1. Crear base de datos Neon y conectarla al proyecto api.
-2. Crear proyecto api (Root = `backend`), cargar variables, desplegar. Comprobar `/health` y `/openapi.json`.
-3. Ejecutar migraciones y seed contra Neon.
-4. Crear proyecto web (Root = `frontend`), poner `VITE_API_URL`, desplegar. `frontend/vercel.json` ya define build, salida (`dist`) y la reescritura de rutas del SPA a `index.html`.
-5. Actualizar `CORS_ORIGINS` en api con la URL del web y redesplegar.
-6. Probar el flujo completo con las facturas del dataset desde la URL pública.
-7. Despliegues de preview por PR: usar una rama de Neon o la misma BD con datos ficticios.
+## Configuración del backend para Vercel (ya en el repo)
+- **Punto de entrada:** Vercel detecta FastAPI sin configuración en `backend/app/main.py`; `backend/pyproject.toml` lo fija con `[tool.vercel] entrypoint = "app.main:app"`. No hay carpeta `api/` ni reescrituras.
+- **Dependencias:** `backend/requirements.txt`. Python 3.12 por `backend/.python-version`. No hay `uv.lock` (el anterior estaba vacío y pedía 3.13).
+- **Build:** `backend/scripts/vercel_build.py` copia `dataset/company.json` a `backend/seed_data/` (ignorado por git), porque solo se despliega `backend/`. Si no encuentra el archivo, **el build falla**: activar en el proyecto *Settings → Build and Deployment → Root Directory → "Include files outside the root directory in the Build Step"*.
+- **Función:** `backend/vercel.json` sube `maxDuration` a 60 s (leer una imagen con Gemini tomó hasta 40 s) y deja fuera del paquete los tests.
+- **Base de datos:** sin `DATABASE_URL`, el backend usa SQLite en `/tmp` (la demo arranca, pero se pierde en cada instancia nueva). Con Neon, las tablas (incluida `llm_cache`) se crean solas al arrancar.
+- **Reinicio seguro:** `/api/dev/reset` responde 503 y no borra nada si no encuentra `company.json`.
 
-> Detalles de configuración de Vercel para FastAPI (punto de entrada y archivo de configuración) deben verificarse con la documentación vigente al momento de desplegar.
+## Checklist de despliegue
+**Proyecto api** (Dev A)
+1. Vercel → *Add New Project* → importar el repo → *Root Directory* = `backend` (framework: FastAPI, lo detecta solo) y activar "Include files outside the root directory".
+2. Variables de entorno (Production y Preview): `GEMINI_API_KEY`, `GEMINI_MODEL=gemini-3.8-flash,gemini-3.5-flash,gemini-3.5-flash-lite`, `APP_ENV=production`, `LLM_PROVIDER_ORDER=gemini,groq,openrouter`, `LLM_CACHE=true`, `CORS_ORIGINS` (la URL del web; mientras no exista, cualquier valor) y `DATABASE_URL` cuando Dev B la tenga.
+3. Desplegar. Comprobar `https://<api>/health` → `{"status":"ok"}` y `https://<api>/openapi.json`.
+4. Sembrar: `curl -X POST https://<api>/api/dev/seed` (o el botón Configuración → Demo → Reiniciar desde el web).
+
+**Proyecto web** (Dev A)
+5. *Add New Project* → mismo repo → *Root Directory* = `frontend` (framework: Vite). Variable `VITE_API_URL=https://<api>` (sin `/` final). Desplegar.
+6. Volver al api: `CORS_ORIGINS=https://<web>` (sin `/` final; varias separadas por coma) → *Redeploy*.
+
+**Base de datos** (Dev B)
+7. Neon → copiar la cadena **con pooling** (host con `-pooler`) → `DATABASE_URL` en el api → *Redeploy* → paso 4 de nuevo (la base nueva está vacía).
+
+**Prueba final** (Dev A)
+8. Desde la URL del web: subir el dataset en dos lotes (001–050 y 051–100). Así queda precargada la caché de lecturas en Neon para el día de la demo.
+9. Opcional: Vercel → *Firewall* → regla de *rate limit* para `POST /api/conversations/*/messages`.
