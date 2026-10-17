@@ -13,13 +13,17 @@ __all__ = ["JsonCache", "LLMChain", "LLMError", "LLMRequest", "LLMUnavailable", 
 
 @lru_cache(maxsize=1)
 def get_llm() -> LLMChain:
-    """Chain built from the environment: LLM_PROVIDER_ORDER, the API keys and LLM_CACHE."""
+    """Chain built from the environment: LLM_PROVIDER_ORDER, the API keys and LLM_CACHE.
+
+    GEMINI_MODEL may list several models separated by commas; each one is tried in order.
+    """
+    gemini_models = [m.strip() for m in settings.GEMINI_MODEL.split(",") if m.strip()]
     factories = {
-        "gemini": lambda: GeminiProvider(settings.GEMINI_API_KEY, settings.GEMINI_MODEL),
-        "groq": lambda: groq(settings.GROQ_API_KEY),
-        "openrouter": lambda: openrouter(settings.OPENROUTER_API_KEY),
+        "gemini": lambda: [GeminiProvider(settings.GEMINI_API_KEY, model) for model in gemini_models],
+        "groq": lambda: [groq(settings.GROQ_API_KEY)],
+        "openrouter": lambda: [openrouter(settings.OPENROUTER_API_KEY)],
     }
     order = [name.strip().lower() for name in settings.LLM_PROVIDER_ORDER.split(",")]
-    providers = [factories[name]() for name in order if name in factories]
+    providers = [p for name in order if name in factories for p in factories[name]()]
     cache = JsonCache(default_cache_folder()) if settings.LLM_CACHE else None
     return LLMChain(providers, cache)
