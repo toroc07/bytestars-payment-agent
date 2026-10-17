@@ -52,7 +52,7 @@ class GeminiProvider:
                     config.thinking_config = None  # some models (the "lite" ones) refuse to switch it off
                     continue
                 daily_quota = code == 429 and "PerDay" in str(exc)
-                if daily_quota:  # waiting seconds does not bring a daily quota back
+                if daily_quota or code == 404:  # no quota today, or a model this key cannot use
                     self._paused_until = time.monotonic() + DAILY_QUOTA_PAUSE_S
                 elif code == 429 and attempt < RATE_LIMIT_RETRIES:
                     time.sleep(RATE_LIMIT_WAIT_S)
