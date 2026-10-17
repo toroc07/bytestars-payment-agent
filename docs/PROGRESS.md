@@ -33,7 +33,7 @@ Dev B también ayuda con el motor de decisiones: al repartir tareas del motor, a
 | `vercel.json` (rutas del SPA) y carga diferida (registro, configuración) | listo | bundle principal 471 KB |
 | Tests unitarios (Vitest) | listo | 56 tests de lógica pura (`npm test`) |
 | Revisión de diseño (`/impeccable critique`) y correcciones | listo | 25/40 inicial; corregidos los 5 problemas: aprobación con evidencia, motivo obligatorio y bloqueada sin beneficiario/monto; reglas agrupadas con resumen de cambios y aviso al cerrar; móvil sin desbordes; vocabulario único y contraste AA; montos y búsqueda en el sidebar, registro desplegable. Informe en `.impeccable/critique/` |
-| Repetir `/impeccable critique` con decisiones reales | listo | validado en pipeline y ejecución de lotes |
+| Repetir `/impeccable critique` con decisiones reales | pendiente | la revisión de diseño no se ha repetido; ahora hay decisiones reales para hacerla |
 
 ## Motor, agente y LLM (Dev A; Dev B ayuda en el motor)
 | Tarea | Estado | Notas |
@@ -43,10 +43,10 @@ Dev B también ayuda con el motor de decisiones: al repartir tareas del motor, a
 | Property tests de invariantes | listo | hypothesis: nunca `pay` con una regla fallida (I1), determinismo (I2), sin datos esenciales nunca `pay` (I4) |
 | Repositorios falsos en memoria para tests | listo | `tests/agent/fakes.py` (repos + proveedor LLM falso); `tests/conftest.py` impide llamar a un LLM real en los tests |
 | Pipeline del agente | listo | `app/agent/pipeline.py`: registrar → extraer → contexto → motor → explicar → guardar; cualquier error escala la misma factura (R00) |
-| Proveedor Gemini + extracción PDF/imagen/texto | listo, sin probar con clave real | `app/llm/gemini.py` (JSON, sin thinking, reintenta ante 429); prompt en `app/agent/prompts/extraction.md`; falta `GEMINI_API_KEY` para probar las imágenes |
+| Proveedor Gemini + extracción PDF/imagen/texto | listo | `app/llm/gemini.py` con varios modelos en cadena (ADR-019); evaluación con Gemini: **100/100 iguales a `expected.json`, autonomía 80 %, 0 trampas pagadas, 0 datos mal leídos** (75 por lector local, 25 imágenes con Gemini) |
 | Fallback Groq/OpenRouter + caché | listo | `app/llm/openai_compat.py` (solo texto) y caché por hash en memoria + carpeta temporal; lector local sin red de respaldo (ADR-019) |
-| Chat de consulta (solo lectura) | listo | responde ayuda ante textos sin factura y procesa turnos del chat |
-| Script de evaluación del dataset | listo | `backend/scripts/evaluate_dataset.py` implementado y verificado (75 archivos evaluados, 0 violaciones I1); `tests/engine/test_dataset_expected.py` pasando 100% |
+| Chat de consulta (solo lectura) | pendiente | hoy un texto que no es factura recibe un mensaje de ayuda; falta responder preguntas sobre decisiones guardadas |
+| Script de evaluación del dataset | listo | `python -m scripts.evaluate_dataset [--offline]`: pasa las 100 facturas por el pipeline real en orden y compara con `expected.json` (coincidencia, autonomía, trampas pagadas, datos mal leídos); sale con código 1 si se paga una trampa |
 
 ## Backend y base de datos (Dev B)
 | Tarea | Estado | Notas |

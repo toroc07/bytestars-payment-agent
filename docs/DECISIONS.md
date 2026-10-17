@@ -58,8 +58,14 @@ Decisión (Dev B con Dev A y Dev C):
 ## ADR-017 · R11 compara el monto con lo acordado, no con el último pago
 Decisión (Dev A): la parte de monto de R11 escala solo si el monto se aleja del acuerdo del proveedor más que `agreement_tolerance_pct`. La cuenta bancaria sí se sigue comparando con el registro y con el último pago, y el NIT con el registro. Además, R02 trata como duplicado el mismo cobro reenviado con otro número (mismo proveedor, orden de compra, monto y moneda). Por qué: los proveedores facturan montos distintos cada vez. Con la lectura literal ("si el monto cambia respecto al último pago, revisión"), el dataset daba 8 pagos y 74 escaladas de 100. Con esta lectura da 62 pagos y ninguna trampa pagada. Para volver a la lectura literal basta con restaurar la comparación de monto contra `last_vendor_invoice` en `r11_vendor_changes`. **Pendiente de validar con Dev C.**
 
-## ADR-019 · Lector local de respaldo y PDF con texto enviados como texto
-Decisión (Dev A): si ningún LLM responde (sin clave, sin cuota o sin red), `agent/local_reader.py` extrae los datos de chats, cuerpos de correo y PDF con capa de texto usando patrones fijos de facturas colombianas. Además, los PDF con texto se mandan al LLM como texto y no como archivo. Por qué: la demo y las pruebas funcionan sin claves (75 de las 100 facturas del set se leen así: 72 iguales a `expected.json` y 3 que solo difieren en la orden "No aplica"). Mandar texto gasta menos cuota y permite usar los respaldos que solo leen texto. El lector local no decide nada: si falta un dato, baja la confianza y el motor escala. Las imágenes necesitan Gemini.
+## ADR-019 · Lector local primero para facturas con texto; Gemini para imágenes y casos dudosos
+Decisión (Dev A, con aprobación del equipo):
+1. Si la factura trae texto (chat, cuerpo de correo o PDF con capa de texto) y no trae imagen, `agent/local_reader.py` la lee con patrones fijos de facturas colombianas. Si encuentra número, proveedor, NIT, cuenta, monto, moneda, fecha y concepto, esa lectura se usa y **no se llama al LLM**.
+2. Si falta algo, o si es una imagen o un PDF escaneado, se llama a la cadena de LLM. Un PDF con texto se manda como texto.
+3. `GEMINI_MODEL` admite varios modelos separados por comas (por defecto `gemini-3.8-flash,gemini-3.5-flash,gemini-3.5-flash-lite`). Cada modelo tiene su propia cuota gratuita, y uno sin cuota diaria se salta durante una hora.
+4. Si ningún LLM responde, se usa la lectura local aunque esté incompleta, y el motor escala lo que falte.
+
+Por qué: la cuota gratuita de Gemini es de 20 lecturas al día por modelo y proyecto. Leyendo todo con Gemini, una pasada del dataset gastaría 100 lecturas; así gasta unas 25 (las imágenes). El lector local leyó 72 de las 75 facturas con texto igual que `expected.json` (las otras 3 solo difieren en la orden "No aplica"). No decide nada: el motor valida cada dato igual que si viniera del LLM. Se aparta de "el LLM extrae" de `ARCHITECTURE.md` §3, que ya está actualizado.
 
 ## ADR-018 · Dataset en USD, allowlist inferida y resultados esperados
 Decisión (Dev A, a pedido del equipo; Dev C valida):
