@@ -7,6 +7,7 @@ from app.db.repositories import (
     SqlConversationRepository,
     SqlDecisionRepository,
     SqlInvoiceRepository,
+    SqlLlmCacheRepository,
     SqlRuleSetRepository,
 )
 from app.db.session import get_db
@@ -34,3 +35,7 @@ def get_decision_repo(db: Session = Depends(get_db)) -> SqlDecisionRepository:
 
 def get_conversation_repo(db: Session = Depends(get_db)) -> SqlConversationRepository:
     return SqlConversationRepository(db)
+
+
+def get_llm_cache_repo(db: Session = Depends(get_db)) -> SqlLlmCacheRepository:
+    return SqlLlmCacheRepository(db)

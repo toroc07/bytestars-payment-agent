@@ -208,3 +208,14 @@ def test_last_paid_for_vendor_and_vendor_sum(db_session):
     other_spent = dec_repo.sum_spent_between(vendor_name="Other Vendor")
     assert other_spent == Decimal("0.00")
 
+
+
+def test_llm_cache_keeps_the_first_reading_and_survives_reset(db_session):
+    from app.db.repositories import SqlLlmCacheRepository
+
+    cache = SqlLlmCacheRepository(db_session)
+    cache.put("k1", {"invoice_number": "ATS-842"})
+    cache.put("k1", {"invoice_number": "OTRA"})
+    assert cache.get("k1") == {"invoice_number": "ATS-842"} and cache.get("k2") is None
+    reset_database(db_session)
+    assert cache.get("k1") == {"invoice_number": "ATS-842"}

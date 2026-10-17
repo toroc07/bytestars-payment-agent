@@ -20,6 +20,7 @@ from app.ports import (
     ConversationRepository,
     DecisionRepository,
     InvoiceRepository,
+    LlmCacheRepository,
     RuleSetRepository,
 )
 from app.schemas import (
@@ -133,6 +134,13 @@ def _pipeline_error(exc: Exception) -> EngineResult:
     )
 
 
+def _with_cache(llm: LLMChain, cache_repo: LlmCacheRepository | None) -> LLMChain:
+    """LLM readings also go to the database, so a reading survives restarts and serverless instances."""
+    if cache_repo is None or llm.cache is None:  # LLM_CACHE=false disables every cache layer
+        return llm
+    return llm.with_store(cache_repo)
+
+
 def _title(invoice: ExtractedInvoice | None, filename: str | None, text: str | None) -> str:
     if invoice and invoice.vendor_name and invoice.invoice_number:
         return f"{invoice.vendor_name} · {invoice.invoice_number}"[:80]
@@ -154,6 +162,7 @@ def handle_chat_turn(
     ben_repo: BeneficiaryRepository,
     agr_repo: AgreementRepository,
     llm: LLMChain | None = None,
+    cache_repo: LlmCacheRepository | None = None,
     clock=lambda: datetime.now(UTC),
 ) -> SendMessageResponse:
     if file_bytes is None and not looks_like_invoice(text):
@@ -172,7 +181,7 @@ def handle_chat_turn(
     extraction = Extraction(None, "none")
     try:
         extraction = extract(text=text, file_bytes=file_bytes, mime_type=sniff_mime(file_bytes),
-                             company_name=rules.company_name, llm=llm or get_llm())
+                             company_name=rules.company_name, llm=_with_cache(llm or get_llm(), cache_repo))
         if extraction.invoice is not None:
             invoice = inv_repo.update(invoice.model_copy(update={"extracted": extraction.invoice}))
         context = build_context(extraction.invoice, invoice.id, rules, now, ben_repo, agr_repo, inv_repo, dec_repo)
@@ -203,3 +212,40 @@ def handle_chat_turn(
                               invoice_id=invoice.id)
     return SendMessageResponse(user_message=user_message, assistant_message=reply, invoice=invoice)
 
+
+def reevaluate(
+    invoice: Invoice,
+    *,
+    inv_repo: InvoiceRepository,
+    dec_repo: DecisionRepository,
+    rule_repo: RuleSetRepository,
+    ben_repo: BeneficiaryRepository,
+    agr_repo: AgreementRepository,
+    clock=lambda: datetime.now(UTC),
+) -> Decision:
+    """New agent decision for a stored invoice with the current rules and data (no new reading).
+
+    Same context and failure handling as a chat turn; the previous decisions stay as they were.
+    """
+    rules = rule_repo.get_current()
+    now = clock()
+    try:
+        context = build_context(invoice.extracted, invoice.id, rules, now, ben_repo, agr_repo, inv_repo, dec_repo)
+        result = evaluate(invoice.extracted, rules, context)
+    except Exception as exc:  # fail-closed: a broken re-evaluation leaves the invoice for a person
+        log.exception("re-evaluation failed for invoice %s", invoice.id)
+        result = _pipeline_error(exc)
+    decision = dec_repo.add(Decision(
+        id=_new_id("dec"),
+        invoice_id=invoice.id,
+        outcome=result.outcome,
+        actor=Actor.agent,
+        checks=result.checks,
+        summary=result.summary,
+        explanation=explain(result, invoice.extracted, "stored", None),
+        rule_set_version=rules.version,
+        amount_base_currency=result.amount_base_currency,
+        created_at=clock(),
+    ))
+    inv_repo.update(invoice.model_copy(update={"status": STATUS_BY_OUTCOME[result.outcome]}))
+    return decision

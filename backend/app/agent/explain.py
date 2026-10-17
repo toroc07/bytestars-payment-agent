@@ -7,6 +7,7 @@ SOURCE_LABELS = {
     "openrouter": "OpenRouter",
     "cache": "una lectura guardada",
     "local": "el lector local (sin IA)",
+    "stored": "los datos ya registrados de la factura (reevaluación con las reglas actuales)",
 }
 
 HEADINGS = {

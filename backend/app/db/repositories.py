@@ -11,6 +11,7 @@ from app.db.models import (
     ConversationModel,
     DecisionModel,
     InvoiceModel,
+    LlmCacheModel,
     MessageModel,
     RuleSetModel,
 )
@@ -544,3 +545,22 @@ class SqlConversationRepository:
             last_outcome=last_outcome,
             updated_at=row.updated_at,
         )
+
+
+class SqlLlmCacheRepository:
+    def __init__(self, db: Session):
+        self.db = db
+
+    def get(self, key: str) -> dict | None:
+        row = self.db.get(LlmCacheModel, key)
+        return dict(row.value) if row else None
+
+    def put(self, key: str, value: dict) -> None:
+        if self.db.get(LlmCacheModel, key) is not None:
+            return  # the first reading stays
+        try:
+            self.db.add(LlmCacheModel(key=key, value=value))
+            self.db.commit()
+        except Exception:
+            self.db.rollback()  # e.g. another instance stored the same key first; keep the session usable
+            raise

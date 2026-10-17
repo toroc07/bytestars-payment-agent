@@ -9,8 +9,10 @@ from app.api.deps import (
     get_conversation_repo,
     get_decision_repo,
     get_invoice_repo,
+    get_llm_cache_repo,
     get_rule_repo,
 )
+from app.api.rate_limit import limit_messages
 from app.config import settings
 from app.ports import (
     AgreementRepository,
@@ -18,6 +20,7 @@ from app.ports import (
     ConversationRepository,
     DecisionRepository,
     InvoiceRepository,
+    LlmCacheRepository,
     RuleSetRepository,
 )
 from app.schemas import (
@@ -71,7 +74,9 @@ def get_messages(
     return repo.get_messages(conversation_id)
 
 
-@router.post("/{conversation_id}/messages", response_model=SendMessageResponse)
+@router.post(
+    "/{conversation_id}/messages", response_model=SendMessageResponse, dependencies=[Depends(limit_messages)]
+)
 def send_message(
     conversation_id: str,
     text: str | None = Form(default=None),
@@ -82,6 +87,7 @@ def send_message(
     rule_repo: RuleSetRepository = Depends(get_rule_repo),
     ben_repo: BeneficiaryRepository = Depends(get_beneficiary_repo),
     agr_repo: AgreementRepository = Depends(get_agreement_repo),
+    cache_repo: LlmCacheRepository = Depends(get_llm_cache_repo),
 ) -> SendMessageResponse:
     conv = conv_repo.get(conversation_id)
     if not conv:
@@ -137,6 +143,7 @@ def send_message(
             rule_repo=rule_repo,
             ben_repo=ben_repo,
             agr_repo=agr_repo,
+            cache_repo=cache_repo,
         )
     except Exception as exc:  # noqa: BLE001
         rules = rule_repo.get_current()

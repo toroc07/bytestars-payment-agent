@@ -15,12 +15,14 @@ log = logging.getLogger(__name__)
 class JsonCache:
     """Answers by hash of the whole request: the same invoice never spends quota twice.
 
-    Memory first, then a folder in the system temp dir (the only writable place on Vercel).
+    Lookup order: this process's memory, the durable store (the database, shared by every serverless
+    instance and kept across demo resets) and a folder in the system temp dir.
     """
 
-    def __init__(self, folder: Path | None = None):
+    def __init__(self, folder: Path | None = None, store=None):
         self._memory: dict[str, dict[str, Any]] = {}
         self._folder = folder
+        self._store = store  # durable, shared by every instance (the database); any object with get/put
 
     @staticmethod
     def key(request: LLMRequest) -> str:
@@ -34,6 +36,13 @@ class JsonCache:
     def get(self, key: str) -> dict[str, Any] | None:
         if key in self._memory:
             return self._memory[key]
+        if self._store is not None:
+            try:
+                if (data := self._store.get(key)) is not None:
+                    self._memory[key] = data
+                    return data
+            except Exception:  # noqa: BLE001 - the cache is an optimization; a broken store is a miss
+                log.warning("LLM cache store read failed")
         if self._folder:
             try:
                 data = json.loads((self._folder / f"{key}.json").read_text(encoding="utf-8"))
@@ -45,6 +54,11 @@ class JsonCache:
 
     def put(self, key: str, value: dict[str, Any]) -> None:
         self._memory[key] = value
+        if self._store is not None:
+            try:
+                self._store.put(key, value)
+            except Exception:  # noqa: BLE001 - never fail the request because of the cache
+                log.warning("LLM cache store write failed")
         if self._folder:
             try:
                 self._folder.mkdir(parents=True, exist_ok=True)
@@ -57,6 +71,14 @@ class LLMChain:
     def __init__(self, providers: list[Provider], cache: JsonCache | None = None):
         self.providers = providers
         self.cache = cache
+
+    def with_store(self, store) -> "LLMChain":
+        """Same providers, with a durable store (e.g. the database) behind this chain's cache."""
+        folder = self.cache._folder if self.cache else None
+        cache = JsonCache(folder, store)
+        if self.cache:
+            cache._memory = self.cache._memory  # keep what this process already read
+        return LLMChain(self.providers, cache)
 
     @property
     def available(self) -> list[str]:

@@ -117,3 +117,13 @@ class MessageModel(Base):
     decision_id: Mapped[str | None] = mapped_column(String(64), ForeignKey("decisions.id"), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
+
+
+class LlmCacheModel(Base):
+    """LLM readings by request hash (docs/DATA_MODEL.md, LlmCache). Survives demo resets on purpose."""
+
+    __tablename__ = "llm_cache"
+
+    key: Mapped[str] = mapped_column(String(64), primary_key=True)
+    value: Mapped[dict] = mapped_column(JSON, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)

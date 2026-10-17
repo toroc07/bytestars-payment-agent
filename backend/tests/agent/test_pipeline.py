@@ -208,3 +208,61 @@ def test_unknown_gemini_model_is_skipped_after_a_404():
     with pytest.raises(LLMError):
         provider.generate_json(request)
     assert provider.supports(request) is False
+
+
+def test_reevaluation_uses_current_vendors_and_keeps_history(repos):
+    from app.agent.pipeline import reevaluate
+
+    delta = {**CLEAN, "invoice_number": "CDE-107", "vendor_name": "Comercializadora Delta Express S.A.S.",
+             "vendor_tax_id": "901.587.432-6", "beneficiary_account": "62690944157"}
+    first = send(repos, "Factura CDE-107", llm=chain(FakeProvider(answer=delta)))
+    assert first.assistant_message.decision.outcome == Outcome.block
+
+    repos.beneficiaries.append(Beneficiary(id="ben-delta", name="Comercializadora Delta Express S.A.S.",
+                                           tax_id="901.587.432-6", account="62690944157", country="CO",
+                                           verified=True))
+    decision = reevaluate(first.invoice, inv_repo=repos, dec_repo=repos, rule_repo=repos, ben_repo=repos,
+                          agr_repo=repos, clock=lambda: NOW)
+    assert decision.outcome == Outcome.pay and "reevaluación" in decision.explanation
+    assert [d.outcome for d in repos.decisions] == [Outcome.block, Outcome.pay]
+    assert repos.invoices[first.invoice.id].status == InvoiceStatus.paid
+
+
+class DictStore:
+    def __init__(self):
+        self.rows: dict[str, dict] = {}
+
+    def get(self, key):
+        return self.rows.get(key)
+
+    def put(self, key, value):
+        self.rows.setdefault(key, value)
+
+
+def test_llm_reading_is_stored_and_reused_by_a_fresh_process(repos):
+    from app.llm import JsonCache, LLMChain
+
+    store = DictStore()
+    first = FakeProvider(answer=CLEAN)
+    send(repos, "Factura No. ATS-842 por US$1,487.50", llm=LLMChain([first], JsonCache()).with_store(store))
+    assert len(store.rows) == 1 and len(first.requests) == 1
+
+    second = FakeProvider(answer=None)  # a new instance with no quota left still gets the reading
+    response = send(repos, "Factura No. ATS-842 por US$1,487.50", llm=LLMChain([second], JsonCache()).with_store(store))
+    assert second.requests == [] and "lectura guardada" in repos.decisions[-1].explanation
+    assert response.invoice.extracted.invoice_number == "ATS-842"
+
+
+def test_broken_cache_store_does_not_break_the_reading(repos):
+    from app.llm import JsonCache, LLMChain
+
+    class Broken:
+        def get(self, key):
+            raise RuntimeError("db down")
+
+        def put(self, key, value):
+            raise RuntimeError("db down")
+
+    llm = LLMChain([FakeProvider(answer=CLEAN)], JsonCache()).with_store(Broken())
+    response = send(repos, "Factura No. ATS-842", llm=llm)
+    assert response.invoice.extracted.invoice_number == "ATS-842"
