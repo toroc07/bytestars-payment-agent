@@ -1,0 +1,50 @@
+# API_CONTRACT — Endpoints
+
+Contrato entre `frontend` y `backend`. Cambios: primero aquí, mismo PR que el código, aprueban ambos.
+Tipos de petición/respuesta = entidades de `docs/DATA_MODEL.md`.
+
+## Convenciones
+- Prefijo `/api` (excepto `/health`). JSON, `snake_case`. Dinero como string decimal.
+- Errores: `{ "detail": "mensaje legible" }` con el código HTTP adecuado (400/404/413/422/429/500).
+- Archivos: `multipart/form-data`, máximo `MAX_UPLOAD_MB` (4 MB por límite de Vercel). Tipos: PDF, PNG, JPG.
+- El backend publica `/openapi.json`; se exporta a `contracts/openapi.json` y el frontend genera sus tipos desde ahí.
+- Ejemplos de respuestas para mocks: `contracts/examples/`.
+
+## Endpoints
+
+| Método y ruta | Uso | Entrada | Salida |
+|---|---|---|---|
+| `GET /health` | Salud | — | `{status}` |
+| `GET /api/conversations` | Sidebar: historial | — | `ConversationSummary[]` |
+| `POST /api/conversations` | Nuevo chat | `{title?}` | `ConversationSummary` |
+| `GET /api/conversations/{id}/messages` | Mensajes de un chat | — | `ChatMessage[]` |
+| `POST /api/conversations/{id}/messages` | Enviar texto y/o archivo; procesa la factura y responde | multipart: `text?`, `file?` | `SendMessageResponse` |
+| `GET /api/invoices` | Registro / filtros | query `status?` | `Invoice[]` |
+| `GET /api/invoices/{id}` | Detalle | — | `Invoice` |
+| `GET /api/invoices/{id}/decisions` | Historial de decisiones (explicación completa) | — | `Decision[]` |
+| `GET /api/decisions` | Registro global (tabla, exportable) | query `outcome?`, `status?` | `Decision[]` |
+| `POST /api/invoices/{id}/approve` | Humano aprueba una factura escalada | `ApprovalRequest` | `Decision` |
+| `POST /api/invoices/{id}/reject` | Humano rechaza | `ApprovalRequest` | `Decision` |
+| `POST /api/invoices/{id}/reevaluate` | Re-evaluar con reglas/beneficiarios actuales (p. ej. tras agregar un beneficiario a una factura frenada) | — | `Decision` |
+| `GET /api/rules` | Reglas vigentes | — | `RuleSet` |
+| `PUT /api/rules` | Guardar nueva versión de reglas | `RuleSet` | `RuleSet` (version+1) |
+| `GET /api/beneficiaries` | Lista permitida | — | `Beneficiary[]` |
+| `POST /api/beneficiaries` | Crear/actualizar | `Beneficiary` | `Beneficiary` |
+| `DELETE /api/beneficiaries/{id}` | Borrar | — | 204 |
+| `GET /api/agreements` | Acuerdos | — | `Agreement[]` |
+| `POST /api/agreements` | Crear/actualizar | `Agreement` | `Agreement` |
+| `GET /api/summary` | Tarjetas: pagado / frenado / pendiente, gasto del periodo vs límites | — | `{paid_count, blocked_count, pending_count, spent_in_period, period_limit, period_budget}` |
+| `POST /api/dev/seed` | Carga empresa ficticia + dataset | — | `{loaded}` |
+| `POST /api/dev/reset` | Resetea el demo | — | `{ok}` |
+
+Reglas de comportamiento:
+- `approve` solo es válido si el estado actual es `pending_approval`; si no → 409.
+- `reject` igual. Una factura `blocked` no se aprueba: se corrige la causa y se usa `reevaluate`.
+- `PUT /api/rules` rechaza cualquier `severity_overrides` con valor `pay` (422).
+- `/api/dev/*` con rate limit; en producción pueden desactivarse con `APP_ENV=production` si hace falta.
+- El endpoint de mensajes **nunca** devuelve error 500 por fallos del LLM: responde con una decisión `escalate` que explica el fallo.
+
+## Desarrollo del frontend sin backend
+`VITE_USE_MOCKS=true`: el frontend responde estos endpoints con los JSON de `contracts/examples/`.
+Archivos esperados en `contracts/examples/` (los crea quien implemente el contrato, acordados en `docs/PROGRESS.md`):
+`conversations.json`, `messages_pay.json`, `messages_block.json`, `messages_escalate.json`, `rules.json`, `beneficiaries.json`, `agreements.json`, `summary.json`.

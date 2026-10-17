@@ -1,0 +1,64 @@
+# PROGRESS — Estado del proyecto
+
+Cada persona (y agente) edita **solo sus filas**. Estados: `pendiente` · `en curso` · `listo` · `bloqueado`.
+Roles confirmados: **Dev A** = frontend + agente + motor de decisiones · **Dev B** = backend (API) + base de datos.
+Dev B también ayuda con el motor de decisiones: al repartir tareas del motor, anotar en la columna de responsable quién hace cada regla.
+
+## M0 · Contrato (compartido)
+| Tarea | Responsable | Estado | Notas |
+|---|---|---|---|
+| Revisar y acordar `docs/DATA_MODEL.md` | ambos | pendiente | |
+| Revisar y acordar `docs/API_CONTRACT.md` | ambos | pendiente | |
+| Implementar modelos Pydantic en `backend/app/schemas/` | Dev B | pendiente | según `DATA_MODEL.md` |
+| Definir `backend/app/ports.py` | Dev B | pendiente | según sección Ports de `DATA_MODEL.md` |
+| Crear JSON de ejemplo en `contracts/examples/` | Dev A | pendiente | lista en `API_CONTRACT.md` |
+| Dataset base (`company.json`, `scenarios.json`) | ambos | pendiente | ver `dataset/README.md` |
+
+## Frontend (Dev A)
+| Tarea | Estado | Notas |
+|---|---|---|
+| Inicializar Vite + React + TS + Tailwind + shadcn/ui | pendiente | |
+| Layout tipo ChatGPT: sidebar + chat + botón de configuración | pendiente | |
+| Cliente API + modo mocks | pendiente | |
+| Tarjeta de decisión (resultado + checks expandibles) | pendiente | |
+| Panel de configuración (reglas, beneficiarios, acuerdos) | pendiente | |
+| Aprobar / rechazar pendientes | pendiente | |
+| Vista de registro de decisiones | pendiente | |
+
+## Motor, agente y LLM (Dev A; Dev B ayuda en el motor)
+| Tarea | Estado | Notas |
+|---|---|---|
+| Motor de reglas R01–R10 + tests | pendiente | `DECISION_ENGINE.md`. Responsable por regla: _(por repartir entre Dev A y Dev B)_ |
+| Property tests de invariantes | pendiente | |
+| Repositorios falsos en memoria para tests | pendiente | |
+| Pipeline del agente | pendiente | |
+| Proveedor Gemini + extracción PDF/imagen/texto | pendiente | |
+| Fallback Groq/OpenRouter + caché | pendiente | |
+| Chat de consulta (solo lectura) | pendiente | |
+| Script de evaluación del dataset | pendiente | |
+
+## Backend y base de datos (Dev B)
+| Tarea | Estado | Notas |
+|---|---|---|
+| Proyecto FastAPI base + `/health` + CORS | pendiente | |
+| Modelos SQLAlchemy + migraciones | pendiente | |
+| Repositorios (implementan `ports`) | pendiente | |
+| Rutas de la API | pendiente | `API_CONTRACT.md` |
+| Seed y reset con el dataset | pendiente | |
+| Exportar `contracts/openapi.json` | pendiente | |
+
+## Dataset (compartido)
+| Tarea | Estado | Notas |
+|---|---|---|
+| Empresa ficticia, beneficiarios, acuerdos | pendiente | |
+| Escenarios y resultados esperados | pendiente | |
+| Generar facturas PDF / imagen / texto | pendiente | |
+
+## Deploy
+| Tarea | Estado | Notas |
+|---|---|---|
+| Cuenta Neon + proyecto Vercel api/web | pendiente | `DEPLOY.md` |
+| Confirmar créditos/free tier de Gemini | pendiente | lo revisa quien tiene Google AI Pro |
+
+## Bloqueos y preguntas abiertas
+- _(ninguna todavía)_
