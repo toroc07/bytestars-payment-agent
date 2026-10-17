@@ -27,6 +27,8 @@ export interface FieldSpec {
   nullable: boolean
   /** The backend fills it when omitted, so it is not "optional" from the operator's point of view. */
   hasDefault: boolean
+  /** The backend's declared default, used to start a new record. */
+  defaultValue?: unknown
   options?: { value: string; label: string }[]
   min?: number
   max?: number
@@ -176,6 +178,7 @@ export function fieldsFrom(schema: JsonSchema, readonlyKeys: string[] = []): Fie
       required: required.has(key),
       nullable,
       hasDefault: raw.default !== undefined,
+      defaultValue: raw.default,
       options: toOptions(s.enum),
       min: numeric.minimum ?? numeric.exclusiveMinimum,
       max: numeric.maximum,
@@ -198,7 +201,8 @@ export function toFormValues(fields: FieldSpec[], data: Record<string, unknown> 
   const values: FormValues = {}
   for (const f of fields) {
     const v = data?.[f.key]
-    if (f.kind === 'boolean') values[f.key] = v === undefined ? true : Boolean(v)
+    // A missing boolean takes the backend default, never an invented true (it could mark a vendor sanctioned).
+    if (f.kind === 'boolean') values[f.key] = v === undefined ? f.defaultValue === true : Boolean(v)
     else if (f.kind === 'map')
       values[f.key] = Object.entries((v as Record<string, unknown>) ?? {}).map(([k, x]) => [k, String(x ?? '')])
     else if (f.kind === 'list') values[f.key] = Array.isArray(v) ? v.join(', ') : ''

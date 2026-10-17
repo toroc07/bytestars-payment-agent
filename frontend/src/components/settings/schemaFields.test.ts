@@ -130,3 +130,32 @@ describe('groupFields and diffPayloads', () => {
     expect(diffPayloads(fields, before, { ...before })).toEqual([])
   })
 })
+
+describe('boolean defaults', () => {
+  // Shape of the backend Beneficiary after Dev C's rules (verified defaults to true there).
+  const beneficiary: JsonSchema = {
+    type: 'object',
+    required: ['id', 'name'],
+    properties: {
+      id: { type: 'string' },
+      name: { type: 'string' },
+      allowed: { type: 'boolean', default: true },
+      verified: { type: 'boolean', default: true },
+      sanctioned: { type: 'boolean', default: false },
+      owners: { type: 'array', items: { type: 'string' } },
+    },
+  }
+  const fields = fieldsFrom(beneficiary)
+
+  it('takes the backend default for a missing boolean instead of inventing true', () => {
+    const values = toFormValues(fields, {})
+    expect(values.sanctioned).toBe(false)
+    expect(values.allowed).toBe(true)
+  })
+
+  it('lets a new vendor start unverified and not sanctioned', () => {
+    const start = { verified: false, sanctioned: false, allowed: true }
+    const payload = toPayload(fields, toFormValues(fields, start), start)
+    expect(payload).toMatchObject({ verified: false, sanctioned: false, allowed: true, owners: [] })
+  })
+})

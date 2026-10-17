@@ -332,6 +332,9 @@ function RowActions({
 
 /* ---------- Beneficiarios ---------- */
 
+// Verification is a human step (rule R04): a new vendor starts unverified and not sanctioned.
+const NEW_BENEFICIARY = { verified: false, sanctioned: false, allowed: true }
+
 function BeneficiariesTab() {
   const list = useBeneficiaries()
   const save = useSaveBeneficiary()
@@ -411,7 +414,7 @@ function BeneficiariesTab() {
               key={`new-${savedName ?? ''}`}
               idPrefix="beneficiary"
               fields={createFields}
-              initial={{}}
+              initial={NEW_BENEFICIARY}
               submitLabel="Agregar a la lista"
               onSave={persist}
               pending={save.isPending}

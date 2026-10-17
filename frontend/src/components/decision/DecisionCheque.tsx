@@ -159,6 +159,12 @@ function ChequeCard({
               <dd className="tabular text-ink-soft">{extracted?.invoice_number ?? '—'}</dd>
               <dt>Vence</dt>
               <dd className="tabular text-ink-soft">{formatDate(extracted?.due_date) ?? '—'}</dd>
+              {extracted?.vendor_country ? (
+                <>
+                  <dt>País</dt>
+                  <dd className="tabular text-ink-soft">{extracted.vendor_country}</dd>
+                </>
+              ) : null}
             </dl>
           </div>
 
