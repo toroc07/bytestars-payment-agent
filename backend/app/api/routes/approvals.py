@@ -11,7 +11,6 @@ from app.api.deps import (
     get_decision_repo,
     get_invoice_repo,
     get_rule_repo,
-    require_admin_token,
 )
 from app.engine.rules import Facts, r02_not_duplicate, r05_not_sanctioned, to_base
 from app.ports import (
@@ -34,7 +33,7 @@ from app.schemas import (
 router = APIRouter(prefix="/api/invoices", tags=["approvals"])
 
 
-@router.post("/{invoice_id}/approve", response_model=Decision, dependencies=[Depends(require_admin_token)])
+@router.post("/{invoice_id}/approve", response_model=Decision)
 def approve_invoice(
     invoice_id: str,
     payload: ApprovalRequest,
@@ -108,6 +107,7 @@ def approve_invoice(
         invoice_id=invoice.id,
         from_status=InvoiceStatus.pending_approval,
         to_status=InvoiceStatus.approved,
+        commit=False,  # committed together with the decision below: never a status change without its record
     )
     if not transitioned:
         raise HTTPException(
@@ -139,7 +139,7 @@ def approve_invoice(
     return new_decision
 
 
-@router.post("/{invoice_id}/reject", response_model=Decision, dependencies=[Depends(require_admin_token)])
+@router.post("/{invoice_id}/reject", response_model=Decision)
 def reject_invoice(
     invoice_id: str,
     payload: ApprovalRequest,
@@ -161,6 +161,7 @@ def reject_invoice(
         invoice_id=invoice.id,
         from_status=InvoiceStatus.pending_approval,
         to_status=InvoiceStatus.rejected,
+        commit=False,  # committed together with the decision below: never a status change without its record
     )
     if not transitioned:
         raise HTTPException(

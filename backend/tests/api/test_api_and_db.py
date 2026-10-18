@@ -248,3 +248,40 @@ def test_dev_endpoints_blocked_in_production_without_admin_token(client: TestCli
     res = client.post("/api/dev/reset")
     assert res.status_code == 403
     assert "Endpoints de desarrollo deshabilitados en producción" in res.json()["detail"]
+
+
+def _pending_invoice(client: TestClient) -> str:
+    conv = client.post("/api/conversations", json={"title": "Pendiente"}).json()
+    res = client.post(f"/api/conversations/{conv['id']}/messages", data={"text": "Factura FAC-9 total US$10.00"})
+    invoice = res.json()["invoice"]
+    assert invoice["status"] == "pending_approval"
+    return invoice["id"]
+
+
+def test_human_decisions_do_not_need_the_admin_token(client: TestClient, monkeypatch):
+    from app.config import settings
+
+    monkeypatch.setattr(settings, "ADMIN_TOKEN", "secret-key-123")
+    monkeypatch.setattr(settings, "APP_ENV", "production")
+    invoice_id = _pending_invoice(client)
+    res = client.post(f"/api/invoices/{invoice_id}/reject", json={"approver": "Ana", "comment": "No reconocida"})
+    assert res.status_code == 200 and res.json()["outcome"] == "block"
+
+
+def test_failed_decision_record_leaves_the_invoice_pending(client: TestClient, monkeypatch):
+    from app.db.repositories import SqlDecisionRepository
+
+    invoice_id = _pending_invoice(client)
+    original_add = SqlDecisionRepository.add
+
+    def broken_add(self, decision):
+        if decision.actor.value == "human":
+            self.db.rollback()
+            raise RuntimeError("db down")
+        return original_add(self, decision)
+
+    monkeypatch.setattr(SqlDecisionRepository, "add", broken_add)
+    with pytest.raises(RuntimeError):
+        client.post(f"/api/invoices/{invoice_id}/reject", json={"approver": "Ana", "comment": "x"})
+    monkeypatch.setattr(SqlDecisionRepository, "add", original_add)
+    assert client.get(f"/api/invoices/{invoice_id}").json()["status"] == "pending_approval"

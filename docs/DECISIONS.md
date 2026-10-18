@@ -89,17 +89,8 @@ Decisión (Dev A, a pedido del equipo; Dev C valida):
 2. **Allowlist inferida:** `dataset/company.json` lista los 8 proveedores que se repiten con NIT y cuenta coherentes (verificados, no sancionados, país CO). Servicios Logísticos Meridian, Comercializadora Delta Express y la papelería con NIT 901.233.780-5 quedan fuera, porque son las trampas del set. No se inventaron dueños ni acuerdos.
 3. **Resultados esperados:** `dataset/expected.json` se calculó con el motor procesando de factura_001 a factura_100 en una sola sesión y se contrastó con una clasificación manual de las trampas. `backend/tests/engine/test_dataset_expected.py` lo vuelve a comprobar en cada corrida de tests.
 
-## ADR-023 · Blindaje de backend contra descalificación: validación en /approve, protección de rutas administrativas y concurrencia segura
-Decisión (Dev B):
-1. **Validación robusta en `POST /api/invoices/{id}/approve`:**
-   - La API valida de forma estricta que la factura cuente con datos extraídos (`extracted` no nulo), monto positivo (`amount > 0`), moneda y beneficiario/proveedor (nombre o NIT) antes de permitir cualquier aprobación humana.
-   - Re-evaluación de reglas duras en el backend: se re-ejecuta `r02_not_duplicate` (con ventana temporal y facturas pagadas/aprobadas existentes) y `r05_not_sanctioned` antes de registrar la decisión humana. Si se detecta un intento de aprobar una factura duplicada o sancionada, se responde con HTTP 409 Conflict protegiendo el flujo append-only.
-2. **Protección de rutas administrativas y de demo:**
-   - Se incorpora `ADMIN_TOKEN` opcional en la configuración (`backend/app/config.py` y `.env.example`).
-   - Dependencia `require_admin_token` protege `/api/dev/*` y las acciones de `/api/invoices/{id}/approve` y `/reject`.
-   - Si `ADMIN_TOKEN` está configurado, se exige el header `X-Admin-Token` con comparación de tiempo constante (`secrets.compare_digest`).
-   - Si `ADMIN_TOKEN` no está configurado pero el entorno es `production` (`APP_ENV=production`), se bloquean los endpoints destructivos de `/api/dev/*` (`/reset`, `/seed`) con HTTP 403 Forbidden para proteger despliegues públicos en Vercel.
-3. **Concurrencia segura y flujo append-only:**
-   - En `InvoiceRepository.get(id, for_update=True)` se añade soporte para row locking (`SELECT ... FOR UPDATE` vía `.with_for_update()`).
-   - Se implementa `InvoiceRepository.transition_status(invoice_id, from_status, to_status)` como actualización atómica condicional (`UPDATE invoices SET status = :to_status WHERE id = :id AND status = :from_status`), garantizando que dos solicitudes concurrentes de aprobación o rechazo resulten en un HTTP 409 Conflict en lugar de decisiones duplicadas o condiciones de carrera.
-
+## ADR-024 · Blindaje de aprobaciones, clave de administrador para la demo y concurrencia segura
+Decisión (Dev B; ajustada por Dev A con el equipo):
+1. **Validación en `POST /api/invoices/{id}/approve`:** antes de aceptar una aprobación humana se exige que la factura tenga datos leídos, monto mayor que cero, moneda y proveedor (nombre o NIT), y se vuelven a comprobar R02 (duplicados, contra facturas recibidas antes o ya pagadas) y R05 (sanciones). Si alguna falla, 409 y no se registra nada.
+2. **Clave de administrador solo para `/api/dev/*`:** `ADMIN_TOKEN` protege sembrar y reiniciar la demo, con el encabezado `X-Admin-Token` comparado en tiempo constante (`secrets.compare_digest`). Sin `ADMIN_TOKEN`, esas rutas funcionan en desarrollo y responden 403 en producción. La web envía la clave desde Configuración → Demo (solo en memoria, no se guarda). **Aprobar y rechazar no piden la clave:** las hace una persona con nombre y motivo (regla de oro 4), y exigir el token habría roto ese flujo en la web.
+3. **Concurrencia:** `InvoiceRepository.get(id, for_update=True)` bloquea la fila (`SELECT ... FOR UPDATE` en Postgres) y `transition_status` cambia el estado solo si sigue en `pending_approval`; dos aprobaciones simultáneas dan 409. El cambio de estado y la decisión humana se guardan en **un solo commit** (`commit=False` en la transición): no puede quedar una factura aprobada sin su registro.

@@ -24,6 +24,7 @@ Base de datos: **Neon Postgres** (integración con Vercel). **SQLite no sirve en
 | api | `GROQ_API_KEY`, `OPENROUTER_API_KEY` | respaldos (opcionales) |
 | api | `LLM_PROVIDER_ORDER`, `LLM_CACHE` | `gemini,groq,openrouter`, `true` |
 | api | `APP_ENV` | `production` |
+| api | `ADMIN_TOKEN` | clave larga y aleatoria para sembrar/reiniciar la demo (se escribe en Configuración → Demo, o en el encabezado `X-Admin-Token`). Sin ella, `/api/dev/*` responde 403 en producción |
 
 Las keys viven **solo** en las variables de entorno de Vercel. Nunca en el repo ni en el frontend.
 
@@ -55,7 +56,7 @@ Las keys viven **solo** en las variables de entorno de Vercel. Nunca en el repo 
 1. Vercel → *Add New Project* → importar el repo → *Root Directory* = `backend` (framework: FastAPI, lo detecta solo) y activar "Include files outside the root directory".
 2. Variables de entorno (Production y Preview): `GEMINI_API_KEY`, `GEMINI_MODEL=gemini-3.8-flash,gemini-3.5-flash,gemini-3.5-flash-lite`, `APP_ENV=production`, `LLM_PROVIDER_ORDER=gemini,groq,openrouter`, `LLM_CACHE=true`, `CORS_ORIGINS` (la URL del web; mientras no exista, cualquier valor) y `DATABASE_URL` cuando Dev B la tenga.
 3. Desplegar. Comprobar `https://<api>/health` → `{"status":"ok"}` y `https://<api>/openapi.json`.
-4. Sembrar: `curl -X POST https://<api>/api/dev/seed` (o el botón Configuración → Demo → Reiniciar desde el web).
+4. Sembrar: `curl -X POST https://<api>/api/dev/seed -H "X-Admin-Token: <ADMIN_TOKEN>"` (o Configuración → Demo → escribir la clave → Reiniciar desde el web).
 
 **Proyecto web** (Dev A)
 5. *Add New Project* → mismo repo → *Root Directory* = `frontend` (framework: Vite). Variable `VITE_API_URL=https://<api>` (sin `/` final). Desplegar.

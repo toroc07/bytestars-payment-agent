@@ -23,7 +23,7 @@ Tipos de petición/respuesta = entidades de `docs/DATA_MODEL.md`.
 | `GET /api/invoices/{id}` | Detalle | — | `Invoice` |
 | `GET /api/invoices/{id}/decisions` | Historial de decisiones (explicación completa) | — | `Decision[]` |
 | `GET /api/decisions` | Registro global (tabla, exportable) | query `outcome?`, `status?` | `Decision[]` |
-| `POST /api/invoices/{id}/approve` | Humano aprueba una factura escalada | `ApprovalRequest` | `Decision` |
+| `POST /api/invoices/{id}/approve` | Humano aprueba una factura escalada. 409 si faltan datos (monto, moneda, proveedor), si es duplicada (R02) o sancionada (R05), o si ya cambió de estado | `ApprovalRequest` | `Decision` |
 | `POST /api/invoices/{id}/reject` | Humano rechaza | `ApprovalRequest` | `Decision` |
 | `POST /api/invoices/{id}/reevaluate` | Re-evaluar con reglas/beneficiarios actuales (p. ej. tras agregar un beneficiario a una factura frenada) | — | `Decision` |
 | `GET /api/rules` | Reglas vigentes | — | `RuleSet` |
@@ -46,3 +46,5 @@ Reglas de comportamiento:
 
 ## Desarrollo del frontend
 El frontend trabaja contra el backend real (sin mocks; ver `DECISIONS.md` ADR-012). En local, Vite reenvía `/api`, `/health` y `/openapi.json` al backend. Además del contrato de arriba, el frontend lee `GET /openapi.json` para generar los formularios de configuración, y la pestaña Demo usa `POST /api/dev/reset`.
+
+**Rutas de demo (`/api/dev/seed`, `/api/dev/reset`):** con `ADMIN_TOKEN` configurado exigen el encabezado `X-Admin-Token` (401 si no coincide); sin `ADMIN_TOKEN`, responden 403 en producción. Ver ADR-024.

@@ -180,11 +180,18 @@ export function useReevaluate(invoiceId: string) {
   })
 }
 
-/** Demo control: wipe invoices, decisions and chats, then reload the company from the dataset. */
+/**
+ * Demo control: wipe invoices, decisions and chats, then reload the company from the dataset.
+ * In production the backend asks for the admin key (ADMIN_TOKEN) in the X-Admin-Token header.
+ */
 export function useResetDemo() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: () => request<{ ok: boolean }>('/api/dev/reset', { method: 'POST' }),
+    mutationFn: (adminKey: string) =>
+      request<{ ok: boolean }>('/api/dev/reset', {
+        method: 'POST',
+        headers: adminKey.trim() ? { 'X-Admin-Token': adminKey.trim() } : undefined,
+      }),
     onSuccess: () => qc.invalidateQueries(),
   })
 }

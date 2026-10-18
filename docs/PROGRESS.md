@@ -59,7 +59,7 @@ Dev B también ayuda con el motor de decisiones: al repartir tareas del motor, a
 | Rutas de la API | listo | Rutas en `app/api/routes/` con soporte multipart simultáneo, 409 en reevaluación indebida y rate limits solo en demo |
 | Seed y reset con el dataset | listo | `dataset/company.json` y `app/db/seed.py` sincronizados con nuevas políticas y atributos |
 | Exportar `contracts/openapi.json` | listo | Exportado y sincronizado con tipos frontend (`gen:api`) |
-| Blindaje de backend y concurrencia | listo | Dev B (ADR-023): validación de extracción en `/approve`, re-chequeo de reglas duras (R02, R05) con 409, protección por `ADMIN_TOKEN` / `X-Admin-Token` y bloqueo en producción, bloqueo pesimista y transiciones atómicas anti race-conditions. |
+| Blindaje de backend y concurrencia | listo | Dev B (ADR-023): validación de extracción en `/approve`, re-chequeo de reglas duras (R02, R05) con 409, protección por `ADMIN_TOKEN` / `X-Admin-Token` y bloqueo en producción, bloqueo pesimista y transiciones atómicas anti race-conditions. Ajustado por Dev A (ADR-024): la clave solo protege `/api/dev/*` (aprobar/rechazar no la piden), comparación en tiempo constante, estado y decisión en un solo commit, campo de clave en Configuración → Demo. |
 
 ## Dataset y reglas de la empresa ficticia (Dev C)
 Tareas por definir por Dev C (empresa ficticia, reglas, beneficiarios, acuerdos, facturas simuladas, resultados esperados). Agregar sus filas aquí.

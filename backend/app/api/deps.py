@@ -1,4 +1,5 @@
 import os
+import secrets
 
 from fastapi import Depends, HTTPException, Request
 from sqlalchemy.orm import Session
@@ -45,25 +46,22 @@ def get_llm_cache_repo(db: Session = Depends(get_db)) -> SqlLlmCacheRepository:
 
 
 def require_admin_token(request: Request) -> None:
-    """Security check for sensitive admin operations and demo endpoints.
+    """Guards /api/dev/* (seed and reset reload or wipe the whole demo). ADR-024.
 
-    - If ADMIN_TOKEN is configured: requires 'X-Admin-Token' header matching ADMIN_TOKEN.
-    - If ADMIN_TOKEN is not configured:
-      - In development and test environments: allowed without credentials.
-      - In production (or Vercel): rejects destructive /api/dev/* calls with 403 Forbidden.
+    - With ADMIN_TOKEN set: the 'X-Admin-Token' header must match (constant-time comparison). The web app
+      sends it from Configuración → Demo.
+    - Without ADMIN_TOKEN: allowed in development and tests; refused in production (APP_ENV=production or
+      on Vercel), so a visitor cannot wipe a public demo.
+    Approving or rejecting an invoice does not use this token: a person does it with name and reason.
     """
-    token = request.headers.get("X-Admin-Token")
     if settings.ADMIN_TOKEN:
-        if not token or token.strip() != settings.ADMIN_TOKEN.strip():
-            raise HTTPException(
-                status_code=401,
-                detail="Token de administración inválido o ausente en el encabezado 'X-Admin-Token'.",
-            )
+        token = (request.headers.get("X-Admin-Token") or "").strip()
+        if not secrets.compare_digest(token.encode(), settings.ADMIN_TOKEN.strip().encode()):
+            raise HTTPException(status_code=401, detail="Token de administración inválido o ausente en el encabezado 'X-Admin-Token'.")
         return
-
-    # In production without an explicit ADMIN_TOKEN, dev endpoints are disabled to prevent abuse
-    is_prod = settings.APP_ENV == "production" or bool(os.environ.get("VERCEL"))
-    if is_prod and settings.APP_ENV not in ("test", "testing") and request.url.path.startswith("/api/dev"):
+    if settings.APP_ENV in ("test", "testing"):
+        return
+    if settings.APP_ENV == "production" or os.environ.get("VERCEL"):
         raise HTTPException(
             status_code=403,
             detail="Endpoints de desarrollo deshabilitados en producción sin ADMIN_TOKEN configurado.",

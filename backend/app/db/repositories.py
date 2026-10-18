@@ -286,6 +286,7 @@ class SqlInvoiceRepository:
         invoice_id: str,
         from_status: InvoiceStatus,
         to_status: InvoiceStatus,
+        commit: bool = True,
     ) -> bool:
         """Atomically transition status from `from_status` to `to_status`.
 
@@ -298,7 +299,8 @@ class SqlInvoiceRepository:
             .values(status=to_status.value)
         )
         res = self.db.execute(stmt)
-        self.db.commit()
+        if commit:
+            self.db.commit()
         return bool(res.rowcount and res.rowcount > 0)
 
     def list_previous_extractions(

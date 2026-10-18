@@ -83,7 +83,8 @@ class Repos:
         self.invoices[invoice.id] = invoice
         return invoice
 
-    def transition_status(self, invoice_id: str, from_status: InvoiceStatus, to_status: InvoiceStatus) -> bool:
+    def transition_status(self, invoice_id: str, from_status: InvoiceStatus, to_status: InvoiceStatus,
+                          commit: bool = True) -> bool:
         inv = self.invoices.get(invoice_id)
         if not inv or inv.status != from_status:
             return False

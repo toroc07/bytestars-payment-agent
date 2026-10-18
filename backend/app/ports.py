@@ -49,6 +49,7 @@ class InvoiceRepository(Protocol):
         invoice_id: str,
         from_status: InvoiceStatus,
         to_status: InvoiceStatus,
+        commit: bool = True,
     ) -> bool: ...
     def list_previous_extractions(
         self,

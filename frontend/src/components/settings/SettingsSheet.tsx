@@ -17,6 +17,7 @@ import {
 import type { Agreement, Beneficiary } from '@/api/types'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, SheetContent } from '@/components/ui/dialog'
+import { Field, Input } from '@/components/ui/field'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { formatAmount } from '@/lib/format'
 import { SchemaFields, type KeySuggestions } from './SchemaForm'
@@ -537,6 +538,8 @@ function DemoTab({ onDone }: { onDone: () => void }) {
   const reset = useResetDemo()
   const navigate = useNavigate()
   const [confirming, setConfirming] = useState(false)
+  // Kept only in memory: the key is never stored in the browser.
+  const [adminKey, setAdminKey] = useState('')
 
   return (
     <div className="grid gap-5">
@@ -547,6 +550,20 @@ function DemoTab({ onDone }: { onDone: () => void }) {
           beneficiarios y acuerdos). Úsalo para empezar una demostración desde cero.
         </p>
       </div>
+      <Field
+        label="Clave de administrador"
+        htmlFor="admin-key"
+        hint="En la versión publicada, reiniciar pide la clave configurada en el servidor (ADMIN_TOKEN). En local no hace falta."
+      >
+        <Input
+          id="admin-key"
+          type="password"
+          autoComplete="off"
+          value={adminKey}
+          onChange={(event) => setAdminKey(event.target.value)}
+          aria-describedby="admin-key-hint"
+        />
+      </Field>
       {reset.isError ? <Notice tone="error">{reset.error.message}</Notice> : null}
       {confirming ? (
         <div className="flex flex-wrap items-center gap-2 rounded-xl bg-brick-tint/60 p-4 ring-1 ring-brick-rule">
@@ -558,7 +575,7 @@ function DemoTab({ onDone }: { onDone: () => void }) {
             variant="danger"
             disabled={reset.isPending}
             onClick={() =>
-              reset.mutate(undefined, {
+              reset.mutate(adminKey, {
                 onSuccess: () => {
                   setConfirming(false)
                   onDone()
