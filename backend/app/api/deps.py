@@ -1,6 +1,9 @@
-from fastapi import Depends
+import os
+
+from fastapi import Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 
+from app.config import settings
 from app.db.repositories import (
     SqlAgreementRepository,
     SqlBeneficiaryRepository,
@@ -39,3 +42,29 @@ def get_conversation_repo(db: Session = Depends(get_db)) -> SqlConversationRepos
 
 def get_llm_cache_repo(db: Session = Depends(get_db)) -> SqlLlmCacheRepository:
     return SqlLlmCacheRepository(db)
+
+
+def require_admin_token(request: Request) -> None:
+    """Security check for sensitive admin operations and demo endpoints.
+
+    - If ADMIN_TOKEN is configured: requires 'X-Admin-Token' header matching ADMIN_TOKEN.
+    - If ADMIN_TOKEN is not configured:
+      - In development and test environments: allowed without credentials.
+      - In production (or Vercel): rejects destructive /api/dev/* calls with 403 Forbidden.
+    """
+    token = request.headers.get("X-Admin-Token")
+    if settings.ADMIN_TOKEN:
+        if not token or token.strip() != settings.ADMIN_TOKEN.strip():
+            raise HTTPException(
+                status_code=401,
+                detail="Token de administración inválido o ausente en el encabezado 'X-Admin-Token'.",
+            )
+        return
+
+    # In production without an explicit ADMIN_TOKEN, dev endpoints are disabled to prevent abuse
+    is_prod = settings.APP_ENV == "production" or bool(os.environ.get("VERCEL"))
+    if is_prod and settings.APP_ENV not in ("test", "testing") and request.url.path.startswith("/api/dev"):
+        raise HTTPException(
+            status_code=403,
+            detail="Endpoints de desarrollo deshabilitados en producción sin ADMIN_TOKEN configurado.",
+        )

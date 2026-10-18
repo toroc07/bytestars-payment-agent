@@ -3,11 +3,12 @@ import time
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 
+from app.api.deps import require_admin_token
 from app.config import settings
 from app.db.seed import find_company_json, reset_database, seed_database
 from app.db.session import get_db
 
-router = APIRouter(prefix="/api/dev", tags=["dev"])
+router = APIRouter(prefix="/api/dev", tags=["dev"], dependencies=[Depends(require_admin_token)])
 
 _LAST_CALL_BY_IP: dict[str, float] = {}
 RATE_LIMIT_SECONDS = 5.0

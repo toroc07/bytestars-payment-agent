@@ -15,6 +15,7 @@ class Settings(BaseSettings):
     GEMINI_MODEL: str = "gemini-3.8-flash,gemini-3.5-flash,gemini-3.5-flash-lite"
     GROQ_API_KEY: str = ""
     OPENROUTER_API_KEY: str = ""
+    ADMIN_TOKEN: str = ""
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 

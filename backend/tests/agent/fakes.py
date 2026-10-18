@@ -76,12 +76,36 @@ class Repos:
             self.decisions.append(item)
         return item
 
+    def get(self, invoice_id: str, for_update: bool = False) -> Invoice | None:
+        return self.invoices.get(invoice_id)
+
     def update(self, invoice: Invoice) -> Invoice:
         self.invoices[invoice.id] = invoice
         return invoice
 
-    def list_previous_extractions(self, exclude_invoice_id=None) -> list[ExtractedInvoice]:
-        return [i.extracted for i in self.invoices.values() if i.extracted and i.id != exclude_invoice_id]
+    def transition_status(self, invoice_id: str, from_status: InvoiceStatus, to_status: InvoiceStatus) -> bool:
+        inv = self.invoices.get(invoice_id)
+        if not inv or inv.status != from_status:
+            return False
+        self.invoices[invoice_id] = inv.model_copy(update={"status": to_status})
+        return True
+
+    def list_previous_extractions(
+        self,
+        exclude_invoice_id=None,
+        before_dt=None,
+    ) -> list[ExtractedInvoice]:
+        return [
+            i.extracted
+            for i in self.invoices.values()
+            if i.extracted
+            and i.id != exclude_invoice_id
+            and (
+                before_dt is None
+                or i.received_at < before_dt
+                or i.status in PAID
+            )
+        ]
 
     def get_last_paid_for_vendor(self, vendor_name=None, vendor_tax_id=None, exclude_invoice_id=None):
         paid = [i for i in self.invoices.values() if i.status in PAID and i.extracted and i.id != exclude_invoice_id

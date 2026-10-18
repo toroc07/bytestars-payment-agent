@@ -2,7 +2,7 @@ import uuid
 from datetime import UTC, datetime
 from decimal import Decimal
 
-from sqlalchemy import desc, select
+from sqlalchemy import desc, or_, select, update
 from sqlalchemy.orm import Session
 
 from app.db.models import (
@@ -256,8 +256,11 @@ class SqlInvoiceRepository:
         self.db.refresh(model)
         return self._to_schema(model)
 
-    def get(self, invoice_id: str) -> Invoice | None:
-        row = self.db.get(InvoiceModel, invoice_id)
+    def get(self, invoice_id: str, for_update: bool = False) -> Invoice | None:
+        stmt = select(InvoiceModel).where(InvoiceModel.id == invoice_id)
+        if for_update:
+            stmt = stmt.with_for_update()
+        row = self.db.execute(stmt).scalar_one_or_none()
         return self._to_schema(row) if row else None
 
     def list_all(self, status: InvoiceStatus | None = None) -> list[Invoice]:
@@ -278,10 +281,41 @@ class SqlInvoiceRepository:
         self.db.refresh(row)
         return self._to_schema(row)
 
-    def list_previous_extractions(self, exclude_invoice_id: str | None = None) -> list[ExtractedInvoice]:
+    def transition_status(
+        self,
+        invoice_id: str,
+        from_status: InvoiceStatus,
+        to_status: InvoiceStatus,
+    ) -> bool:
+        """Atomically transition status from `from_status` to `to_status`.
+
+        Guarantees that race conditions cannot approve/reject the same invoice multiple times.
+        Returns True if a row was updated, False if the status did not match or row was missing.
+        """
+        stmt = (
+            update(InvoiceModel)
+            .where(InvoiceModel.id == invoice_id, InvoiceModel.status == from_status.value)
+            .values(status=to_status.value)
+        )
+        res = self.db.execute(stmt)
+        self.db.commit()
+        return bool(res.rowcount and res.rowcount > 0)
+
+    def list_previous_extractions(
+        self,
+        exclude_invoice_id: str | None = None,
+        before_dt: datetime | None = None,
+    ) -> list[ExtractedInvoice]:
         stmt = select(InvoiceModel).where(InvoiceModel.extracted.is_not(None))
         if exclude_invoice_id:
             stmt = stmt.where(InvoiceModel.id != exclude_invoice_id)
+        if before_dt is not None:
+            stmt = stmt.where(
+                or_(
+                    InvoiceModel.received_at < before_dt,
+                    InvoiceModel.status.in_([InvoiceStatus.paid.value, InvoiceStatus.approved.value]),
+                )
+            )
         rows = self.db.execute(stmt).scalars().all()
         return [ExtractedInvoice.model_validate(r.extracted) for r in rows if r.extracted]
 
