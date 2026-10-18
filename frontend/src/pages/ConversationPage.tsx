@@ -20,14 +20,21 @@ export function ConversationPage() {
     (location.state as { freshMessageId?: string } | null)?.freshMessageId ?? null,
   )
   const endRef = useRef<HTMLDivElement>(null)
+  const listRef = useRef<HTMLDivElement>(null)
 
   const summary = conversations.data?.find((c) => c.id === conversationId)
   useEffect(() => setTitle(summary?.title ?? 'Factura'), [setTitle, summary?.title])
 
   const count = messages.data?.length ?? 0
+  const lastIsDecision = Boolean(messages.data?.[count - 1]?.decision)
   useEffect(() => {
-    endRef.current?.scrollIntoView({ block: 'end' })
-  }, [count, pending])
+    // A decision is read from its face (amount, verdict, actions), so land on the top of the latest cheque.
+    // A text answer or a turn in progress is read from the bottom, like any chat.
+    const cheques = listRef.current?.querySelectorAll('article[data-cheque]')
+    const latest = cheques?.[cheques.length - 1]
+    if (!pending && lastIsDecision && latest) latest.scrollIntoView({ block: 'start' })
+    else endRef.current?.scrollIntoView({ block: 'end' })
+  }, [count, pending, lastIsDecision, conversationId])
 
   async function submit({ note, files }: ComposerSubmit) {
     setPending({ text: note, fileName: files[0]?.name })
@@ -50,7 +57,7 @@ export function ConversationPage() {
   return (
     <div className="flex h-full flex-col">
       <div className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto">
-        <div className="mx-auto grid w-full max-w-[52rem] gap-6 px-4 py-6 sm:px-6 sm:py-8">
+        <div ref={listRef} className="mx-auto grid w-full max-w-[52rem] gap-6 px-4 py-6 sm:px-6 sm:py-8">
           <NextUpStrip />
           {messages.isPending ? (
             <div className="space-y-4" aria-hidden="true">

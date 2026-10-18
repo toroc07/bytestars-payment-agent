@@ -40,8 +40,8 @@ describe('formatDate', () => {
 
 describe('verdictOf', () => {
   it('names human decisions as approval or rejection', () => {
-    expect(verdictOf('pay', 'human')).toBe('Aprobada por una persona')
+    expect(verdictOf('pay', 'human')).toBe('Pagada · la aprobó una persona')
     expect(verdictOf('block', 'human')).toBe('Rechazada por una persona')
-    expect(verdictOf('escalate', 'agent')).toBe('Escalada a una persona')
+    expect(verdictOf('escalate', 'agent')).toBe('Por aprobar')
   })
 })

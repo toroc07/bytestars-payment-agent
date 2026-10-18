@@ -1,5 +1,5 @@
 import { Menu, Settings2 } from 'lucide-react'
-import { lazy, Suspense, useState } from 'react'
+import { lazy, Suspense, useRef, useState } from 'react'
 import { Outlet } from 'react-router'
 import { useHealth } from '@/api/hooks'
 import { Sidebar } from '@/components/sidebar/Sidebar'
@@ -30,15 +30,33 @@ export function AppShell() {
   const [settingsLoaded, setSettingsLoaded] = useState(false)
   const [navOpen, setNavOpen] = useState(false)
   const [title, setTitle] = useState<string | null>(null)
+  // Both panels are opened from the header; closing one returns focus to the button that opened it.
+  const menuButton = useRef<HTMLButtonElement>(null)
+  const settingsButton = useRef<HTMLButtonElement>(null)
 
   return (
     <div className="grid h-dvh grid-cols-1 md:grid-cols-[18rem_minmax(0,1fr)]">
+      <a
+        href="#contenido"
+        className="sr-only rounded-lg bg-intaglio px-4 py-2 text-sm font-medium text-paper focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50"
+      >
+        Saltar al contenido
+      </a>
       <aside className="hidden min-h-0 border-r border-rule md:block">
         <Sidebar />
       </aside>
 
       <Dialog open={navOpen} onOpenChange={setNavOpen}>
-        <SheetContent side="left" title="Historial de facturas" hideHeader className="md:hidden">
+        <SheetContent
+          side="left"
+          title="Historial de facturas"
+          hideHeader
+          className="md:hidden"
+          onCloseAutoFocus={(event) => {
+            event.preventDefault()
+            menuButton.current?.focus()
+          }}
+        >
           <Sidebar onNavigate={() => setNavOpen(false)} onClose={() => setNavOpen(false)} />
         </SheetContent>
       </Dialog>
@@ -47,6 +65,7 @@ export function AppShell() {
         <OfflineBanner />
         <header className="flex h-14 shrink-0 items-center gap-2 border-b border-rule px-3 sm:px-5">
           <Button
+            ref={menuButton}
             variant="ghost"
             size="icon"
             className="md:hidden"
@@ -56,7 +75,7 @@ export function AppShell() {
             <Menu />
           </Button>
           <p className="min-w-0 flex-1 truncate text-[0.9375rem] font-medium">{title ?? 'Nueva factura'}</p>
-          <Button variant="secondary" size="sm" onClick={() => {
+          <Button ref={settingsButton} variant="secondary" size="sm" onClick={() => {
               setSettingsLoaded(true)
               setSettingsOpen(true)
             }} aria-label="Configuración">
@@ -64,14 +83,14 @@ export function AppShell() {
             <span className="hidden sm:inline">Configuración</span>
           </Button>
         </header>
-        <main className="min-h-0 flex-1">
+        <main id="contenido" tabIndex={-1} className="min-h-0 flex-1 outline-none">
           <Outlet context={{ setTitle } satisfies ShellContext} />
         </main>
       </div>
 
       {settingsLoaded ? (
         <Suspense fallback={null}>
-          <SettingsSheet open={settingsOpen} onOpenChange={setSettingsOpen} />
+          <SettingsSheet open={settingsOpen} onOpenChange={setSettingsOpen} returnFocusTo={settingsButton} />
         </Suspense>
       ) : null}
     </div>

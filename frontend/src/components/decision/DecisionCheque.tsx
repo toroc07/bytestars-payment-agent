@@ -1,4 +1,4 @@
-import { Check, Minus, PenLine, RotateCcw, X } from 'lucide-react'
+import { Check, ChevronDown, Minus, PenLine, RotateCcw, X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { useInvoice, useInvoiceDecisions, useReevaluate } from '@/api/hooks'
 import type { Decision, Invoice, RuleCheck } from '@/api/types'
@@ -20,6 +20,15 @@ const verdictTone: Record<StatusTone, string> = {
 
 const MICROPRINT = 'SIMULADO · NO ES UN PAGO REAL · '.repeat(8)
 
+/** Failed rules first (blocking before escalating), then the rest in catalogue order. */
+function orderChecks(checks: RuleCheck[]) {
+  const rank = (c: RuleCheck) => (c.status !== 'failed' ? 2 : c.outcome_if_failed === 'block' ? 0 : 1)
+  return checks
+    .map((c, i) => [c, i] as const)
+    .sort((a, b) => rank(a[0]) - rank(b[0]) || a[1] - b[1])
+    .map(([c]) => c)
+}
+
 function CheckRow({ check }: { check: RuleCheck }) {
   const failed = check.status === 'failed'
   const skipped = check.status === 'skipped'
@@ -40,7 +49,14 @@ function CheckRow({ check }: { check: RuleCheck }) {
       : 'Cumple'
 
   return (
-    <li className="grid grid-cols-[1.25rem_1fr] gap-x-2 py-2.5 first:pt-0 last:pb-0">
+    <li
+      className={cn(
+        'grid grid-cols-[1.25rem_1fr] gap-x-2',
+        failed
+          ? cn('-mx-2 rounded-md px-2 py-2.5', check.outcome_if_failed === 'block' ? 'bg-brick-tint/50' : 'bg-ochre-tint/50')
+          : 'py-2.5 first:pt-0 last:pb-0',
+      )}
+    >
       <Icon className={cn('mt-0.5 size-4', tone)} aria-hidden="true" strokeWidth={2.5} />
       <div className="min-w-0 space-y-1">
         <p className="text-sm leading-snug text-ink">
@@ -63,7 +79,7 @@ function CheckRow({ check }: { check: RuleCheck }) {
             ) : null}
           </dl>
         )}
-        <p className="tabular text-xs text-ink-muted">
+        <p className={cn('tabular text-xs', failed ? cn('font-semibold', tone) : 'text-ink-muted')}>
           <span className="sr-only">Regla </span>
           {check.rule_id}
           <span aria-hidden="true"> · {statusText}</span>
@@ -95,8 +111,24 @@ function ChequeCard({
   onReevaluated,
 }: ChequeProps) {
   const [dialog, setDialog] = useState<'approve' | 'reject' | null>(null)
+  const ordered = orderChecks(decision.checks)
+  const failing = ordered.filter((c) => c.status === 'failed')
+  const passing = ordered.filter((c) => c.status !== 'failed')
+  const passed = passing.filter((c) => c.status === 'passed').length
+  const skipped = passing.length - passed
+  // On a paid cheque the passing rules are the explanation; elsewhere the failures are, so fold the rest.
+  const [showPassing, setShowPassing] = useState(decision.outcome === 'pay')
   const reevaluate = useReevaluate(decision.invoice_id)
   const ref = useRef<HTMLElement>(null)
+  // The dialog is opened from a button on this cheque; focus goes back there when it closes, or to the
+  // cheque itself when the button is gone (the invoice was just resolved).
+  const opener = useRef<HTMLButtonElement | null>(null)
+  useEffect(() => {
+    if (dialog !== null || !opener.current) return
+    const target = opener.current.isConnected ? opener.current : ref.current
+    opener.current = null
+    requestAnimationFrame(() => target?.focus())
+  }, [dialog])
 
   // A cheque issued while the operator watches (a re-evaluation) is brought into view.
   useEffect(() => {
@@ -105,6 +137,14 @@ function ChequeCard({
 
   const extracted = invoice?.extracted
   const outcome = OUTCOME[decision.outcome]
+  // Once a person resolves it, the face shows the final state and the agent's verdict becomes history.
+  const final = endorsement ? OUTCOME[endorsement.outcome === 'pay' ? 'pay' : 'block'] : outcome
+  const approver = endorsement?.approver ?? 'una persona'
+  const finalVerdict = endorsement
+    ? endorsement.outcome === 'pay'
+      ? `Pagada · la aprobó ${approver}`
+      : `Rechazada por ${approver}`
+    : outcome.verdict
   const beneficiary = extracted?.vendor_name ?? null
   const currency = extracted?.currency ?? null
   const amount = formatAmount(extracted?.amount, currency)
@@ -125,8 +165,10 @@ function ChequeCard({
   return (
     <article
       ref={ref}
-      aria-label={`${isReevaluation ? 'Reevaluación' : 'Decisión'}: ${outcome.verdict}${beneficiary ? `, ${beneficiary}` : ''}`}
-      className={cn('w-full', fresh && 'cheque-issue')}
+      aria-label={`${isReevaluation ? 'Reevaluación' : 'Decisión'}: ${finalVerdict}${beneficiary ? `, ${beneficiary}` : ''}`}
+      data-cheque=""
+      tabIndex={-1}
+      className={cn('w-full scroll-mt-4', fresh && 'cheque-issue')}
     >
       {isReevaluation ? (
         <p className="mb-2 flex items-center gap-2 px-1 text-sm text-ink-muted">
@@ -184,20 +226,33 @@ function ChequeCard({
             <span
               className={cn(
                 'inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-semibold',
-                verdictTone[outcome.tone],
+                verdictTone[final.tone],
               )}
             >
               <StatusGlyph
-                shape={outcome.shape}
-                tone={outcome.tone === 'intaglio' ? 'muted' : outcome.tone}
-                className={outcome.tone === 'intaglio' ? '[&_*]:fill-paper' : undefined}
+                shape={final.shape}
+                tone={final.tone === 'intaglio' ? 'muted' : final.tone}
+                className={final.tone === 'intaglio' ? '[&_*]:fill-paper' : undefined}
               />
-              {outcome.verdict}
+              {finalVerdict}
             </span>
             <span className="text-sm text-ink-muted">
-              Decidido por el agente · {formatTimestamp(decision.created_at)}
+              {endorsement ? (
+                <>
+                  <span className="tabular">{formatTimestamp(endorsement.created_at)}</span> · el agente la había
+                  dejado en «{outcome.verdict}»
+                </>
+              ) : (
+                <>Decidido por el agente · {formatTimestamp(decision.created_at)}</>
+              )}
             </span>
           </div>
+          {endorsement?.comment ? (
+            <p className="mt-2 flex max-w-[50ch] gap-1.5 text-sm text-ink-soft">
+              <PenLine className="mt-0.5 size-3.5 shrink-0 text-ink-muted" aria-hidden="true" />
+              <span>«{endorsement.comment}»</span>
+            </p>
+          ) : null}
           {!isLatest && !endorsement ? (
             <p className="mt-3 text-sm text-ink-muted">Sustituida por la reevaluación de abajo.</p>
           ) : null}
@@ -210,18 +265,27 @@ function ChequeCard({
                     variant="primary"
                     disabled={!canApprove}
                     aria-describedby={canApprove ? undefined : approveBlockedId}
-                    onClick={() => setDialog('approve')}
+                    onClick={(event) => {
+                      opener.current = event.currentTarget
+                      setDialog('approve')
+                    }}
                   >
                     Aprobar pago
                   </Button>
-                  <Button variant="danger" onClick={() => setDialog('reject')}>
+                  <Button
+                    variant="danger"
+                    onClick={(event) => {
+                      opener.current = event.currentTarget
+                      setDialog('reject')
+                    }}
+                  >
                     Rechazar
                   </Button>
                 </>
               ) : null}
               {canReevaluate ? (
                 <Button
-                  variant={canResolve ? 'ghost' : 'secondary'}
+                  variant="secondary"
                   disabled={reevaluate.isPending}
                   onClick={() => reevaluate.mutate(undefined, { onSuccess: (d) => onReevaluated(d.id) })}
                 >
@@ -250,7 +314,7 @@ function ChequeCard({
 
           <p
             aria-hidden="true"
-            className="tabular absolute inset-x-5 bottom-3 overflow-hidden whitespace-nowrap text-[0.5625rem] tracking-[0.2em] text-ink-muted/70 sm:inset-x-7"
+            className="tabular absolute inset-x-5 bottom-3 overflow-hidden whitespace-nowrap text-[0.625rem] tracking-[0.2em] text-ink-muted sm:inset-x-7"
           >
             {MICROPRINT}
           </p>
@@ -285,11 +349,47 @@ function ChequeCard({
             </p>
           </div>
           {decision.checks.length > 0 ? (
-            <ul className="divide-y divide-rule">
-              {decision.checks.map((check, i) => (
-                <CheckRow key={`${check.rule_id}-${i}`} check={check} />
-              ))}
-            </ul>
+            <>
+              {failing.length > 0 ? (
+                <ul className="space-y-2">
+                  {failing.map((check, i) => (
+                    <CheckRow key={`${check.rule_id}-${i}`} check={check} />
+                  ))}
+                </ul>
+              ) : null}
+              {passing.length > 0 ? (
+                <div className={cn(failing.length > 0 && 'mt-4 border-t border-rule pt-3')}>
+                  <button
+                    type="button"
+                    className="pressable flex w-full items-center justify-between gap-2 rounded-md py-1 text-left text-sm text-ink-soft hover:text-ink"
+                    aria-expanded={showPassing}
+                    aria-controls={`passing-${decision.id}`}
+                    onClick={() => setShowPassing((v) => !v)}
+                  >
+                    <span>
+                      <span className="tabular">{passed}</span> {passed === 1 ? 'regla se cumple' : 'reglas se cumplen'}
+                      {skipped > 0 ? (
+                        <>
+                          {' · '}
+                          <span className="tabular">{skipped}</span> {skipped === 1 ? 'no aplica' : 'no aplican'}
+                        </>
+                      ) : null}
+                    </span>
+                    <ChevronDown
+                      className={cn('size-4 shrink-0 transition-transform duration-200', showPassing && 'rotate-180')}
+                      aria-hidden="true"
+                    />
+                  </button>
+                  {showPassing ? (
+                    <ul id={`passing-${decision.id}`} className="mt-3 divide-y divide-rule">
+                      {passing.map((check, i) => (
+                        <CheckRow key={`${check.rule_id}-${i}`} check={check} />
+                      ))}
+                    </ul>
+                  ) : null}
+                </div>
+              ) : null}
+            </>
           ) : (
             <p className="text-sm text-ink-muted">No se evaluaron reglas para esta decisión.</p>
           )}
@@ -306,15 +406,19 @@ function ChequeCard({
             <span className="font-medium">
               {endorsement.outcome === 'pay' ? 'Aprobada' : 'Rechazada'} por {endorsement.approver ?? 'una persona'}
             </span>
-            {endorsement.comment ? <span className="text-ink-soft">«{endorsement.comment}»</span> : null}
             <span className="tabular text-xs text-ink-muted">{formatTimestamp(endorsement.created_at)}</span>
           </div>
         ) : null}
       </div>
 
       {(decision.summary || decision.explanation) && (
-        <div className="mt-3 max-w-[68ch] space-y-2 px-1 text-[0.9375rem] leading-relaxed text-ink-soft">
-          {decision.summary ? <p>{decision.summary}</p> : null}
+        <div className="mt-3 max-w-[50ch] space-y-2 px-1 text-[0.9375rem] leading-relaxed text-ink-soft">
+          {decision.summary ? (
+            <p>
+              {endorsement ? <span className="text-ink-muted">Lo que decidió el agente: </span> : null}
+              {decision.summary}
+            </p>
+          ) : null}
           {explanationNotes(decision).length > 0 ? (
             <ul className="space-y-1 text-sm text-ink-muted">
               {explanationNotes(decision).map((note) => (

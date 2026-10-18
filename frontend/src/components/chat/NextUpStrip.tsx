@@ -24,7 +24,7 @@ export function NextUpStrip() {
       <span className="flex min-w-0 items-center gap-2">
         <StatusGlyph shape="ring" tone="ochre" />
         <span className="truncate">
-          {count === 1 ? '1 factura espera tu aprobación' : `${count} facturas esperan tu aprobación`}
+          {count === 1 ? '1 factura por aprobar' : `${count} facturas por aprobar`}
           {onlyThisOne ? ': es esta.' : ''}
         </span>
       </span>

@@ -13,49 +13,76 @@ import { OUTCOME, verdictOf } from '@/lib/status'
 
 type OutcomeFilter = 'all' | Outcome
 
+/** Hatching for money a person approved, so the two segments differ in form and not only in colour. */
+const PEOPLE_HATCH =
+  'repeating-linear-gradient(135deg, var(--color-intaglio) 0 3px, var(--color-intaglio-tint) 3px 6px)'
+
 /**
- * Period spend as a tape against the 7-day limit (R09): past it, every new invoice escalates to a person.
+ * Period spend as a tape against the weekly review threshold (R09): past it the agent stops paying on its own
+ * and every new invoice goes to a person. What the agent paid inside the rules and what people approved as an
+ * exception are separate segments, so an approved exception never reads as the agent breaking a rule.
  * `period_budget` is not shown: no rule enforces it (docs/DECISION_ENGINE.md), so the UI must not claim it does.
  */
 function PeriodTape({ summary, currency }: { summary: Summary; currency: string }) {
   const spent = Number(summary.spent_in_period)
-  const limit = Number(summary.period_limit)
-  const scale = Math.max(spent, limit, 1)
+  const byPeople = Number(summary.spent_by_people ?? 0)
+  const byAgent = summary.spent_by_agent !== undefined ? Number(summary.spent_by_agent) : spent - byPeople
+  const threshold = Number(summary.period_limit)
+  const scale = Math.max(spent, threshold, 1)
   const pct = (n: number) => `${Math.min(100, (n / scale) * 100)}%`
-  const tone = spent > limit ? 'bg-ochre' : 'bg-intaglio'
   const money = (n: number) => `${currency} ${formatAmount(n, currency)}`
 
   return (
     <section aria-labelledby="tape-title" className="min-w-0 rounded-xl bg-sheet px-5 py-4 ring-1 ring-rule">
       <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
         <h2 id="tape-title" className="text-sm font-semibold">
-          Gasto del periodo
+          Gasto de los últimos 7 días
         </h2>
         <p className="text-sm">
           <span className="tabular">{money(spent)}</span> <span className="text-ink-muted">pagados</span>
         </p>
       </div>
       <div
-        className="relative mt-3 h-3 rounded-full bg-paper-deep"
+        className="relative mt-3 flex h-3 overflow-visible rounded-full bg-paper-deep"
         role="meter"
         aria-valuemin={0}
         aria-valuemax={scale}
         aria-valuenow={spent}
-        aria-valuetext={`${money(spent)} pagados; el límite de los últimos 7 días es ${money(limit)}`}
-        aria-label="Gasto del periodo"
+        aria-valuetext={`${money(byAgent)} pagados por el agente dentro de las reglas y ${money(byPeople)} aprobados por personas; umbral de revisión semanal ${money(threshold)}`}
+        aria-label="Gasto de los últimos 7 días"
       >
-        <div className={cn('h-full rounded-full transition-[width] duration-500', tone)} style={{ width: pct(spent) }} />
-        <span className="absolute -top-1 h-5 w-0.5 bg-ochre" style={{ left: pct(limit) }} aria-hidden="true" />
+        <div
+          className="h-full rounded-l-full bg-intaglio transition-[width] duration-500 last:rounded-r-full"
+          style={{ width: pct(byAgent) }}
+        />
+        {byPeople > 0 ? (
+          <div
+            className="h-full rounded-r-full transition-[width] duration-500"
+            style={{ width: pct(byPeople), backgroundImage: PEOPLE_HATCH }}
+          />
+        ) : null}
+        <span className="absolute -top-1 h-5 w-0.5 bg-ochre" style={{ left: pct(threshold) }} aria-hidden="true" />
       </div>
-      <dl className="mt-3 grid gap-x-6 gap-y-1 text-xs text-ink-muted sm:flex sm:flex-wrap">
+      <dl className="mt-3 grid gap-x-6 gap-y-1.5 text-xs text-ink-muted sm:flex sm:flex-wrap">
+        <div className="flex items-center gap-1.5">
+          <span className="size-2.5 shrink-0 rounded-sm bg-intaglio" aria-hidden="true" />
+          <dt>Pagado por el agente, dentro de las reglas</dt>
+          <dd className="tabular ml-auto whitespace-nowrap text-ink-soft sm:ml-0">{money(byAgent)}</dd>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <span className="size-2.5 shrink-0 rounded-sm" style={{ backgroundImage: PEOPLE_HATCH }} aria-hidden="true" />
+          <dt>Excepciones aprobadas por personas</dt>
+          <dd className="tabular ml-auto whitespace-nowrap text-ink-soft sm:ml-0">{money(byPeople)}</dd>
+        </div>
         <div className="flex items-center gap-1.5">
           <span className="h-3 w-0.5 shrink-0 bg-ochre" aria-hidden="true" />
-          <dt>Límite de 7 días (escala)</dt>
-          <dd className="tabular ml-auto whitespace-nowrap text-ink-soft sm:ml-0">{money(limit)}</dd>
+          <dt>Umbral de revisión semanal</dt>
+          <dd className="tabular ml-auto whitespace-nowrap text-ink-soft sm:ml-0">{money(threshold)}</dd>
         </div>
       </dl>
       <p className="mt-2 text-xs text-ink-muted">
-        Cuenta lo pagado en los últimos 7 días. Por encima del límite, cada factura nueva queda para una persona.
+        Por encima del umbral, el agente ya no paga solo: cada factura nueva va a una persona, que la aprueba o la
+        rechaza con su nombre y un motivo.
       </p>
     </section>
   )
@@ -152,8 +179,8 @@ function ChecksDetail({ decision }: { decision: Decision }) {
 const FILTERS: { id: OutcomeFilter; label: string }[] = [
   { id: 'all', label: 'Todas' },
   { id: 'pay', label: 'Pagadas' },
-  { id: 'escalate', label: 'Escaladas a una persona' },
-  { id: 'block', label: 'Rechazadas por el agente' },
+  { id: 'escalate', label: 'Por aprobar' },
+  { id: 'block', label: 'Rechazadas' },
 ]
 
 export function LogPage() {
@@ -276,20 +303,20 @@ export function LogPage() {
           </div>
         ) : (
           <div className="overflow-x-auto rounded-xl bg-sheet ring-1 ring-rule">
-            <table className="w-full min-w-[56rem] text-left text-sm">
+            <table className="w-full text-left text-sm md:min-w-[56rem]">
               <caption className="sr-only">Decisiones registradas, de la más reciente a la más antigua</caption>
               <thead className="border-b border-rule text-xs text-ink-muted">
                 <tr>
                   <th scope="col" className="w-10 px-2 py-3">
                     <span className="sr-only">Detalle</span>
                   </th>
-                  <th scope="col" className="px-4 py-3 font-medium">Fecha</th>
-                  <th scope="col" className="px-4 py-3 font-medium">Beneficiario</th>
-                  <th scope="col" className="px-4 py-3 text-right font-medium">Monto</th>
-                  <th scope="col" className="px-4 py-3 font-medium">Resultado</th>
-                  <th scope="col" className="px-4 py-3 font-medium">Decidido por</th>
-                  <th scope="col" className="px-4 py-3 font-medium">Reglas</th>
-                  <th scope="col" className="px-4 py-3 font-medium">Por qué</th>
+                  <th scope="col" className="hidden px-4 py-3 font-medium sm:table-cell">Fecha</th>
+                  <th scope="col" className="px-3 py-3 font-medium sm:px-4">Beneficiario</th>
+                  <th scope="col" className="px-3 py-3 text-right font-medium sm:px-4">Monto</th>
+                  <th scope="col" className="hidden px-4 py-3 font-medium sm:table-cell">Resultado</th>
+                  <th scope="col" className="hidden px-4 py-3 font-medium md:table-cell">Decidido por</th>
+                  <th scope="col" className="hidden px-4 py-3 font-medium md:table-cell">Reglas</th>
+                  <th scope="col" className="hidden px-4 py-3 font-medium md:table-cell">Por qué</th>
                 </tr>
               </thead>
               <tbody>
@@ -318,10 +345,10 @@ export function LogPage() {
                             />
                           </button>
                         </td>
-                        <td className="tabular px-4 py-3 whitespace-nowrap text-ink-soft">
+                        <td className="tabular hidden px-4 py-3 whitespace-nowrap text-ink-soft sm:table-cell">
                           {formatTimestamp(d.created_at)}
                         </td>
-                        <td className="max-w-56 px-4 py-3">
+                        <td className="px-3 py-3 sm:max-w-56 sm:px-4">
                           {convo ? (
                             <Link to={`/c/${convo}`} className="font-medium hover:underline">
                               {e?.vendor_name ?? 'No identificado'}
@@ -332,8 +359,16 @@ export function LogPage() {
                           {e?.invoice_number ? (
                             <span className="tabular block text-xs text-ink-muted">{e.invoice_number}</span>
                           ) : null}
+                          {/* On phones the date and result columns fold in here. */}
+                          <span className="mt-1.5 flex items-center gap-1.5 text-xs text-ink-soft sm:hidden">
+                            <StatusGlyph shape={meta.shape} tone={meta.tone} />
+                            <span>
+                              {verdictOf(d.outcome, d.actor)} ·{' '}
+                              <span className="tabular">{formatTimestamp(d.created_at)}</span>
+                            </span>
+                          </span>
                         </td>
-                        <td className="tabular px-4 py-3 text-right whitespace-nowrap">
+                        <td className="tabular px-3 py-3 text-right whitespace-nowrap sm:px-4">
                           {e?.amount ? (
                             <>
                               <span className="text-ink-muted">{e.currency}</span>{' '}
@@ -343,23 +378,23 @@ export function LogPage() {
                             <span className="text-ink-muted">—</span>
                           )}
                         </td>
-                        <td className="px-4 py-3 whitespace-nowrap">
+                        <td className="hidden px-4 py-3 whitespace-nowrap sm:table-cell">
                           <span className="inline-flex items-center gap-2">
                             <StatusGlyph shape={meta.shape} tone={meta.tone} />
                             {verdictOf(d.outcome, d.actor)}
                           </span>
                         </td>
-                        <td className="px-4 py-3 whitespace-nowrap text-ink-soft">
+                        <td className="hidden px-4 py-3 whitespace-nowrap text-ink-soft md:table-cell">
                           {d.actor === 'human' ? (d.approver ?? 'Una persona') : 'Agente'}
                         </td>
-                        <td className="px-4 py-3 whitespace-nowrap text-ink-soft">
+                        <td className="hidden px-4 py-3 whitespace-nowrap text-ink-soft md:table-cell">
                           <span className="tabular">v{d.rule_set_version}</span> ·{' '}
                           <span className="tabular">
                             {failed}/{d.checks.length}
                           </span>{' '}
                           sin cumplir
                         </td>
-                        <td className="max-w-md px-4 py-3 text-ink-soft">
+                        <td className="hidden max-w-md px-4 py-3 text-ink-soft md:table-cell">
                           {d.comment ? `«${d.comment}» ` : ''}
                           {d.summary}
                         </td>
@@ -368,6 +403,17 @@ export function LogPage() {
                         <tr id={detailId} className="bg-paper/50">
                           <td />
                           <td colSpan={7} className="px-4 pt-1 pb-4">
+                            {/* On small screens the hidden columns live here. */}
+                            <div className="mb-3 space-y-1 text-sm text-ink-soft md:hidden">
+                              <p>
+                                {d.comment ? `«${d.comment}» ` : ''}
+                                {d.summary}
+                              </p>
+                              <p className="text-xs text-ink-muted">
+                                Decidido por {d.actor === 'human' ? (d.approver ?? 'una persona') : 'el agente'} ·
+                                reglas <span className="tabular">v{d.rule_set_version}</span>
+                              </p>
+                            </div>
                             <ChecksDetail decision={d} />
                           </td>
                         </tr>

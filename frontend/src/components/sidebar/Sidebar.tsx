@@ -121,7 +121,12 @@ export function Sidebar({ onNavigate, onClose }: { onNavigate?: () => void; onCl
                 )}
               >
                 {f.label}
-                {count > 0 && f.id !== 'all' ? <span className="tabular ml-1">{count}</span> : null}
+                {count > 0 && f.id !== 'all' ? (
+                  <>
+                    <span className="sr-only">, </span>
+                    <span className="tabular ml-1">{count}</span>
+                  </>
+                ) : null}
               </button>
             )
           })}

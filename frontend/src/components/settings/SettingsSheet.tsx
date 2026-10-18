@@ -1,5 +1,5 @@
 import { ChevronDown, Pencil, RotateCcw, Trash2 } from 'lucide-react'
-import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from 'react'
+import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode, type RefObject } from 'react'
 import { useNavigate } from 'react-router'
 import { isOffline } from '@/api/client'
 import {
@@ -553,7 +553,7 @@ function DemoTab({ onDone }: { onDone: () => void }) {
       <Field
         label="Clave de administrador"
         htmlFor="admin-key"
-        hint="En la versión publicada, reiniciar pide la clave configurada en el servidor (ADMIN_TOKEN). En local no hace falta."
+        hint="En la versión publicada, reiniciar pide la clave de administrador del servidor. En local no hace falta."
       >
         <Input
           id="admin-key"
@@ -599,7 +599,16 @@ function DemoTab({ onDone }: { onDone: () => void }) {
   )
 }
 
-export function SettingsSheet({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
+export function SettingsSheet({
+  open,
+  onOpenChange,
+  returnFocusTo,
+}: {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  /** The button that opened the sheet: focus goes back to it on close. */
+  returnFocusTo?: RefObject<HTMLElement | null>
+}) {
   const [rulesDirty, setRulesDirty] = useState(false)
   const [confirmClose, setConfirmClose] = useState(false)
   const [resetKey, setResetKey] = useState(0)
@@ -615,6 +624,11 @@ export function SettingsSheet({ open, onOpenChange }: { open: boolean; onOpenCha
   return (
     <Dialog open={open} onOpenChange={requestClose}>
       <SheetContent
+        onCloseAutoFocus={(event) => {
+          if (!returnFocusTo?.current) return
+          event.preventDefault()
+          returnFocusTo.current.focus()
+        }}
         title="Configuración"
         description="Las reglas con las que el agente decide, a quién puede pagar y lo acordado con cada uno."
       >

@@ -37,6 +37,28 @@ export interface FieldSpec {
   valueOptions?: { value: string; label: string }[]
 }
 
+/** Invoice data fields the engine can require, as people call them. Keys are what the backend stores. */
+export const INVOICE_FIELD_NAMES: Record<string, string> = {
+  vendor_name: 'proveedor',
+  vendor_tax_id: 'NIT',
+  invoice_number: 'número de factura',
+  amount: 'monto',
+  currency: 'moneda',
+  issue_date: 'fecha de emisión',
+  due_date: 'fecha de vencimiento',
+  description: 'concepto',
+  beneficiary_account: 'cuenta bancaria',
+  po_reference: 'orden de compra',
+}
+const FIELD_KEY_BY_NAME = Object.fromEntries(
+  Object.entries(INVOICE_FIELD_NAMES).map(([key, name]) => [name.toLowerCase(), key]),
+)
+/** List fields whose items are invoice field keys: shown and typed by their Spanish name. */
+const FIELD_NAME_LISTS = new Set(['required_fields'])
+
+/** Fields that exist in the backend but do nothing in the engine: kept in the payload, not shown. */
+const HIDDEN_KEYS = new Set(['period'])
+
 const LABELS: Record<string, { label: string; hint?: string }> = {
   version: { label: 'Versión vigente', hint: 'Cada vez que guardas se crea una versión nueva.' },
   company_name: { label: 'Empresa' },
@@ -49,8 +71,11 @@ const LABELS: Record<string, { label: string; hint?: string }> = {
   },
   per_payment_limit: { label: 'Límite por pago', hint: 'Tope duro por pago individual.' },
   period: { label: 'Periodo' },
-  period_limit: { label: 'Límite del periodo', hint: 'Tope de pagos acumulados en el periodo.' },
-  period_budget: { label: 'Presupuesto del periodo', hint: 'Fondos disponibles en el periodo.' },
+  period_limit: {
+    label: 'Umbral de revisión del periodo',
+    hint: 'Cuando lo pagado en el periodo lo supera, cada factura nueva pasa a una persona.',
+  },
+  period_budget: { label: 'Presupuesto del periodo', hint: 'Informativo: hoy ninguna regla lo aplica.' },
   duplicate_window_days: {
     label: 'Ventana de duplicados (días)',
     hint: 'Días hacia atrás para detectar cobros repetidos.',
@@ -65,14 +90,13 @@ const LABELS: Record<string, { label: string; hint?: string }> = {
   },
   require_allowlisted_beneficiary: {
     label: 'Solo beneficiarios permitidos',
-    hint: 'Si está activo, un beneficiario nuevo se escala.',
+    hint: 'Si está activo, se rechaza la factura de un proveedor que no esté en la lista.',
   },
   severity_overrides: {
     label: 'Severidad por regla',
     hint: 'Cambia si una regla incumplida rechaza o escala. Nunca puede pagar.',
   },
-  // Proposed with Dev C's rules (docs/DATA_MODEL.md); labelled ahead so they render in Spanish when they land.
-  period_days: { label: 'Días del periodo', hint: 'Ventana móvil para sumar lo pagado (Dev C: 7 días).' },
+  period_days: { label: 'Días del periodo', hint: 'Cuántos días hacia atrás se suma lo pagado, por ejemplo 7.' },
   per_vendor_period_limit: {
     label: 'Límite por proveedor en el periodo',
     hint: 'Por encima, el pago a ese proveedor pasa a revisión humana.',
@@ -84,14 +108,14 @@ const LABELS: Record<string, { label: string; hint?: string }> = {
   block_sanctioned: { label: 'Rechazar sancionados', hint: 'No se paga a personas, empresas ni países sancionados.' },
   sanctioned_countries: { label: 'Países sancionados', hint: 'Códigos ISO de dos letras separados por coma.' },
   review_on_vendor_changes: {
-    label: 'Revisar si cambian monto o datos bancarios',
-    hint: 'Respecto al último pago al mismo proveedor.',
+    label: 'Revisar cambios de cuenta, NIT o monto acordado',
+    hint: 'Cuenta o NIT distintos a lo registrado o al último pago, o monto fuera de lo acordado: pasa a una persona.',
   },
   required_fields: {
     label: 'Datos obligatorios de la factura',
-    hint: 'Si falta alguno, la factura queda incompleta y se escala.',
+    hint: `Si falta alguno, la factura pasa a una persona. Separa con coma: ${Object.values(INVOICE_FIELD_NAMES).join(', ')}.`,
   },
-  retention_years: { label: 'Años de conservación', hint: 'Facturas, pagos y aprobaciones (Dev C: 5 años).' },
+  retention_years: { label: 'Años de conservación', hint: 'Cuánto tiempo se guardan facturas, pagos y aprobaciones.' },
   verified: { label: 'Verificado' },
   sanctioned: { label: 'Sancionado' },
   legal_name: { label: 'Razón social' },
@@ -205,8 +229,10 @@ export function toFormValues(fields: FieldSpec[], data: Record<string, unknown> 
     if (f.kind === 'boolean') values[f.key] = v === undefined ? f.defaultValue === true : Boolean(v)
     else if (f.kind === 'map')
       values[f.key] = Object.entries((v as Record<string, unknown>) ?? {}).map(([k, x]) => [k, String(x ?? '')])
-    else if (f.kind === 'list') values[f.key] = Array.isArray(v) ? v.join(', ') : ''
-    else values[f.key] = v === null || v === undefined ? '' : String(v)
+    else if (f.kind === 'list') {
+      const items = Array.isArray(v) ? v.map(String) : []
+      values[f.key] = (FIELD_NAME_LISTS.has(f.key) ? items.map((k) => INVOICE_FIELD_NAMES[k] ?? k) : items).join(', ')
+    } else values[f.key] = v === null || v === undefined ? '' : String(v)
   }
   return values
 }
@@ -232,6 +258,11 @@ export function validate(fields: FieldSpec[], values: FormValues): Record<string
       if (f.max !== undefined && n > f.max) errors[f.key] = `Debe ser como máximo ${f.max}.`
     }
     if (f.maxLength !== undefined && text.length > f.maxLength) errors[f.key] = `Máximo ${f.maxLength} caracteres.`
+    if (f.kind === 'list' && FIELD_NAME_LISTS.has(f.key)) {
+      // An unknown name would be "missing" on every invoice and send all of them to a person.
+      const unknown = text.split(',').map((n) => n.trim()).filter((n) => n && !(n.toLowerCase() in FIELD_KEY_BY_NAME))
+      if (unknown.length) errors[f.key] = `No reconozco «${unknown.join('», «')}». Usa: ${Object.values(INVOICE_FIELD_NAMES).join(', ')}.`
+    }
   }
   return errors
 }
@@ -246,11 +277,13 @@ export function toPayload(fields: FieldSpec[], values: FormValues, base: Record<
       payload[f.key] = Object.fromEntries(
         (v as [string, string][]).filter(([k]) => k.trim() !== '').map(([k, x]) => [k.trim(), x.trim()]),
       )
-    else if (f.kind === 'list')
-      payload[f.key] = String(v)
+    else if (f.kind === 'list') {
+      const items = String(v)
         .split(',')
         .map((s) => s.trim())
         .filter(Boolean)
+      payload[f.key] = FIELD_NAME_LISTS.has(f.key) ? items.map((n) => FIELD_KEY_BY_NAME[n.toLowerCase()] ?? n) : items
+    }
     else {
       const text = String(v).trim()
       if (text === '') {
@@ -282,9 +315,9 @@ export const RULE_GROUPS: FieldGroup[] = [
     keys: ['approval_threshold', 'per_payment_limit'],
   },
   {
-    title: 'Periodo',
-    hint: 'Lo acumulado en el periodo se compara con el límite (escala) y el presupuesto (rechaza).',
-    keys: ['period', 'period_days', 'period_limit', 'per_vendor_period_limit', 'period_budget'],
+    title: 'Pagos acumulados',
+    hint: 'Lo pagado en los últimos días se compara con el umbral de revisión: por encima, cada factura nueva va a una persona.',
+    keys: ['period_days', 'period_limit', 'per_vendor_period_limit', 'period_budget'],
   },
   {
     title: 'Beneficiarios',
@@ -308,7 +341,7 @@ export const RULE_GROUPS: FieldGroup[] = [
 /** Splits fields into the known groups; anything the backend adds later lands in "Otros ajustes". */
 export function groupFields(fields: FieldSpec[], groups: FieldGroup[]) {
   const byKey = new Map(fields.map((f) => [f.key, f]))
-  const used = new Set<string>()
+  const used = new Set<string>(HIDDEN_KEYS)
   const result = groups
     .map((g) => {
       const members = g.keys.map((k) => byKey.get(k)).filter((f): f is FieldSpec => Boolean(f))

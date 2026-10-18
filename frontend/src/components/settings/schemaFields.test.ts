@@ -159,3 +159,35 @@ describe('boolean defaults', () => {
     expect(payload).toMatchObject({ verified: false, sanctioned: false, allowed: true, owners: [] })
   })
 })
+
+describe('invoice field names and hidden fields', () => {
+  const schema: JsonSchema = {
+    type: 'object',
+    properties: {
+      required_fields: { type: 'array', items: { type: 'string' } },
+      period: { type: 'string', enum: ['weekly', 'monthly'] },
+      period_days: { type: 'integer' },
+    },
+  }
+  const fields = fieldsFrom(schema)
+
+  it('shows required invoice fields in Spanish and saves their keys', () => {
+    const values = toFormValues(fields, { required_fields: ['vendor_name', 'amount', 'issue_date'], period: 'weekly' })
+    expect(values.required_fields).toBe('proveedor, monto, fecha de emisión')
+    values.required_fields = 'proveedor, Monto, concepto'
+    expect(validate(fields, values).required_fields).toBeUndefined()
+    expect(toPayload(fields, values).required_fields).toEqual(['vendor_name', 'amount', 'description'])
+  })
+
+  it('refuses a name the engine does not know, since it would send every invoice to a person', () => {
+    const values = toFormValues(fields, { required_fields: ['vendor_name'] })
+    values.required_fields = 'proveedor, firma digital'
+    expect(validate(fields, values).required_fields).toMatch(/firma digital/)
+  })
+
+  it('hides the unused period field but keeps it in the payload', () => {
+    const shown = groupFields(fields, RULE_GROUPS).flatMap((g) => g.fields.map((f) => f.key))
+    expect(shown).not.toContain('period')
+    expect(toPayload(fields, toFormValues(fields, { period: 'weekly', required_fields: [] })).period).toBe('weekly')
+  })
+})

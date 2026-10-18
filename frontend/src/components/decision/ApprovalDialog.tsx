@@ -1,24 +1,16 @@
 import { X } from 'lucide-react'
-import { useState, type FormEvent } from 'react'
+import { useRef, useState, type FormEvent } from 'react'
 import { useResolveInvoice } from '@/api/hooks'
 import type { RuleCheck } from '@/api/types'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent } from '@/components/ui/dialog'
 import { Field, Input, Textarea } from '@/components/ui/field'
 
-const APPROVER_KEY = 'bytestars.approver'
-
-function rememberedApprover(): string {
-  try {
-    return localStorage.getItem(APPROVER_KEY) ?? ''
-  } catch {
-    return ''
-  }
-}
-
 /**
- * A person resolves an escalation. The dialog keeps the evidence in view (the rules that failed),
- * says the payment is simulated, and requires a name and a reason for the audit trail.
+ * A person resolves an escalation. The dialog keeps the evidence in view (the rules that failed, observed
+ * against expected), says the payment is simulated, and requires a name and a reason for the audit trail.
+ * The name is typed every time on purpose: a remembered name would let anyone at this browser approve as
+ * someone else without noticing.
  */
 export function ApprovalDialog({
   invoiceId,
@@ -37,7 +29,8 @@ export function ApprovalDialog({
   amountLabel: string | null
   failedChecks: RuleCheck[]
 }) {
-  const [approver, setApprover] = useState(rememberedApprover)
+  const [approver, setApprover] = useState('')
+  const nameRef = useRef<HTMLInputElement>(null)
   const [comment, setComment] = useState('')
   const [tried, setTried] = useState(false)
   const resolve = useResolveInvoice(invoiceId)
@@ -53,11 +46,6 @@ export function ApprovalDialog({
       { action, approver: approver.trim(), comment: comment.trim() },
       {
         onSuccess: () => {
-          try {
-            localStorage.setItem(APPROVER_KEY, approver.trim())
-          } catch {
-            /* storage unavailable: nothing to remember */
-          }
           setComment('')
           onOpenChange(false)
         },
@@ -75,6 +63,10 @@ export function ApprovalDialog({
     >
       <DialogContent
         className="max-w-lg"
+        onOpenAutoFocus={(event) => {
+          event.preventDefault()
+          nameRef.current?.focus()
+        }}
         title={approving ? `Aprobar excepción: ${beneficiary}` : `Rechazar: ${beneficiary}`}
         description={
           <>
@@ -90,7 +82,7 @@ export function ApprovalDialog({
           {failedChecks.length > 0 ? (
             <section aria-labelledby="failed-title" className="rounded-lg bg-paper px-4 py-3 ring-1 ring-rule">
               <h3 id="failed-title" className="text-sm font-semibold">
-                {approving ? 'Estás aprobando a pesar de que:' : 'El agente la escaló porque:'}
+                {approving ? 'Estás aprobando a pesar de que:' : 'El agente la dejó por aprobar porque:'}
               </h3>
               <ul className="mt-2 space-y-2">
                 {failedChecks.map((check, i) => (
@@ -103,8 +95,21 @@ export function ApprovalDialog({
                     />
                     <span>
                       {check.message}
-                      {check.observed ? (
-                        <span className="tabular block text-xs text-ink-muted">Observado: {check.observed}</span>
+                      {check.observed || check.expected ? (
+                        <span className="mt-1 grid grid-cols-[auto_1fr] gap-x-2 text-xs text-ink-muted">
+                          {check.observed ? (
+                            <>
+                              <span>Observado</span>
+                              <span className="tabular text-ink-soft">{check.observed}</span>
+                            </>
+                          ) : null}
+                          {check.expected ? (
+                            <>
+                              <span>Esperado</span>
+                              <span className="tabular text-ink-soft">{check.expected}</span>
+                            </>
+                          ) : null}
+                        </span>
                       ) : null}
                     </span>
                   </li>
@@ -115,6 +120,7 @@ export function ApprovalDialog({
 
           <Field label="Tu nombre" htmlFor="approver" error={tried && missingName ? 'Escribe tu nombre.' : undefined}>
             <Input
+              ref={nameRef}
               id="approver"
               autoComplete="name"
               value={approver}
