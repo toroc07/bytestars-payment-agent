@@ -34,7 +34,7 @@ Decisiones tomadas (ver justificación en `docs/DECISIONS.md`). Cualquier depend
 - Confirmar el nombre vigente del modelo gratuito en AI Studio (los límites cambian con frecuencia).
 
 ## Variables de entorno
-Backend: `APP_ENV`, `DATABASE_URL`, `CORS_ORIGINS`, `MAX_UPLOAD_MB`, `LLM_PROVIDER_ORDER`, `LLM_CACHE`, `GEMINI_API_KEY`, `GEMINI_MODEL`, `GROQ_API_KEY`, `OPENROUTER_API_KEY`.
+Backend: `APP_ENV`, `DATABASE_URL`, `CORS_ORIGINS`, `MAX_UPLOAD_MB`, `LLM_PROVIDER_ORDER`, `LLM_CACHE`, `GEMINI_API_KEY`, `GEMINI_MODEL`, `GROQ_API_KEY`, `GROQ_MODEL`, `OPENROUTER_API_KEY`, `OPENROUTER_MODEL`, `ADMIN_TOKEN`.
 Frontend: `VITE_API_URL` (producción) y `VITE_DEV_BACKEND` (proxy local).
 Cada carpeta tendrá su `.env.example` (sin valores reales). Nunca se suben los `.env`.
 

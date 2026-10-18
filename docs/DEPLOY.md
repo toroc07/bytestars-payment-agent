@@ -21,7 +21,8 @@ Base de datos: **Neon Postgres** (integración con Vercel). **SQLite no sirve en
 | api | `DATABASE_URL` | cadena de Neon (la inyecta la integración) |
 | api | `CORS_ORIGINS` | URL pública del proyecto web |
 | api | `GEMINI_API_KEY`, `GEMINI_MODEL` | key de AI Studio y modelos en orden: `gemini-3.8-flash,gemini-3.5-flash,gemini-3.5-flash-lite` |
-| api | `GROQ_API_KEY`, `OPENROUTER_API_KEY` | respaldos (opcionales) |
+| api | `OPENROUTER_API_KEY`, `OPENROUTER_MODEL` | respaldo cuando Gemini no tiene cuota: key gratuita de openrouter.ai; modelos con visión, p. ej. `google/gemma-4-31b-it:free,nvidia/nemotron-3.5-super-vl:free` |
+| api | `GROQ_API_KEY`, `GROQ_MODEL` | respaldo rápido para texto (chats, correos, PDF con texto): `openai/gpt-oss-120b,qwen/qwen3.8-27b` |
 | api | `LLM_PROVIDER_ORDER`, `LLM_CACHE` | `gemini,groq,openrouter`, `true` |
 | api | `APP_ENV` | `production` |
 | api | `ADMIN_TOKEN` | clave larga y aleatoria para sembrar/reiniciar la demo (se escribe en Configuración → Demo, o en el encabezado `X-Admin-Token`). Sin ella, `/api/dev/*` responde 403 en producción |

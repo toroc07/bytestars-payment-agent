@@ -39,7 +39,7 @@ Prohibido: `engine → llm/db`, `agent → db`, `db → agent/engine`, ciclos.
 
 1. **Entrada.** El usuario adjunta un PDF/imagen o pega texto en el chat → `POST` al endpoint de mensajes.
 2. **Registro.** `api` guarda la factura con estado `received`.
-3. **Extracción.** El documento se convierte en `ExtractedInvoice` (ADR-019). Si trae texto y no trae imagen, el **lector local** (`agent/local_reader.py`) lo lee primero; si encuentra todos los datos clave, no se llama al LLM. Si no, `llm` lo lee: un PDF con capa de texto se manda como texto; las imágenes y los PDF escaneados, como archivo. La cadena es caché por hash del contenido (memoria → tabla `llm_cache` → carpeta temporal; ADR-022) → modelos de Gemini en orden (`GEMINI_MODEL`) → Groq/OpenRouter (solo texto). Si nadie responde, se usa la lectura local aunque esté incompleta; si tampoco hay texto (imagen sin LLM), la factura queda sin datos y el motor la escala. La salida del LLM se valida campo por campo: lo que no tiene forma válida queda vacío.
+3. **Extracción.** El documento se convierte en `ExtractedInvoice` (ADR-019). Si trae texto y no trae imagen, el **lector local** (`agent/local_reader.py`) lo lee primero; si encuentra todos los datos clave, no se llama al LLM. Si no, `llm` lo lee: un PDF con capa de texto se manda como texto; las imágenes y los PDF escaneados, como archivo. La cadena es caché por hash del contenido (memoria → tabla `llm_cache` → carpeta temporal; ADR-022) → modelos de Gemini en orden (`GEMINI_MODEL`) → Groq (solo texto) → OpenRouter (`OPENROUTER_MODEL`, modelos gratuitos con visión: lee texto e imágenes). Si nadie responde, se usa la lectura local aunque esté incompleta; si tampoco hay texto (imagen sin LLM), la factura queda sin datos y el motor la escala. La salida del LLM se valida campo por campo: lo que no tiene forma válida queda vacío.
 4. **Contexto (código, sin LLM).** `agent` arma `EvaluationContext`: beneficiario coincidente, acuerdo vigente, facturas previas (duplicados), gasto acumulado del periodo.
 5. **Decisión (motor).** `engine.evaluate(extracción, reglas, contexto)` → resultado + lista de chequeos. **Determinista y sin I/O.**
 6. **Explicación.** Resumen en español **construido por plantilla desde los chequeos** (siempre). Opcionalmente el LLM lo redacta mejor; el texto del LLM nunca cambia el resultado.
@@ -49,7 +49,7 @@ Prohibido: `engine → llm/db`, `agent → db`, `db → agent/engine`, ciclos.
 Cualquier excepción en los pasos 3-7 termina en **escalar** (fail-closed), registrando el error en el motivo.
 
 ### Chat de consulta
-Preguntas como "¿por qué frenaste la factura de Cloudly?" las responde el agente **leyendo decisiones guardadas** (herramientas de solo lectura) y narrándolas. El chat **no tiene herramientas de escritura** que aprueben o modifiquen pagos o reglas.
+Preguntas como "¿por qué frenaste la factura SIG-497?", "¿qué está pendiente?" o "¿cuánto se ha pagado esta semana?" las responde `agent/query.py` **sin LLM**: reconoce la pregunta con patrones fijos y arma la respuesta leyendo facturas y decisiones guardadas (solo lectura). No registra nada, no puede aprobar ni cambiar reglas, no gasta cuota y no hay texto de terceros que pueda inyectar instrucciones (ADR-025).
 
 ## 4. Modelo de datos (resumen)
 Entidades: `rule_sets` (versionadas), `beneficiaries`, `agreements`, `invoices`, `decisions` (append-only), `conversations`, `messages`.

@@ -13,7 +13,7 @@ Dev B también ayuda con el motor de decisiones: al repartir tareas del motor, a
 | Implementar modelos Pydantic en `backend/app/schemas/` | Dev B | listo | según `DATA_MODEL.md`, serialización Decimal a String, validaciones de invariantes |
 | Definir `backend/app/ports.py` | Dev B | listo | según sección Ports de `DATA_MODEL.md` (Protocol síncronos) |
 | Crear JSON de ejemplo en `contracts/examples/` | Dev A | no aplica | el frontend trabaja contra el backend real (ver `DECISIONS.md` ADR-012) |
-| Definir formato del dataset y reglas de la empresa ficticia | Dev C | listo | `dataset/README.md`, `company.json` y `expected.json` (propuesta de Dev A, ADR-018; Dev C valida) |
+| Definir formato del dataset y reglas de la empresa ficticia | Dev C | listo | `dataset/README.md`, `company.json` y `expected.json` (propuesta de Dev A, ADR-018; validada por Dev C) |
 
 ## Frontend (Dev A)
 | Tarea | Estado | Notas |
@@ -45,9 +45,9 @@ Dev B también ayuda con el motor de decisiones: al repartir tareas del motor, a
 | Repositorios falsos en memoria para tests | listo | `tests/agent/fakes.py` (repos + proveedor LLM falso); `tests/conftest.py` impide llamar a un LLM real en los tests |
 | Pipeline del agente | listo | `app/agent/pipeline.py`: registrar → extraer → contexto → motor → explicar → guardar; cualquier error escala la misma factura (R00) |
 | Proveedor Gemini + extracción PDF/imagen/texto | listo | `app/llm/gemini.py` con varios modelos en cadena (ADR-019); evaluación con Gemini: **100/100 iguales a `expected.json`, autonomía 80 %, 0 trampas pagadas, 0 datos mal leídos** (75 por lector local, 25 imágenes con Gemini) |
-| Fallback Groq/OpenRouter + caché | listo | `app/llm/openai_compat.py` (solo texto) y caché por hash en memoria + carpeta temporal; lector local sin red de respaldo (ADR-019) |
+| Fallback Groq/OpenRouter + caché | listo | `app/llm/openai_compat.py`: Groq solo texto, OpenRouter con visión (texto e imágenes, ADR-025); caché por hash en memoria, tabla `llm_cache` y carpeta temporal; lector local sin red (ADR-019) |
 | Prueba de prompt injection con Gemini real | listo | 4 ataques en imágenes y texto (suplantar a un proveedor permitido, cambiar el monto, JSON falso, romper el formato): Gemini no obedeció ninguno; impostor rechazado (R03) y chat incompleto escalado (R01) |
-| Chat de consulta (solo lectura) | pendiente | hoy un texto que no es factura recibe un mensaje de ayuda; falta responder preguntas sobre decisiones guardadas |
+| Chat de consulta (solo lectura) | listo | `app/agent/query.py`, sin LLM (ADR-025): por qué se frenó/escaló una factura (con endoso humano), pendientes, rechazadas, pagadas, gasto de la semana y facturas por proveedor |
 | Script de evaluación del dataset | listo | `python -m scripts.evaluate_dataset [--offline]`: pasa todas las facturas (104) por el pipeline real en orden y compara con `expected.json` (coincidencia, autonomía, trampas pagadas, datos mal leídos); sale con código 1 si se paga una trampa |
 
 ## Backend y base de datos (Dev B)
@@ -65,11 +65,11 @@ Dev B también ayuda con el motor de decisiones: al repartir tareas del motor, a
 Tareas por definir por Dev C (empresa ficticia, reglas, beneficiarios, acuerdos, facturas simuladas, resultados esperados). Agregar sus filas aquí.
 | Tarea | Estado | Notas |
 |---|---|---|
-| Dataset de 25 correos `.eml` y facturas | listo | Estructura en `dataset/` |
+| Dataset de 26 correos `.eml` y facturas | listo | Estructura en `dataset/` |
 | Políticas de la empresa (R01–R11) | listo | Definidas en `DECISION_ENGINE.md` y sincronizadas en backend |
 | Montos del dataset en USD | listo | Dev A, a pedido del equipo: las 100 facturas regeneradas con el mismo contenido (ADR-018) |
-| Empresa, allowlist y reglas en `company.json` | listo | Dev A: Distribuciones Andinas S.A.S. con 8 proveedores inferidos del dataset; **Dev C valida** |
-| Resultados esperados por factura (`expected.json`) | listo | Dev A: 62 pagar · 18 frenar · 20 escalar; **Dev C valida** las trampas y el criterio de R11 (ADR-017) |
+| Empresa, allowlist y reglas en `company.json` | listo | Dev A: Distribuciones Andinas S.A.S. con 8 proveedores inferidos del dataset; **validado por Dev C** |
+| Resultados esperados por factura (`expected.json`) | listo | Dev A: 104 facturas, 62 pagar · 20 frenar · 22 escalar; trampas, casos de monto alto y criterio de R11 (ADR-017) **validados por Dev C** |
 | Casos de monto alto (más de US$5.000 o US$10.000) | listo | Dev A, a pedido del equipo: facturas 101–104 (PDF, chat, correo, imagen) de proveedores permitidos; 101 y 103 se escalan (R08), 102 y 104 se frenan (R07). `expected.json` con 104 facturas; evaluación 104/104 |
 
 ## Deploy
