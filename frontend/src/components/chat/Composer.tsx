@@ -139,7 +139,7 @@ export function Composer({
             ? `${files.length} facturas listas. Cada una se revisa por separado.`
             : files.length === 1
               ? 'Agrega una nota (opcional)…'
-              : 'Pega el texto de una factura, un correo o un mensaje…'
+              : 'Pega una factura, un correo o un mensaje… o pregunta por una decisión'
         }
         aria-describedby={problems.length ? 'composer-error' : 'composer-hint'}
         className="field-sizing-content block max-h-60 min-h-14 w-full resize-none bg-transparent px-4 pt-3 text-[0.9375rem] leading-relaxed text-ink placeholder:text-ink-muted focus:outline-none disabled:opacity-60"

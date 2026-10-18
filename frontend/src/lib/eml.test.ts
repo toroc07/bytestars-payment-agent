@@ -19,8 +19,8 @@ describe('decodeHeader', () => {
 describe('parseEmail on the dataset', () => {
   const entries = Object.entries(dataset)
 
-  it('finds the 25 dataset emails', () => {
-    expect(entries.length).toBe(25)
+  it('finds the 26 dataset emails', () => {
+    expect(entries.length).toBe(26)
   })
 
   it.each(entries.map(([path, raw]) => [path.split('/').pop()!, raw]))(

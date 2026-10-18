@@ -12,6 +12,7 @@ from decimal import Decimal
 
 from app.agent.explain import explain
 from app.agent.extraction import Extraction, extract, looks_like_invoice
+from app.agent.query import HELP_TEXT, answer_question, looks_like_question
 from app.engine import evaluate
 from app.llm import LLMChain, get_llm
 from app.ports import (
@@ -50,10 +51,6 @@ STATUS_BY_OUTCOME = {
     Outcome.escalate: InvoiceStatus.pending_approval,
 }
 
-HELP_TEXT = (
-    "Envíame una factura para revisarla: adjunta un PDF o una imagen (PNG o JPG), o pega el texto del "
-    "mensaje o correo con la factura. Te digo si se paga, se frena o queda pendiente de aprobación, y por qué."
-)
 
 
 def _new_id(prefix: str) -> str:
@@ -165,9 +162,13 @@ def handle_chat_turn(
     cache_repo: LlmCacheRepository | None = None,
     clock=lambda: datetime.now(UTC),
 ) -> SendMessageResponse:
-    if file_bytes is None and not looks_like_invoice(text):
+    question = file_bytes is None and looks_like_question(text)
+    if question or (file_bytes is None and not looks_like_invoice(text)):
+        # Read-only answer (or help): nothing is registered and nothing can be approved from here.
+        content = answer_question(text or "", inv_repo=inv_repo, dec_repo=dec_repo, rule_repo=rule_repo,
+                                  now=clock()) if question else HELP_TEXT
         reply = ChatMessage(id=_new_id("msg"), conversation_id=conversation_id, role="assistant",
-                            content=HELP_TEXT, created_at=clock())
+                            content=content, created_at=clock())
         conv_repo.add_message(reply)
         return SendMessageResponse(user_message=user_message, assistant_message=reply, invoice=None)
 

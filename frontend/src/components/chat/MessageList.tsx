@@ -82,7 +82,7 @@ export function MessageList({
           ) : message.decision ? (
             <DecisionThread decision={message.decision} fresh={message.id === freshMessageId} />
           ) : (
-            <p className="max-w-[68ch] text-[0.9375rem] leading-relaxed text-ink-soft">{message.content}</p>
+            <p className="max-w-[68ch] whitespace-pre-line text-[0.9375rem] leading-relaxed text-ink-soft">{message.content}</p>
           )}
         </li>
       ))}

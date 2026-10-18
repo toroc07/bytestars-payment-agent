@@ -79,6 +79,14 @@ class Repos:
     def get(self, invoice_id: str, for_update: bool = False) -> Invoice | None:
         return self.invoices.get(invoice_id)
 
+    def list_all(self, status: InvoiceStatus | None = None) -> list[Invoice]:
+        rows = sorted(self.invoices.values(), key=lambda i: i.received_at, reverse=True)
+        return [i for i in rows if status is None or i.status == status]
+
+    def list_by_invoice(self, invoice_id: str) -> list[Decision]:
+        return sorted((d for d in self.decisions if d.invoice_id == invoice_id), key=lambda d: d.created_at,
+                      reverse=True)
+
     def update(self, invoice: Invoice) -> Invoice:
         self.invoices[invoice.id] = invoice
         return invoice

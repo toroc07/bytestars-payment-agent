@@ -29,7 +29,13 @@ def explain(result: EngineResult, invoice: ExtractedInvoice | None, source: str,
     if invoice is None:
         lines.append("No se pudieron leer los datos de la factura" + (f" ({error})." if error else "."))
     else:
-        label = f"Gemini ({source})" if source.startswith("gemini") else SOURCE_LABELS.get(source, source)
+        if source.startswith("gemini"):
+            label = f"Gemini ({source})"
+        elif source.startswith(("openrouter (", "groq (")):
+            provider, _, model = source.partition(" ")
+            label = f"{'OpenRouter' if provider == 'openrouter' else 'Groq'} {model}"
+        else:
+            label = SOURCE_LABELS.get(source, source)
         lines.append(f"Datos leídos con {label}.")
     lines.append("No se movió dinero real: los pagos de esta demo son simulados.")
     return "\n".join(lines)
