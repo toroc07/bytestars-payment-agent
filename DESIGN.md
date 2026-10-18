@@ -146,7 +146,9 @@ Neutros de papel tintados hacia el cálido, tinta casi negra y una tinta de segu
 
 ### Named Rules
 **Regla del acento único.** Intaglio es el único color de marca. Ocre y ladrillo solo existen para decir estado o error.
-**Regla de la forma.** Ningún estado depende solo de su color: pagada = círculo lleno, pendiente = anillo, frenada = cuadro, recibida = anillo punteado.
+**Regla de la forma.** Ningún estado depende solo de su color: pagada = círculo lleno, por aprobar = anillo, rechazada = cuadro, recibida o consulta = anillo punteado.
+
+**Regla del nombre.** Cada estado tiene un solo nombre en toda la app y en el chat: **Pagada**, **Por aprobar**, **Rechazada**. Quién decidió va como detalle («Rechazada por el agente», «Pagada · la aprobó Laura Gómez»), nunca como un nombre distinto del estado.
 
 ## Typography
 
@@ -183,11 +185,11 @@ Radios medios: 6px en elementos pequeños, 8px en botones e inputs, 12px en el c
 
 ## Components
 
-- **Cheque de decisión:** frente (beneficiario, factura y vencimiento, monto, veredicto, quién decidió, microtexto de simulado) + talón perforado con cada regla: icono de cumple/no cumple, mensaje, observado vs esperado, id de regla. Un endoso al pie registra la aprobación o el rechazo humano con nombre, comentario y hora.
+- **Cheque de decisión:** frente (beneficiario, factura y vencimiento, monto, veredicto, quién decidió, microtexto de simulado) + talón perforado con cada regla: icono de cumple/no cumple, mensaje, observado vs esperado, id de regla. Las reglas incumplidas van primero, sobre su tinte de estado; las que se cumplen se pliegan en «N reglas se cumplen» (abiertas en un cheque pagado, donde son la justificación). Cuando una persona resuelve, el frente cambia al estado final («Pagada · la aprobó …» / «Rechazada por …») con su motivo, y el veredicto del agente queda como antecedente; el endoso al pie firma con nombre y hora. Al abrir una conversación se ve el inicio del último cheque, no el final del talón.
 - **Botones:** primario intaglio, secundario hoja con borde, fantasma, peligro ladrillo. `scale(0.97)` al presionar (140ms).
 - **Composer:** hoja con borde que se vuelve intaglio al enfocar; adjuntar PDF o imagen, arrastrar y soltar, Enter envía.
 - **Panel de configuración:** cajón derecho con pestañas Reglas / Beneficiarios / Acuerdos; los campos se generan del JSON Schema que publica el backend.
-- **Registro:** cinta de gasto del periodo con marcas de límite (ocre) y presupuesto (ladrillo), filtros y tabla exportable a CSV.
+- **Registro:** cinta de gasto de los últimos 7 días en dos tramos: lo que pagó el agente dentro de las reglas (tinta sólida) y las excepciones aprobadas por personas (tinta rayada), contra la marca ocre del umbral de revisión semanal. Así una excepción humana nunca se lee como el agente saltándose una regla. Filtros Todas / Pagadas / Por aprobar / Rechazadas y tabla exportable a CSV; en móvil las columnas secundarias pasan a la fila desplegable.
 
 ## Do's and Don'ts
 

@@ -31,10 +31,10 @@ Dev B también ayuda con el motor de decisiones: al repartir tareas del motor, a
 | Editar beneficiarios y acuerdos, confirmar al quitar, selector de beneficiario | listo | |
 | Pestaña Demo: reiniciar la demo | listo | usa `/api/dev/reset` con confirmación |
 | `vercel.json` (rutas del SPA) y carga diferida (registro, configuración) | listo | bundle principal 471 KB |
-| Tests unitarios (Vitest) | listo | 56 tests de lógica pura (`npm test`) |
+| Tests unitarios (Vitest) | listo | 62 tests de lógica pura (`npm test`) |
 | Revisión de diseño (`/impeccable critique`) y correcciones | listo | 25/40 inicial; corregidos los 5 problemas: aprobación con evidencia, motivo obligatorio y bloqueada sin beneficiario/monto; reglas agrupadas con resumen de cambios y aviso al cerrar; móvil sin desbordes; vocabulario único y contraste AA; montos y búsqueda en el sidebar, registro desplegable. Informe en `.impeccable/critique/` |
 | Prueba en el navegador con decisiones reales (Playwright) | listo | 100 facturas en 2 lotes: 100/100 iguales a `expected.json`; aprobar, rechazar, reevaluar tras agregar un proveedor, registro y CSV (103 filas) correctos; móvil sin desbordes. Corregidos: notas repetidas en el cheque, conversación sin factura marcada «Recibida», textos falsos («un proveedor nuevo se escala», «el presupuesto rechaza»), scroll horizontal, R11 sin los números de cuenta |
-| Repetir `/impeccable critique` con decisiones reales | pendiente | la revisión de diseño no se ha repetido; ahora hay decisiones reales para hacerla |
+| Repetir `/impeccable critique` con decisiones reales y corregir | listo | 26/40 con 104 decisiones reales; corregidos los 6 puntos (ADR-026): gasto separado en agente y personas frente al umbral semanal; un nombre por estado (Pagada, Por aprobar, Rechazada); configuración sin jerga y con nombres de campos en español; la conversación abre en el cheque con fallos primero y el resto plegado; sello final con nombre y motivo de quien resolvió; accesibilidad (saltar al contenido, foco al abrir y cerrar diálogos, nombre del aprobador sin recordar) y registro legible en móvil. Verificado con Playwright en escritorio y 390 px |
 
 ## Motor, agente y LLM (Dev A; Dev B ayuda en el motor)
 | Tarea | Estado | Notas |
