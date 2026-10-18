@@ -1,6 +1,6 @@
 """In-memory repositories and a fake LLM provider (no network, no database) for agent tests."""
 
-from datetime import datetime
+from datetime import UTC, datetime
 from decimal import Decimal
 from typing import Any
 
@@ -9,6 +9,7 @@ from app.schemas import (
     Agreement,
     Beneficiary,
     ChatMessage,
+    ConversationSummary,
     Decision,
     ExtractedInvoice,
     Invoice,
@@ -51,6 +52,7 @@ class Repos:
         self.decisions: list[Decision] = []
         self.messages: list[ChatMessage] = []
         self.titles: dict[str, str] = {}
+        self.conversation_invoice: dict[str, str] = {}
 
     # RuleSetRepository
     def get_current(self) -> RuleSet:
@@ -76,8 +78,14 @@ class Repos:
             self.decisions.append(item)
         return item
 
-    def get(self, invoice_id: str, for_update: bool = False) -> Invoice | None:
-        return self.invoices.get(invoice_id)
+    def get(self, item_id: str, for_update: bool = False):
+        """InvoiceRepository.get and ConversationRepository.get share this fake object."""
+        if item_id in self.invoices:
+            return self.invoices[item_id]
+        if item_id in self.conversation_invoice:
+            return ConversationSummary(id=item_id, title=self.titles.get(item_id, ""),
+                                       invoice_id=self.conversation_invoice[item_id], updated_at=datetime.now(UTC))
+        return None
 
     def list_all(self, status: InvoiceStatus | None = None) -> list[Invoice]:
         rows = sorted(self.invoices.values(), key=lambda i: i.received_at, reverse=True)
@@ -138,3 +146,5 @@ class Repos:
     def update_metadata(self, conversation_id: str, title=None, invoice_id=None) -> None:
         if title:
             self.titles[conversation_id] = title
+        if invoice_id:
+            self.conversation_invoice[conversation_id] = invoice_id

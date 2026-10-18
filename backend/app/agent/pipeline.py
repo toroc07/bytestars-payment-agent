@@ -165,8 +165,11 @@ def handle_chat_turn(
     question = file_bytes is None and looks_like_question(text)
     if question or (file_bytes is None and not looks_like_invoice(text)):
         # Read-only answer (or help): nothing is registered and nothing can be approved from here.
-        content = answer_question(text or "", inv_repo=inv_repo, dec_repo=dec_repo, rule_repo=rule_repo,
-                                  now=clock()) if question else HELP_TEXT
+        content = HELP_TEXT
+        if question:  # asked inside an invoice's conversation, "esta factura" is that invoice
+            conversation = conv_repo.get(conversation_id)
+            content = answer_question(text or "", inv_repo=inv_repo, dec_repo=dec_repo, rule_repo=rule_repo,
+                                      now=clock(), context_invoice_id=conversation.invoice_id if conversation else None)
         reply = ChatMessage(id=_new_id("msg"), conversation_id=conversation_id, role="assistant",
                             content=content, created_at=clock())
         conv_repo.add_message(reply)

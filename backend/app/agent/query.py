@@ -132,6 +132,87 @@ def _listing(title: str, invoices: list[Invoice], dec_repo: DecisionRepository, 
     return "\n".join(lines)
 
 
+# What a person can do about each failed rule. Every path goes through a person and a re-evaluation:
+# nothing here tells anyone how to slip past a rule.
+REMEDIES = {
+    "R01": "Faltan datos o la lectura fue dudosa: pide al proveedor la factura completa y legible y vuelve a enviarla, "
+           "o revisa los datos y decide tú con «Aprobar pago» o «Rechazar».",
+    "R02": "Ya hay una factura igual (mismo número, o misma orden de compra y monto). No se debe pagar dos veces; si de "
+           "verdad es otro cobro, confírmalo con el proveedor y pide una factura con su propio número.",
+    "R03": "El proveedor no está en la lista de permitidos. Si lo reconoces, agrégalo en Configuración → Beneficiarios "
+           "(con NIT y cuenta, y márcalo Verificado tras comprobarlo) y pulsa «Reevaluar con las reglas actuales» en el "
+           "cheque. Si no lo reconoces, déjala rechazada.",
+    "R04": "El proveedor está en la lista pero sin verificar. Comprueba razón social, país, banco y dueños, márcalo "
+           "Verificado en Configuración → Beneficiarios y pulsa «Reevaluar».",
+    "R05": "El proveedor o su país están en la lista de sanciones: esta factura no se puede pagar.",
+    "R06": "La moneda no tiene tasa de cambio. Agrégala en Configuración → Reglas (monedas y tasas) y reevalúa, o pide "
+           "la factura en una moneda permitida.",
+    "R07": "Supera el límite por pago. Solo se pagaría cambiando ese límite en Configuración → Reglas (queda una versión "
+           "nueva registrada) y reevaluando; si no, déjala rechazada.",
+    "R08": "Supera el umbral de aprobación: una persona puede aprobarla con «Aprobar pago», su nombre y un motivo.",
+    "R09": "Con esta factura se pasa el tope de pagos de la semana: una persona puede aprobarla con «Aprobar pago», o "
+           "esperar al siguiente periodo y reevaluarla.",
+    "R10": "Con esta factura el proveedor pasa su tope de la semana: una persona puede aprobarla, o esperar y reevaluar.",
+    "R11": "Cambió la cuenta o el NIT respecto a lo registrado. Confirma el cambio con el proveedor por un canal que ya "
+           "conozcas (no por el mismo correo). Si es legítimo, actualiza la cuenta en Configuración → Beneficiarios y "
+           "reevalúa; si no, recházala.",
+}
+REMEDY_QUESTION = re.compile(
+    r"que (puedo|debo|tengo que|hay que) hacer|que hago|como (hago|puedo|logro|se puede)|para que (no )?(sea|se|la|lo)|"
+    r"para pagar|solucion|arreglar|corregir|que falta|que necesito|como la (pago|apruebo)"
+)
+LIST_QUESTION = re.compile(
+    r"(que|cuales|cuantas)\s+(otras?\s+)?facturas|otras? facturas?|todas las facturas|facturas hay|"
+    r"lista(r|me)?\s+(de\s+)?(las\s+)?facturas|historial"
+)
+# A question refers to the conversation's own invoice only when it talks about it ("¿por qué fue rechazada?").
+ABOUT_THIS_INVOICE = re.compile(
+    r"\b(fue|esta|esa|factura|rechaz\w*|fren\w*|bloque\w*|pag\w*|aprob\w*|escal\w*|pendiente|estado|regla\w*|"
+    r"hacer|hago|monto|cuenta|proveedor|decid\w*|motivo|razon|por que|porque)\b"
+)
+# Words that make a question about many invoices, not about the one of the current conversation.
+PLURAL_SCOPE = re.compile(r"\bfacturas\b|pendientes|cuanto|gasto|todas|\botras?\b|lista|historial|proveedores")
+
+
+def _count(n: int, singular: str, plural: str) -> str:
+    return f"{n} {singular if n == 1 else plural}"
+
+
+def _capital(text: str) -> str:
+    return text[:1].upper() + text[1:]
+
+
+def _remedy(invoice: Invoice, dec_repo: DecisionRepository) -> str:
+    label = _label(invoice)
+    if invoice.status in (InvoiceStatus.paid, InvoiceStatus.approved):
+        return f"{_capital(label)} ya está {STATUS_LABEL[invoice.status]}: no hay nada que hacer."
+    if invoice.status == InvoiceStatus.rejected:
+        return (f"{_capital(label)} la rechazó una persona y esa decisión es final. Si el proveedor envía una factura "
+                "corregida, se revisa como una nueva.")
+    agent = [d for d in dec_repo.list_by_invoice(invoice.id) if d.actor.value == "agent"]
+    failed = [c for c in agent[0].checks if c.status == CheckStatus.failed] if agent else []
+    if not failed:
+        return f"{_capital(label)} no tiene reglas incumplidas registradas."
+    lines = [f"Para {label}:"]
+    lines += [f"• {c.rule_id} · {REMEDIES.get(c.rule_id, c.message.rstrip('. ') + '.')}" for c in failed]
+    lines.append("El agente nunca paga algo que incumple una regla: estos pasos los hace una persona.")
+    return "\n".join(lines)
+
+
+def _overview(invoices: list[Invoice]) -> str:
+    counts = {s: sum(1 for i in invoices if i.status == s) for s in InvoiceStatus}
+    paid = counts[InvoiceStatus.paid] + counts[InvoiceStatus.approved]
+    blocked = counts[InvoiceStatus.blocked] + counts[InvoiceStatus.rejected]
+    pending = counts[InvoiceStatus.pending_approval]
+    lines = [(f"Hay {_count(len(invoices), 'factura', 'facturas')}: {_count(paid, 'pagada', 'pagadas')}, "
+              f"{_count(pending, 'pendiente', 'pendientes')} de aprobación y "
+              f"{_count(blocked, 'rechazada', 'rechazadas')}. Las más recientes:")]
+    lines += [f"• {_label(i)}, {STATUS_LABEL.get(i.status, i.status.value)}" for i in invoices[:MAX_LISTED]]
+    if len(invoices) > MAX_LISTED:
+        lines.append("Todas están en la barra lateral y en el Registro de decisiones.")
+    return "\n".join(lines)
+
+
 def answer_question(
     text: str,
     *,
@@ -139,23 +220,32 @@ def answer_question(
     dec_repo: DecisionRepository,
     rule_repo: RuleSetRepository,
     now: datetime,
+    context_invoice_id: str | None = None,
 ) -> str:
+    """`context_invoice_id`: the invoice of the conversation the question was asked in, if any."""
     plain = _plain(text)
     invoices = inv_repo.list_all()
 
-    named = _find_invoices(text, invoices)
-    if named:
-        return "\n\n".join(_explain_invoice(i, dec_repo) for i in named[:3])
+    subject = _find_invoices(text, invoices)
+    if (not subject and context_invoice_id and ABOUT_THIS_INVOICE.search(plain)
+            and not PLURAL_SCOPE.search(plain)):
+        subject = [i for i in invoices if i.id == context_invoice_id]
+    if subject and REMEDY_QUESTION.search(plain):
+        return "\n\n".join(_remedy(i, dec_repo) for i in subject[:3])
+    if subject:
+        return "\n\n".join(_explain_invoice(i, dec_repo) for i in subject[:3])
 
     if re.search(r"cuanto|gasto|gastado|pagado|presupuesto|tope|limite", plain):
         rules = rule_repo.get_current()
         spent = dec_repo.sum_spent_between(start_dt=now - timedelta(days=rules.period_days))
         counts = {s: sum(1 for i in invoices if i.status == s) for s in InvoiceStatus}
         paid = counts[InvoiceStatus.paid] + counts[InvoiceStatus.approved]
+        pending = counts[InvoiceStatus.pending_approval]
+        blocked = counts[InvoiceStatus.blocked] + counts[InvoiceStatus.rejected]
         return (f"En los últimos {rules.period_days} días se han pagado {_money(spent, rules.base_currency)} de un "
-                f"límite de {_money(rules.period_limit, rules.base_currency)}. Facturas: {paid} pagadas, "
-                f"{counts[InvoiceStatus.pending_approval]} pendientes de aprobación y "
-                f"{counts[InvoiceStatus.blocked] + counts[InvoiceStatus.rejected]} rechazadas.")
+                f"límite de {_money(rules.period_limit, rules.base_currency)}. Facturas: "
+                f"{_count(paid, 'pagada', 'pagadas')}, {_count(pending, 'pendiente', 'pendientes')} de aprobación y "
+                f"{_count(blocked, 'rechazada', 'rechazadas')}.")
 
     if re.search(r"pendiente|aprobar|aprobacion|escalad|revisar", plain):
         pending = [i for i in invoices if i.status == InvoiceStatus.pending_approval]
@@ -163,11 +253,16 @@ def answer_question(
 
     if re.search(r"rechaz|frenad|bloquead|frenaste|rechazaste", plain):
         blocked = [i for i in invoices if i.status in (InvoiceStatus.blocked, InvoiceStatus.rejected)]
+        if REMEDY_QUESTION.search(plain) and len(blocked) == 1:
+            return _remedy(blocked[0], dec_repo)
         return _listing("Facturas rechazadas", blocked, dec_repo, with_reason=True)
 
     if re.search(r"pagad|pagaste", plain):
         paid = [i for i in invoices if i.status in (InvoiceStatus.paid, InvoiceStatus.approved)]
         return _listing("Facturas pagadas", paid, dec_repo, with_reason=False)
+
+    if LIST_QUESTION.search(plain):
+        return _overview(invoices) if invoices else "Todavía no hay facturas revisadas. " + HELP_TEXT
 
     vendor = _vendor_invoices(text, invoices)
     if vendor:

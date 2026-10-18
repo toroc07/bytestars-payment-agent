@@ -75,7 +75,7 @@ def test_pending_list_and_spend_summary():
     pending = send(repos, "¿qué facturas están pendientes?").assistant_message.content
     assert "pendientes de aprobación: 1." in pending and "ATS-900" in pending and "R08" in pending
     spend = send(repos, "¿cuánto se ha pagado esta semana?").assistant_message.content
-    assert "USD 1,487.50" in spend and "USD 50,000.00" in spend and "1 pagadas" in spend
+    assert "USD 1,487.50" in spend and "USD 50,000.00" in spend and "1 pagada," in spend
 
 
 def test_vendor_listing_and_unknown_question():
@@ -83,3 +83,30 @@ def test_vendor_listing_and_unknown_question():
     send(repos, "Factura CDE-107", llm=chain_with(DELTA))
     assert "Facturas de Comercializadora Delta Express" in send(repos, "facturas de delta?").assistant_message.content
     assert "No encontré esa factura" in send(repos, "¿qué opinas del clima?").assistant_message.content
+
+
+LAO_KAO = {"invoice_number": "WL2141486", "vendor_name": "LAO KAO S.A.", "vendor_tax_id": "900.111.222-3",
+           "beneficiary_account": "12345678901", "amount": "130200.00", "currency": "COP"}
+
+
+def test_questions_inside_an_invoice_conversation_are_about_that_invoice():
+    repos = repos_for()
+    send(repos, "Factura No. ATS-842 por US$1,487.50", llm=chain_with({}))  # another invoice, paid
+    send(repos, "Factura WL2141486", llm=chain_with(LAO_KAO))  # same conversation now holds the LAO KAO invoice
+
+    why = send(repos, "por que fue rechazada?").assistant_message.content
+    assert why.startswith("La factura WL2141486 de LAO KAO S.A.") and "R03" in why
+
+    fix = send(repos, "que puedo hacer para que no sea rechazada?").assistant_message.content
+    assert "Configuración → Beneficiarios" in fix and "Reevaluar" in fix and "R03" in fix
+    assert "nunca paga algo que incumple una regla" in fix
+
+    others = send(repos, "que otra factura hay?").assistant_message.content
+    assert others.startswith("Hay 2 facturas: 1 pagada,") and "ATS-842" in others and "WL2141486" in others
+
+
+def test_remedy_for_an_escalation_points_to_human_approval():
+    repos = repos_for()
+    send(repos, "Factura ATS-900", llm=chain_with({"invoice_number": "ATS-900", "amount": "6000.00"}))
+    fix = send(repos, "¿qué hago para pagar la ATS-900?").assistant_message.content
+    assert "R08" in fix and "«Aprobar pago»" in fix

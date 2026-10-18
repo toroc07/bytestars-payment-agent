@@ -47,7 +47,7 @@ Dev B también ayuda con el motor de decisiones: al repartir tareas del motor, a
 | Proveedor Gemini + extracción PDF/imagen/texto | listo | `app/llm/gemini.py` con varios modelos en cadena (ADR-019); evaluación con Gemini: **100/100 iguales a `expected.json`, autonomía 80 %, 0 trampas pagadas, 0 datos mal leídos** (75 por lector local, 25 imágenes con Gemini) |
 | Fallback Groq/OpenRouter + caché | listo | `app/llm/openai_compat.py`: Groq solo texto, OpenRouter con visión (texto e imágenes, ADR-025); caché por hash en memoria, tabla `llm_cache` y carpeta temporal; lector local sin red (ADR-019) |
 | Prueba de prompt injection con Gemini real | listo | 4 ataques en imágenes y texto (suplantar a un proveedor permitido, cambiar el monto, JSON falso, romper el formato): Gemini no obedeció ninguno; impostor rechazado (R03) y chat incompleto escalado (R01) |
-| Chat de consulta (solo lectura) | listo | `app/agent/query.py`, sin LLM (ADR-025): por qué se frenó/escaló una factura (con endoso humano), pendientes, rechazadas, pagadas, gasto de la semana y facturas por proveedor |
+| Chat de consulta (solo lectura) | listo | `app/agent/query.py`, sin LLM (ADR-025): por qué se frenó/escaló una factura (con endoso humano), qué hacer para resolverla (pasos por regla), pendientes, rechazadas, pagadas, todas, gasto de la semana y facturas por proveedor; dentro de la conversación de una factura entiende «esta factura» |
 | Script de evaluación del dataset | listo | `python -m scripts.evaluate_dataset [--offline]`: pasa todas las facturas (104) por el pipeline real en orden y compara con `expected.json` (coincidencia, autonomía, trampas pagadas, datos mal leídos); sale con código 1 si se paga una trampa |
 
 ## Backend y base de datos (Dev B)
