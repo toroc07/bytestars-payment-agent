@@ -15,13 +15,15 @@ __all__ = ["JsonCache", "LLMChain", "LLMError", "LLMRequest", "LLMUnavailable", 
 def get_llm() -> LLMChain:
     """Chain built from the environment: LLM_PROVIDER_ORDER, the API keys and LLM_CACHE.
 
-    GEMINI_MODEL may list several models separated by commas; each one is tried in order.
+    GEMINI_MODEL, GROQ_MODEL and OPENROUTER_MODEL may list several models separated by commas; each one is tried in order.
     """
     gemini_models = [m.strip() for m in settings.GEMINI_MODEL.split(",") if m.strip()]
+    openrouter_models = [m.strip() for m in settings.OPENROUTER_MODEL.split(",") if m.strip()]
+    groq_models = [m.strip() for m in settings.GROQ_MODEL.split(",") if m.strip()]
     factories = {
         "gemini": lambda: [GeminiProvider(settings.GEMINI_API_KEY, model) for model in gemini_models],
-        "groq": lambda: [groq(settings.GROQ_API_KEY)],
-        "openrouter": lambda: [openrouter(settings.OPENROUTER_API_KEY)],
+        "groq": lambda: [groq(settings.GROQ_API_KEY, model) for model in groq_models],
+        "openrouter": lambda: [openrouter(settings.OPENROUTER_API_KEY, model) for model in openrouter_models],
     }
     order = [name.strip().lower() for name in settings.LLM_PROVIDER_ORDER.split(",")]
     providers = [p for name in order if name in factories for p in factories[name]()]
