@@ -6,14 +6,14 @@ Todo es **ficticio**: empresas, NIT, cuentas, personas y correos (dominios `.exa
 ## Contenido
 | Ruta | Qué es |
 |---|---|
-| `Textos/` | 25 mensajes de chat (`.txt`), en una línea o con detalle por ítem |
-| `Correos/` | 25 correos (`.eml`) con la factura en PDF adjunta |
-| `PDFS/` | 25 facturas en PDF |
-| `Imagenes/` | 25 facturas escaneadas o fotografiadas (`.png`, `.jpg`) |
+| `Textos/` | 26 mensajes de chat (`.txt`), en una línea o con detalle por ítem |
+| `Correos/` | 26 correos (`.eml`) con la factura en PDF adjunta |
+| `PDFS/` | 26 facturas en PDF |
+| `Imagenes/` | 26 facturas escaneadas o fotografiadas (`.png`, `.jpg`) |
 | `company.json` | empresa, reglas (`rule_set`), beneficiarios permitidos y acuerdos; lo carga `backend/app/db/seed.py` |
 | `expected.json` | por factura: los datos que debería leer el agente y el resultado esperado (pagar / frenar / escalar) con su porqué |
 
-Las facturas se numeran de `factura_001` a `factura_100` repartidas entre las cuatro carpetas. **El orden canónico es por número.** Los resultados dependen del orden: el duplicado es la segunda copia que llega y el tope semanal se alcanza al final.
+Las facturas se numeran de `factura_001` a `factura_104` repartidas entre las cuatro carpetas (de la 101 a la 104 son los casos de monto alto, una por formato). **El orden canónico es por número.** Los resultados dependen del orden: el duplicado es la segunda copia que llega y el tope semanal se alcanza al final.
 
 ## La empresa
 **Distribuciones Andinas S.A.S.** (NIT 900.482.117-5, Bogotá). Reglas de pago de Dev C, en USD:
@@ -55,8 +55,10 @@ No hay acuerdos cargados: el set no trae montos pactados por proveedor.
 | Duplicado con otro número (misma orden de compra y monto) | 014, 019, 044, 085, 098 | frenar (R02) |
 | El correo pide pagar a una cuenta nueva | 075, 092 | escalar (R11) |
 | Tope de 7 días: con todo el set en una sesión, el gasto pasa de US$50.000 desde la factura 078 | 18 facturas a partir de la 078 | escalar (R09) |
+| Monto sobre el umbral de aprobación (más de US$5.000): Seguridad Integral US$6.854,40 (PDF) y Tecnoredes US$6.188,00 (correo) | 101, 103 | escalar (R08) |
+| Monto sobre el límite por pago (más de US$10.000): Transportes Rápido Andino US$11.352,60 (chat) y Mantenimiento Industrial US$10.043,60 (imagen) | 102, 104 | frenar (R07) |
 
-Ninguna factura supera US$5.000, así que R07 (límite por pago) y R08 (aprobación) no tienen casos. Hay que agregarlos.
+Las facturas 101 a 104 son de proveedores permitidos y con sus datos correctos: lo único que falla es el monto. Como van al final del orden canónico, también marcan el tope de 7 días (R09); en una demo desde cero (Configuración → Demo → Reiniciar) muestran solo la regla de monto.
 
 ## Montos
 Los originales estaban en pesos colombianos y se pasaron a USD a la tasa ~4.000, con el mismo contenido. Los precios unitarios se redondearon: menos de 20 → al entero; menos de 100 → a 5; menos de 1.000 → a 10; desde 1.000 → a 100. Después se recalcularon líneas, subtotal, IVA del 19 % y total. Los montos se escriben como `US$1,234.00`.
@@ -68,4 +70,4 @@ Los originales estaban en pesos colombianos y se pasaron a USD a la tasa ~4.000,
 
 ## Para el resto del equipo
 - **Base de datos (Dev B):** `POST /api/dev/reset` vuelve a sembrar desde `company.json`.
-- **Frontend:** las cuatro carpetas se pueden cargar como lote desde la pantalla inicial (hasta 50 archivos por vez). Para reproducir `expected.json`, cargar de la 001 a la 100 en orden.
+- **Frontend:** las cuatro carpetas se pueden cargar como lote desde la pantalla inicial (hasta 50 archivos por vez). Para reproducir `expected.json`, cargar de la 001 a la 104 en orden (tres lotes: 001–050, 051–100, 101–104).

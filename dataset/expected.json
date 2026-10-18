@@ -2,7 +2,7 @@
   "status": "propuesta: calculada con el motor y revisada a mano; Dev C debe validarla",
   "company": "Distribuciones Andinas S.A.S.",
   "rule_set_version": 1,
-  "order": "factura_001 a factura_100 en una sola sesión (dentro de la misma ventana de 7 días)",
+  "order": "factura_001 a factura_104 en una sola sesión (dentro de la misma ventana de 7 días)",
   "assumptions": [
     "La extracción lee exactamente los datos de expected_extraction (confianza ≥ 0,8) y el país CO.",
     "La base arranca con dataset/company.json y sin facturas previas.",
@@ -11,15 +11,17 @@
   ],
   "totals": {
     "pay": 62,
-    "block": 18,
-    "escalate": 20,
+    "block": 20,
+    "escalate": 22,
     "cases": {
       "normal": 62,
       "proveedor_no_permitido": 6,
       "suplantacion": 2,
       "duplicado": 10,
       "cambio_de_cuenta": 2,
-      "tope_semanal": 18
+      "tope_semanal": 18,
+      "monto_sobre_umbral": 2,
+      "monto_sobre_limite": 2
     }
   },
   "invoices": [
@@ -1551,7 +1553,7 @@
         "R11"
       ],
       "case": "cambio_de_cuenta",
-      "reason": "Escalada a una persona: Revisión humana: la cuenta bancaria no coincide con la registrada; la cuenta bancaria cambió respecto al último pago."
+      "reason": "Escalada a una persona: Revisión humana: piden pagar a la cuenta 48325995592, que no es la registrada (76408675855); la cuenta cambió respecto al último pago (76408675855 → 48325995592)."
     },
     {
       "file": "Textos/factura_076.txt",
@@ -1924,7 +1926,7 @@
         "R11"
       ],
       "case": "cambio_de_cuenta",
-      "reason": "Escalada a una persona: Con esta factura se pagarían USD 50,177.54 en 7 días y el tope es USD 50,000.00: queda para revisión. Revisión humana: la cuenta bancaria no coincide con la registrada; la cuenta bancaria cambió respecto al último pago."
+      "reason": "Escalada a una persona: Con esta factura se pagarían USD 50,177.54 en 7 días y el tope es USD 50,000.00: queda para revisión. Revisión humana: piden pagar a la cuenta 89113353680, que no es la registrada (72923393128); la cuenta cambió respecto al último pago (72923393128 → 89113353680)."
     },
     {
       "file": "Correos/factura_093.eml",
@@ -2103,6 +2105,101 @@
       ],
       "case": "tope_semanal",
       "reason": "Escalada a una persona: Con esta factura se pagarían USD 51,522.24 en 7 días y el tope es USD 50,000.00: queda para revisión."
+    },
+    {
+      "file": "PDFS/factura_101.pdf",
+      "format": "pdf",
+      "expected_extraction": {
+        "invoice_number": "SIG-512",
+        "vendor_name": "Seguridad Integral Guardianes Ltda.",
+        "vendor_tax_id": "830.082.649-1",
+        "beneficiary_account": "90663776548",
+        "amount": "6854.40",
+        "currency": "USD",
+        "issue_date": "2026-10-03",
+        "due_date": "2026-11-17",
+        "po_reference": "OC-2026-0501",
+        "description": "Servicio de vigilancia 24h mensual"
+      },
+      "expected_outcome": "escalate",
+      "failed_rules": [
+        "R08",
+        "R09"
+      ],
+      "case": "monto_sobre_umbral",
+      "reason": "Escalada a una persona: USD 6,854.40 supera el umbral de USD 5,000.00: requiere aprobación de una persona. Con esta factura se pagarían USD 56,782.04 en 7 días y el tope es USD 50,000.00: queda para revisión."
+    },
+    {
+      "file": "Textos/factura_102.txt",
+      "format": "text",
+      "expected_extraction": {
+        "invoice_number": "TRA-560",
+        "vendor_name": "Transportes Rápido Andino S.A.",
+        "vendor_tax_id": "860.045.873-7",
+        "beneficiary_account": "14231607409",
+        "amount": "11352.60",
+        "currency": "USD",
+        "issue_date": "2026-10-05",
+        "due_date": null,
+        "po_reference": "OC-2026-0502",
+        "description": "Flete Bogotá - Cali tractomula"
+      },
+      "expected_outcome": "block",
+      "failed_rules": [
+        "R07",
+        "R08",
+        "R09",
+        "R10"
+      ],
+      "case": "monto_sobre_limite",
+      "reason": "Rechazada: USD 11,352.60 supera el límite por pago de USD 10,000.00."
+    },
+    {
+      "file": "Correos/factura_103.eml",
+      "format": "email",
+      "expected_extraction": {
+        "invoice_number": "TRC-760",
+        "vendor_name": "Tecnoredes Colombia Ltda.",
+        "vendor_tax_id": "830.114.921-1",
+        "beneficiary_account": "86447545986",
+        "amount": "6188.00",
+        "currency": "USD",
+        "issue_date": "2026-10-06",
+        "due_date": "2026-11-05",
+        "po_reference": "OC-2026-0503",
+        "description": "Switch administrable 24 puertos"
+      },
+      "expected_outcome": "escalate",
+      "failed_rules": [
+        "R08",
+        "R09"
+      ],
+      "case": "monto_sobre_umbral",
+      "reason": "Escalada a una persona: USD 6,188.00 supera el umbral de USD 5,000.00: requiere aprobación de una persona. Con esta factura se pagarían USD 56,115.64 en 7 días y el tope es USD 50,000.00: queda para revisión."
+    },
+    {
+      "file": "Imagenes/factura_104.jpg",
+      "format": "image",
+      "expected_extraction": {
+        "invoice_number": "MIC-430",
+        "vendor_name": "Mantenimiento Industrial Cundinamarca S.A.S.",
+        "vendor_tax_id": "900.718.452-3",
+        "beneficiary_account": "68367326817",
+        "amount": "10043.60",
+        "currency": "USD",
+        "issue_date": "2026-10-07",
+        "due_date": "2026-11-21",
+        "po_reference": "OC-2026-0504",
+        "description": "Mantenimiento preventivo aire acondicionado"
+      },
+      "expected_outcome": "block",
+      "failed_rules": [
+        "R07",
+        "R08",
+        "R09"
+      ],
+      "case": "monto_sobre_limite",
+      "reason": "Rechazada: USD 10,043.60 supera el límite por pago de USD 10,000.00."
     }
   ]
 }

@@ -6,11 +6,13 @@ from typing import Any
 
 from app.llm.base import LLMError, LLMRequest
 
-TIMEOUT_MS = 45_000
-# A model without quota is skipped for a while instead of being asked (and waited on) again. There is no
+# A healthy reading takes 2-10 s; an overloaded model can hang 30-40 s and then drop the connection.
+TIMEOUT_MS = 20_000
+# A model that fails is skipped for a while instead of being asked (and waited on) again. There is no
 # sleep-and-retry: the request runs in a time-limited function and the next model has its own quota.
 DAILY_QUOTA_PAUSE_S = 3600
 MINUTE_QUOTA_PAUSE_S = 60
+OVERLOAD_PAUSE_S = 120  # 5xx, timeouts and dropped connections: give the model a couple of minutes
 
 
 class GeminiProvider:
@@ -58,6 +60,8 @@ class GeminiProvider:
                     self._paused_until = time.monotonic() + DAILY_QUOTA_PAUSE_S
                 elif code == 429:  # per-minute limit: let the next model answer
                     self._paused_until = time.monotonic() + MINUTE_QUOTA_PAUSE_S
+                elif code is None or (isinstance(code, int) and code >= 500):  # overloaded, timed out or cut off
+                    self._paused_until = time.monotonic() + OVERLOAD_PAUSE_S
                 raise LLMError(f"{self._model}: {type(exc).__name__} {code or ''}".strip()) from exc
         return _as_object(response.text, self._model)
 

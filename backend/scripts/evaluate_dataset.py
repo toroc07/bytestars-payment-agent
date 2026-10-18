@@ -1,7 +1,7 @@
 """Evaluates the agent on the dataset against dataset/expected.json (docs/PROJECT.md, "Cómo se evalúa").
 
-Runs the real pipeline (extraction -> context -> engine -> persistence) over the 100 invoices in canonical
-order (factura_001..100) on a freshly seeded in-memory SQLite, feeding each file the way the frontend sends it:
+Runs the real pipeline (extraction -> context -> engine -> persistence) over every invoice in canonical
+order (factura_001 onwards) on a freshly seeded in-memory SQLite, feeding each file the way the frontend sends it:
 .txt as text, .eml as headers + body text with the PDF attached, PDF and images as files.
 
 Usage (from backend/):

@@ -48,7 +48,7 @@ Dev B también ayuda con el motor de decisiones: al repartir tareas del motor, a
 | Fallback Groq/OpenRouter + caché | listo | `app/llm/openai_compat.py` (solo texto) y caché por hash en memoria + carpeta temporal; lector local sin red de respaldo (ADR-019) |
 | Prueba de prompt injection con Gemini real | listo | 4 ataques en imágenes y texto (suplantar a un proveedor permitido, cambiar el monto, JSON falso, romper el formato): Gemini no obedeció ninguno; impostor rechazado (R03) y chat incompleto escalado (R01) |
 | Chat de consulta (solo lectura) | pendiente | hoy un texto que no es factura recibe un mensaje de ayuda; falta responder preguntas sobre decisiones guardadas |
-| Script de evaluación del dataset | listo | `python -m scripts.evaluate_dataset [--offline]`: pasa las 100 facturas por el pipeline real en orden y compara con `expected.json` (coincidencia, autonomía, trampas pagadas, datos mal leídos); sale con código 1 si se paga una trampa |
+| Script de evaluación del dataset | listo | `python -m scripts.evaluate_dataset [--offline]`: pasa todas las facturas (104) por el pipeline real en orden y compara con `expected.json` (coincidencia, autonomía, trampas pagadas, datos mal leídos); sale con código 1 si se paga una trampa |
 
 ## Backend y base de datos (Dev B)
 | Tarea | Estado | Notas |
@@ -70,7 +70,7 @@ Tareas por definir por Dev C (empresa ficticia, reglas, beneficiarios, acuerdos,
 | Montos del dataset en USD | listo | Dev A, a pedido del equipo: las 100 facturas regeneradas con el mismo contenido (ADR-018) |
 | Empresa, allowlist y reglas en `company.json` | listo | Dev A: Distribuciones Andinas S.A.S. con 8 proveedores inferidos del dataset; **Dev C valida** |
 | Resultados esperados por factura (`expected.json`) | listo | Dev A: 62 pagar · 18 frenar · 20 escalar; **Dev C valida** las trampas y el criterio de R11 (ADR-017) |
-| Casos de monto alto (más de US$5.000 o US$10.000) | pendiente | ninguna factura del set supera el umbral de aprobación ni el límite por pago; faltan casos para R07 y R08 |
+| Casos de monto alto (más de US$5.000 o US$10.000) | listo | Dev A, a pedido del equipo: facturas 101–104 (PDF, chat, correo, imagen) de proveedores permitidos; 101 y 103 se escalan (R08), 102 y 104 se frenan (R07). `expected.json` con 104 facturas; evaluación 104/104 |
 
 ## Deploy
 | Tarea | Estado | Notas |
@@ -89,7 +89,7 @@ Tareas por definir por Dev C (empresa ficticia, reglas, beneficiarios, acuerdos,
 - (Dev A → Dev B) `period` (weekly/monthly) convive con `period_days` y el motor solo usa `period_days`. No se quitó porque es columna NOT NULL y hace falta migración; decidir si se borra.
 - ~~(Dev A → Dev B) `reevaluate` armaba su propio contexto y usaba `R01` en los errores.~~ **Corregido por Dev A:** la ruta llama a `agent.pipeline.reevaluate` (ADR-022).
 - (Dev A → Dev B) Nuevas en tu zona (ADR-022): tabla `llm_cache` + `SqlLlmCacheRepository`, `get_llm_cache_repo` en `deps.py`, `app/api/rate_limit.py` aplicado al envío de mensajes. En Neon la tabla la crea `create_all` al arrancar.
-- (Dev A → Dev C) Validar `dataset/company.json` y `dataset/expected.json` (allowlist inferida, trampas y criterio de R11 en ADR-017), y agregar facturas por encima de US$5.000 y US$10.000 para cubrir R07 y R08.
+- (Dev A → Dev C) Validar `dataset/company.json` y `dataset/expected.json` (allowlist inferida, trampas y criterio de R11 en ADR-017), (los casos de monto alto 101–104 ya están).
 - (Dev A → Dev B) Revisión del commit `ae3f511`: se mantienen el filtro de marcas de agua en PDF y el lector de facturas en inglés. Se revirtió `GEMINI_MODEL` (`gemini-2.5-flash`, `2.0-flash` y `1.5-flash` devuelven 404: ya no se ofrecen a cuentas nuevas) y se cambió "$" a secas → USD, que podía pagar en dólares una factura en pesos (ADR-021). Si tu key sí puede usar otro modelo, agrégalo al final de la lista en tu `.env`: un modelo con 404 se salta solo durante una hora.
 - (Dev A → Dev B) Sugerencia: agregar `title`/`description` en español a los `Field` del `RuleSet` para que el panel de reglas no dependa del diccionario de etiquetas del frontend.
 - (Dev A → Dev C) Formatos que el frontend sabe enviar: **PDF, PNG, JPG** (como archivo) y **`.eml`, `.txt`, `.md`** (se leen y se mandan como texto). Otros formatos (`.webp`, `.heic`, `.msg`, `.docx`) se rechazan; máximo 4 MB por archivo. Las 4 carpetas del dataset se pueden cargar como lote desde la pantalla inicial (hasta 50 archivos por vez).

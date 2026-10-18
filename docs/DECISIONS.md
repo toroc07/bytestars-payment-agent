@@ -87,7 +87,8 @@ Por qué: la cuota gratuita de Gemini es de 20 lecturas al día por modelo y pro
 Decisión (Dev A, a pedido del equipo; Dev C valida):
 1. **Montos en USD:** las 100 facturas se regeneraron con el mismo contenido y los montos de COP pasados a USD a la tasa ~4.000, con precios unitarios redondeados (menos de 20 → a 1; menos de 100 → a 5; menos de 1.000 → a 10; desde 1.000 → a 100), IVA del 19 % y totales recalculados. Las reglas de Dev C están en USD; así los límites se leen sin conversión.
 2. **Allowlist inferida:** `dataset/company.json` lista los 8 proveedores que se repiten con NIT y cuenta coherentes (verificados, no sancionados, país CO). Servicios Logísticos Meridian, Comercializadora Delta Express y la papelería con NIT 901.233.780-5 quedan fuera, porque son las trampas del set. No se inventaron dueños ni acuerdos.
-3. **Resultados esperados:** `dataset/expected.json` se calculó con el motor procesando de factura_001 a factura_100 en una sola sesión y se contrastó con una clasificación manual de las trampas. `backend/tests/engine/test_dataset_expected.py` lo vuelve a comprobar en cada corrida de tests.
+3. **Resultados esperados:** `dataset/expected.json` se calculó con el motor procesando de factura_001 a factura_104 en una sola sesión y se contrastó con una clasificación manual de las trampas. `backend/tests/engine/test_dataset_expected.py` lo vuelve a comprobar en cada corrida de tests.
+4. **Casos de monto alto (101–104):** se agregaron una factura por formato, de proveedores permitidos y con los conceptos y precios que ya usan, para cubrir R08 (más de US$5.000, escalar) y R07 (más de US$10.000, frenar), que el set original no tenía.
 
 ## ADR-024 · Blindaje de aprobaciones, clave de administrador para la demo y concurrencia segura
 Decisión (Dev B; ajustada por Dev A con el equipo):

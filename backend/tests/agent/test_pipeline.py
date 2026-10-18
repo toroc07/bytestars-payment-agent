@@ -290,3 +290,24 @@ def test_per_minute_limit_skips_the_model_without_waiting():
     with pytest.raises(LLMError):
         provider.generate_json(request)
     assert time.monotonic() - started < 1 and provider.supports(request) is False
+
+
+def test_hanging_model_is_skipped_for_the_next_invoices():
+    from app.llm.base import LLMError, LLMRequest
+    from app.llm.gemini import GeminiProvider
+
+    class Dropped(Exception):  # httpx.RemoteProtocolError / timeouts carry no HTTP code
+        pass
+
+    class Models:
+        def generate_content(self, **_kwargs):
+            raise Dropped("Server disconnected without sending a response.")
+
+    class Client:
+        models = Models()
+
+    provider = GeminiProvider("key", "gemini-overloaded", client=Client())
+    request = LLMRequest(system="s", text="t")
+    with pytest.raises(LLMError):
+        provider.generate_json(request)
+    assert provider.supports(request) is False
