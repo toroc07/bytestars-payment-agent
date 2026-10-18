@@ -26,7 +26,7 @@ Dev B también ayuda con el motor de decisiones: al repartir tareas del motor, a
 | Panel de configuración (reglas, beneficiarios, acuerdos) | listo | formularios generados desde `/openapi.json`; sigue los cambios de reglas solo |
 | Aprobar / rechazar pendientes | listo | probado contra el backend local |
 | Vista de registro de decisiones + exportar CSV | listo | |
-| Entradas de correo y texto (`.eml`, `.txt`) + lotes de hasta 50 archivos | listo | los `.eml` se abren en el navegador: cuerpo decodificado como texto + PDF adjunto como archivo; probado con los 25 correos del dataset |
+| Entradas de correo y texto (`.eml`, `.txt`) + lotes de hasta 50 archivos | listo | los `.eml` se abren en el navegador: cuerpo decodificado como texto + PDF adjunto como archivo; probado con los 26 correos del dataset |
 | Reevaluar facturas frenadas o pendientes | listo | cheque nuevo debajo del anterior |
 | Editar beneficiarios y acuerdos, confirmar al quitar, selector de beneficiario | listo | |
 | Pestaña Demo: reiniciar la demo | listo | usa `/api/dev/reset` con confirmación |
@@ -75,8 +75,8 @@ Tareas por definir por Dev C (empresa ficticia, reglas, beneficiarios, acuerdos,
 ## Deploy
 | Tarea | Estado | Notas |
 |---|---|---|
-| Base de datos en Neon (crear, conectar al proyecto api, migraciones y seed) | listo | creada por Dev B; Dev A probó el flujo completo contra Neon y la dejó sembrada (8 proveedores, 0 facturas); falta poner `DATABASE_URL` en Vercel. Nota: la contraseña se compartió por chat, conviene rotarla | **Dev B**; usar la cadena con pooling (`-pooler`); las tablas se crean al arrancar; sembrar con `POST /api/dev/seed` (`DEPLOY.md` paso 7) |
-| Proyectos Vercel api y web (variables, CORS, prueba con el dataset) | listo | **Dev A**; web https://bytestars-payment-agent-web.vercel.app · api https://bytestars-payment-agent-api-mu.vercel.app (Neon, `maxDuration` 300 s). Probado de punta a punta con Playwright (8 facturas de los 3 tipos); base dejada limpia y sembrada. Pendiente: precargar la caché con `scripts/preload_llm_cache.py` y, opcional, la regla de rate limit en el Firewall |
+| Base de datos en Neon (crear, conectar al proyecto api, migraciones y seed) | listo | creada por Dev B; Dev A probó el flujo completo contra Neon y la dejó sembrada (8 proveedores); conectada al proyecto api en Vercel y contraseña rotada | **Dev B**; usar la cadena con pooling (`-pooler`); las tablas se crean al arrancar; sembrar con `POST /api/dev/seed` (`DEPLOY.md` paso 7) |
+| Proyectos Vercel api y web (variables, CORS, prueba con el dataset) | listo | **Dev A**; web https://bytestars-payment-agent-web.vercel.app · api https://bytestars-payment-agent-api-mu.vercel.app (Neon, `maxDuration` 300 s). Probado de punta a punta con Playwright (8 facturas de los 3 tipos). Variables de OpenRouter y Groq agregadas. Caché precargada con `scripts/preload_llm_cache.py`: las 26 imágenes del dataset se leen sin gastar cuota de Gemini. La base de producción queda con facturas de ejemplo para la demo. Opcional: regla de rate limit en el Firewall |
 | Confirmar créditos/free tier de Gemini | listo | gratis: 20 lecturas al día por modelo y proyecto; se encadenan 3 modelos (ADR-019); `gemini-2.5-flash` ya no se ofrece a cuentas nuevas |
 
 ## Bloqueos y preguntas abiertas
