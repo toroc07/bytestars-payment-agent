@@ -80,6 +80,7 @@ class DecisionRepository(Protocol):
         end_dt: datetime | None = None,
         vendor_name: str | None = None,
         vendor_tax_id: str | None = None,
+        statuses: list[InvoiceStatus] | None = None,  # default: paid and approved
     ) -> Decimal: ...
 
 

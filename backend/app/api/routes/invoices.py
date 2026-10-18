@@ -58,6 +58,8 @@ def get_summary(
     rules = rule_repo.get_current()
     window_start = datetime.now(UTC) - timedelta(days=rules.period_days)
     spent = dec_repo.sum_spent_between(start_dt=window_start)
+    by_agent = dec_repo.sum_spent_between(start_dt=window_start, statuses=[InvoiceStatus.paid])
+    by_people = dec_repo.sum_spent_between(start_dt=window_start, statuses=[InvoiceStatus.approved])
 
     paid_count = sum(1 for i in invoices if i.status in (InvoiceStatus.paid, InvoiceStatus.approved))
     blocked_count = sum(1 for i in invoices if i.status in (InvoiceStatus.blocked, InvoiceStatus.rejected))
@@ -68,6 +70,8 @@ def get_summary(
         blocked_count=blocked_count,
         pending_count=pending_count,
         spent_in_period=spent,
+        spent_by_agent=by_agent,
+        spent_by_people=by_people,
         period_limit=rules.period_limit,
         period_budget=rules.period_budget,
     )

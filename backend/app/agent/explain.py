@@ -12,8 +12,8 @@ SOURCE_LABELS = {
 
 HEADINGS = {
     Outcome.pay: "Pago simulado: todas las reglas se cumplen.",
-    Outcome.block: "Frenada: incumple una regla que no admite excepciones automáticas.",
-    Outcome.escalate: "Pendiente de aprobación: una persona debe revisarla antes de pagar.",
+    Outcome.block: "Rechazada: incumple una regla que no admite excepciones automáticas.",
+    Outcome.escalate: "Por aprobar: una persona debe revisarla antes de pagar.",
 }
 
 

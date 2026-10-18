@@ -63,3 +63,11 @@ def test_pdf_from_unknown_vendor_is_blocked(client):
     decision = body["assistant_message"]["decision"]
     assert decision["outcome"] == "block"
     assert any(c["rule_id"] == "R03" and c["status"] == "failed" for c in decision["checks"])
+
+
+def test_question_thread_is_named_after_its_first_question(client):
+    conversation = client.post("/api/conversations", json={}).json()
+    client.post(f"/api/conversations/{conversation['id']}/messages", data={"text": "¿qué facturas están por aprobar?"})
+    client.post(f"/api/conversations/{conversation['id']}/messages", data={"text": "¿y cuánto se ha pagado?"})
+    titles = {c["id"]: c["title"] for c in client.get("/api/conversations").json()}
+    assert titles[conversation["id"]] == "¿qué facturas están por aprobar?"

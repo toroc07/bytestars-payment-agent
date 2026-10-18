@@ -83,7 +83,7 @@ class Repos:
         if item_id in self.invoices:
             return self.invoices[item_id]
         if item_id in self.conversation_invoice:
-            return ConversationSummary(id=item_id, title=self.titles.get(item_id, ""),
+            return ConversationSummary(id=item_id, title=self.titles.get(item_id, "Nueva factura"),
                                        invoice_id=self.conversation_invoice[item_id], updated_at=datetime.now(UTC))
         return None
 
@@ -129,10 +129,11 @@ class Repos:
                 and i.extracted.vendor_tax_id == vendor_tax_id]
         return paid[-1].extracted if paid else None
 
-    def sum_spent_between(self, start_dt: datetime | None = None, end_dt=None, vendor_name=None, vendor_tax_id=None):
+    def sum_spent_between(self, start_dt: datetime | None = None, end_dt=None, vendor_name=None, vendor_tax_id=None,
+                          statuses=None):
         total = Decimal("0.00")
         for invoice in self.invoices.values():
-            if invoice.status not in PAID or (vendor_tax_id and invoice.extracted.vendor_tax_id != vendor_tax_id):
+            if invoice.status not in (statuses or PAID) or (vendor_tax_id and invoice.extracted.vendor_tax_id != vendor_tax_id):
                 continue
             last = [d for d in self.decisions if d.invoice_id == invoice.id][-1]
             total += last.amount_base_currency or Decimal(0)

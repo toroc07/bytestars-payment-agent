@@ -45,6 +45,8 @@ from app.schemas import (
 
 log = logging.getLogger(__name__)
 
+DEFAULT_TITLE = "Nueva factura"  # what SqlConversationRepository.create names a conversation
+
 STATUS_BY_OUTCOME = {
     Outcome.pay: InvoiceStatus.paid,
     Outcome.block: InvoiceStatus.blocked,
@@ -127,7 +129,7 @@ def _pipeline_error(exc: Exception) -> EngineResult:
             observed=f"error del agente: {type(exc).__name__}", expected="procesamiento completo",
             message="El agente no pudo terminar de revisar la factura; queda para una persona (fail-closed).",
         )],
-        summary="Escalada a una persona: el agente no pudo terminar la revisión.",
+        summary="Por aprobar: el agente no pudo terminar la revisión.",
     )
 
 
@@ -166,13 +168,16 @@ def handle_chat_turn(
     if question or (file_bytes is None and not looks_like_invoice(text)):
         # Read-only answer (or help): nothing is registered and nothing can be approved from here.
         content = HELP_TEXT
+        conversation = conv_repo.get(conversation_id)
         if question:  # asked inside an invoice's conversation, "esta factura" is that invoice
-            conversation = conv_repo.get(conversation_id)
             content = answer_question(text or "", inv_repo=inv_repo, dec_repo=dec_repo, rule_repo=rule_repo,
                                       now=clock(), context_invoice_id=conversation.invoice_id if conversation else None)
         reply = ChatMessage(id=_new_id("msg"), conversation_id=conversation_id, role="assistant",
                             content=content, created_at=clock())
         conv_repo.add_message(reply)
+        if conversation and not conversation.invoice_id and conversation.title == DEFAULT_TITLE and text:
+            # A thread of questions is named after its first question, not "Nueva factura".
+            conv_repo.update_metadata(conversation_id=conversation_id, title=text.strip().splitlines()[0][:80])
         return SendMessageResponse(user_message=user_message, assistant_message=reply, invoice=None)
 
     rules = rule_repo.get_current()

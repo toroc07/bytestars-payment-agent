@@ -2088,6 +2088,16 @@
             "type": "string",
             "title": "Spent In Period"
           },
+          "spent_by_agent": {
+            "type": "string",
+            "title": "Spent By Agent",
+            "default": "0.00"
+          },
+          "spent_by_people": {
+            "type": "string",
+            "title": "Spent By People",
+            "default": "0.00"
+          },
           "period_limit": {
             "type": "string",
             "title": "Period Limit"

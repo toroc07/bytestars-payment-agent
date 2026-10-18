@@ -755,6 +755,16 @@ export interface components {
             pending_count: number;
             /** Spent In Period */
             spent_in_period: string;
+            /**
+             * Spent By Agent
+             * @default 0.00
+             */
+            spent_by_agent: string;
+            /**
+             * Spent By People
+             * @default 0.00
+             */
+            spent_by_people: string;
             /** Period Limit */
             period_limit: string;
             /** Period Budget */

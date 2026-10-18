@@ -33,7 +33,7 @@ Tipos de petición/respuesta = entidades de `docs/DATA_MODEL.md`.
 | `DELETE /api/beneficiaries/{id}` | Borrar | — | 204 |
 | `GET /api/agreements` | Acuerdos | — | `Agreement[]` |
 | `POST /api/agreements` | Crear/actualizar | `Agreement` | `Agreement` |
-| `GET /api/summary` | Tarjetas: pagado / frenado / pendiente, gasto del periodo vs límites | — | `{paid_count, blocked_count, pending_count, spent_in_period, period_limit, period_budget}` |
+| `GET /api/summary` | Tarjetas: pagado / frenado / pendiente, gasto del periodo vs límites. `spent_in_period` = `spent_by_agent` (pagado por el agente dentro de reglas) + `spent_by_people` (excepciones aprobadas por una persona) | — | `{paid_count, blocked_count, pending_count, spent_in_period, spent_by_agent, spent_by_people, period_limit, period_budget}` |
 | `POST /api/dev/seed` | Carga empresa ficticia + dataset | — | `{loaded}` |
 | `POST /api/dev/reset` | Resetea el demo | — | `{ok}` |
 

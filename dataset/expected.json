@@ -1553,7 +1553,7 @@
         "R11"
       ],
       "case": "cambio_de_cuenta",
-      "reason": "Escalada a una persona: Revisión humana: piden pagar a la cuenta 48325995592, que no es la registrada (76408675855); la cuenta cambió respecto al último pago (76408675855 → 48325995592)."
+      "reason": "Por aprobar: Revisión humana: piden pagar a la cuenta 48325995592, que no es la registrada (76408675855); la cuenta cambió respecto al último pago (76408675855 → 48325995592)."
     },
     {
       "file": "Textos/factura_076.txt",
@@ -1615,7 +1615,7 @@
         "R09"
       ],
       "case": "tope_semanal",
-      "reason": "Escalada a una persona: Con esta factura se pagarían USD 50,127.56 en 7 días y el tope es USD 50,000.00: queda para revisión."
+      "reason": "Por aprobar: Con esta factura se pagarían USD 50,127.56 en 7 días y el tope es USD 50,000.00: queda para revisión."
     },
     {
       "file": "Imagenes/factura_079.jpg",
@@ -1637,7 +1637,7 @@
         "R09"
       ],
       "case": "tope_semanal",
-      "reason": "Escalada a una persona: Con esta factura se pagarían USD 53,473.84 en 7 días y el tope es USD 50,000.00: queda para revisión."
+      "reason": "Por aprobar: Con esta factura se pagarían USD 53,473.84 en 7 días y el tope es USD 50,000.00: queda para revisión."
     },
     {
       "file": "Correos/factura_080.eml",
@@ -1659,7 +1659,7 @@
         "R09"
       ],
       "case": "tope_semanal",
-      "reason": "Escalada a una persona: Con esta factura se pagarían USD 50,379.84 en 7 días y el tope es USD 50,000.00: queda para revisión."
+      "reason": "Por aprobar: Con esta factura se pagarían USD 50,379.84 en 7 días y el tope es USD 50,000.00: queda para revisión."
     },
     {
       "file": "Correos/factura_081.eml",
@@ -1681,7 +1681,7 @@
         "R09"
       ],
       "case": "tope_semanal",
-      "reason": "Escalada a una persona: Con esta factura se pagarían USD 50,260.84 en 7 días y el tope es USD 50,000.00: queda para revisión."
+      "reason": "Por aprobar: Con esta factura se pagarían USD 50,260.84 en 7 días y el tope es USD 50,000.00: queda para revisión."
     },
     {
       "file": "Correos/factura_082.eml",
@@ -1703,7 +1703,7 @@
         "R09"
       ],
       "case": "tope_semanal",
-      "reason": "Escalada a una persona: Con esta factura se pagarían USD 50,227.52 en 7 días y el tope es USD 50,000.00: queda para revisión."
+      "reason": "Por aprobar: Con esta factura se pagarían USD 50,227.52 en 7 días y el tope es USD 50,000.00: queda para revisión."
     },
     {
       "file": "Correos/factura_083.eml",
@@ -1725,7 +1725,7 @@
         "R09"
       ],
       "case": "tope_semanal",
-      "reason": "Escalada a una persona: Con esta factura se pagarían USD 50,259.65 en 7 días y el tope es USD 50,000.00: queda para revisión."
+      "reason": "Por aprobar: Con esta factura se pagarían USD 50,259.65 en 7 días y el tope es USD 50,000.00: queda para revisión."
     },
     {
       "file": "Textos/factura_084.txt",
@@ -1747,7 +1747,7 @@
         "R09"
       ],
       "case": "tope_semanal",
-      "reason": "Escalada a una persona: Con esta factura se pagarían USD 50,695.19 en 7 días y el tope es USD 50,000.00: queda para revisión."
+      "reason": "Por aprobar: Con esta factura se pagarían USD 50,695.19 en 7 días y el tope es USD 50,000.00: queda para revisión."
     },
     {
       "file": "PDFS/factura_085.pdf",
@@ -1792,7 +1792,7 @@
         "R09"
       ],
       "case": "tope_semanal",
-      "reason": "Escalada a una persona: Con esta factura se pagarían USD 50,184.68 en 7 días y el tope es USD 50,000.00: queda para revisión."
+      "reason": "Por aprobar: Con esta factura se pagarían USD 50,184.68 en 7 días y el tope es USD 50,000.00: queda para revisión."
     },
     {
       "file": "Imagenes/factura_087.png",
@@ -1814,7 +1814,7 @@
         "R09"
       ],
       "case": "tope_semanal",
-      "reason": "Escalada a una persona: Con esta factura se pagarían USD 53,622.59 en 7 días y el tope es USD 50,000.00: queda para revisión."
+      "reason": "Por aprobar: Con esta factura se pagarían USD 53,622.59 en 7 días y el tope es USD 50,000.00: queda para revisión."
     },
     {
       "file": "Textos/factura_088.txt",
@@ -1859,7 +1859,7 @@
         "R09"
       ],
       "case": "tope_semanal",
-      "reason": "Escalada a una persona: Con esta factura se pagarían USD 50,182.30 en 7 días y el tope es USD 50,000.00: queda para revisión."
+      "reason": "Por aprobar: Con esta factura se pagarían USD 50,182.30 en 7 días y el tope es USD 50,000.00: queda para revisión."
     },
     {
       "file": "Correos/factura_090.eml",
@@ -1881,7 +1881,7 @@
         "R09"
       ],
       "case": "tope_semanal",
-      "reason": "Escalada a una persona: Con esta factura se pagarían USD 51,974.44 en 7 días y el tope es USD 50,000.00: queda para revisión."
+      "reason": "Por aprobar: Con esta factura se pagarían USD 51,974.44 en 7 días y el tope es USD 50,000.00: queda para revisión."
     },
     {
       "file": "Correos/factura_091.eml",
@@ -1903,7 +1903,7 @@
         "R09"
       ],
       "case": "tope_semanal",
-      "reason": "Escalada a una persona: Con esta factura se pagarían USD 50,452.43 en 7 días y el tope es USD 50,000.00: queda para revisión."
+      "reason": "Por aprobar: Con esta factura se pagarían USD 50,452.43 en 7 días y el tope es USD 50,000.00: queda para revisión."
     },
     {
       "file": "Correos/factura_092.eml",
@@ -1926,7 +1926,7 @@
         "R11"
       ],
       "case": "cambio_de_cuenta",
-      "reason": "Escalada a una persona: Con esta factura se pagarían USD 50,177.54 en 7 días y el tope es USD 50,000.00: queda para revisión. Revisión humana: piden pagar a la cuenta 89113353680, que no es la registrada (72923393128); la cuenta cambió respecto al último pago (72923393128 → 89113353680)."
+      "reason": "Por aprobar: Con esta factura se pagarían USD 50,177.54 en 7 días y el tope es USD 50,000.00: queda para revisión. Revisión humana: piden pagar a la cuenta 89113353680, que no es la registrada (72923393128); la cuenta cambió respecto al último pago (72923393128 → 89113353680)."
     },
     {
       "file": "Correos/factura_093.eml",
@@ -1971,7 +1971,7 @@
         "R09"
       ],
       "case": "tope_semanal",
-      "reason": "Escalada a una persona: Con esta factura se pagarían USD 50,433.39 en 7 días y el tope es USD 50,000.00: queda para revisión."
+      "reason": "Por aprobar: Con esta factura se pagarían USD 50,433.39 en 7 días y el tope es USD 50,000.00: queda para revisión."
     },
     {
       "file": "Textos/factura_095.txt",
@@ -1993,7 +1993,7 @@
         "R09"
       ],
       "case": "tope_semanal",
-      "reason": "Escalada a una persona: Con esta factura se pagarían USD 50,534.54 en 7 días y el tope es USD 50,000.00: queda para revisión."
+      "reason": "Por aprobar: Con esta factura se pagarían USD 50,534.54 en 7 días y el tope es USD 50,000.00: queda para revisión."
     },
     {
       "file": "PDFS/factura_096.pdf",
@@ -2015,7 +2015,7 @@
         "R09"
       ],
       "case": "tope_semanal",
-      "reason": "Escalada a una persona: Con esta factura se pagarían USD 51,046.24 en 7 días y el tope es USD 50,000.00: queda para revisión."
+      "reason": "Por aprobar: Con esta factura se pagarían USD 51,046.24 en 7 días y el tope es USD 50,000.00: queda para revisión."
     },
     {
       "file": "Imagenes/factura_097.jpg",
@@ -2037,7 +2037,7 @@
         "R09"
       ],
       "case": "tope_semanal",
-      "reason": "Escalada a una persona: Con esta factura se pagarían USD 50,486.94 en 7 días y el tope es USD 50,000.00: queda para revisión."
+      "reason": "Por aprobar: Con esta factura se pagarían USD 50,486.94 en 7 días y el tope es USD 50,000.00: queda para revisión."
     },
     {
       "file": "Textos/factura_098.txt",
@@ -2082,7 +2082,7 @@
         "R09"
       ],
       "case": "tope_semanal",
-      "reason": "Escalada a una persona: Con esta factura se pagarían USD 50,409.59 en 7 días y el tope es USD 50,000.00: queda para revisión."
+      "reason": "Por aprobar: Con esta factura se pagarían USD 50,409.59 en 7 días y el tope es USD 50,000.00: queda para revisión."
     },
     {
       "file": "Correos/factura_100.eml",
@@ -2104,7 +2104,7 @@
         "R09"
       ],
       "case": "tope_semanal",
-      "reason": "Escalada a una persona: Con esta factura se pagarían USD 51,522.24 en 7 días y el tope es USD 50,000.00: queda para revisión."
+      "reason": "Por aprobar: Con esta factura se pagarían USD 51,522.24 en 7 días y el tope es USD 50,000.00: queda para revisión."
     },
     {
       "file": "PDFS/factura_101.pdf",
@@ -2127,7 +2127,7 @@
         "R09"
       ],
       "case": "monto_sobre_umbral",
-      "reason": "Escalada a una persona: USD 6,854.40 supera el umbral de USD 5,000.00: requiere aprobación de una persona. Con esta factura se pagarían USD 56,782.04 en 7 días y el tope es USD 50,000.00: queda para revisión."
+      "reason": "Por aprobar: USD 6,854.40 supera el umbral de USD 5,000.00: requiere aprobación de una persona. Con esta factura se pagarían USD 56,782.04 en 7 días y el tope es USD 50,000.00: queda para revisión."
     },
     {
       "file": "Textos/factura_102.txt",
@@ -2175,7 +2175,7 @@
         "R09"
       ],
       "case": "monto_sobre_umbral",
-      "reason": "Escalada a una persona: USD 6,188.00 supera el umbral de USD 5,000.00: requiere aprobación de una persona. Con esta factura se pagarían USD 56,115.64 en 7 días y el tope es USD 50,000.00: queda para revisión."
+      "reason": "Por aprobar: USD 6,188.00 supera el umbral de USD 5,000.00: requiere aprobación de una persona. Con esta factura se pagarían USD 56,115.64 en 7 días y el tope es USD 50,000.00: queda para revisión."
     },
     {
       "file": "Imagenes/factura_104.jpg",

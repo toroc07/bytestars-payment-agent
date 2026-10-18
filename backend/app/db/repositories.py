@@ -418,10 +418,10 @@ class SqlDecisionRepository:
         end_dt: datetime | None = None,
         vendor_name: str | None = None,
         vendor_tax_id: str | None = None,
+        statuses: list[InvoiceStatus] | None = None,
     ) -> Decimal:
-        stmt = select(InvoiceModel).where(
-            InvoiceModel.status.in_([InvoiceStatus.paid.value, InvoiceStatus.approved.value])
-        )
+        wanted = statuses or [InvoiceStatus.paid, InvoiceStatus.approved]
+        stmt = select(InvoiceModel).where(InvoiceModel.status.in_([s.value for s in wanted]))
         if start_dt:
             stmt = stmt.where(InvoiceModel.received_at >= start_dt)
         if end_dt:

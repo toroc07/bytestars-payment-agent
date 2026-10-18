@@ -24,7 +24,7 @@ def _summary(outcome: Outcome, failed: list[RuleCheck], invoice: ExtractedInvoic
     reasons = " ".join(c.message for c in failed)
     if outcome == Outcome.block:
         return f"Rechazada: {reasons}"
-    return f"Escalada a una persona: {reasons}"
+    return f"Por aprobar: {reasons}"
 
 
 def _fail_closed(reason: str) -> EngineResult:
@@ -41,7 +41,7 @@ def _fail_closed(reason: str) -> EngineResult:
                 message="El motor no pudo evaluar la factura; se escala por seguridad.",
             )
         ],
-        summary="Escalada a una persona: el motor no pudo evaluar la factura.",
+        summary="Por aprobar: el motor no pudo evaluar la factura.",
         amount_base_currency=None,
     )
 

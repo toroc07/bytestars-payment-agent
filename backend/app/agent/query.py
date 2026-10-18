@@ -20,10 +20,11 @@ QUESTION_START = re.compile(
 INVOICE_NUMBER = re.compile(r"\b([A-Z]{2,5}-\d{2,})\b", re.IGNORECASE)
 FILE_NUMBER = re.compile(r"\b(?:factura[_\s]?|la\s|el\s)(\d{3})\b", re.IGNORECASE)
 
+# Same three words as the app (Pagada / Por aprobar / Rechazada), with who decided as the detail.
 STATUS_LABEL = {
     InvoiceStatus.paid: "pagada",
-    InvoiceStatus.approved: "aprobada por una persona",
-    InvoiceStatus.pending_approval: "pendiente de aprobación",
+    InvoiceStatus.approved: "pagada (la aprobó una persona)",
+    InvoiceStatus.pending_approval: "por aprobar",
     InvoiceStatus.blocked: "rechazada por el agente",
     InvoiceStatus.rejected: "rechazada por una persona",
     InvoiceStatus.received: "recibida, sin decisión",
@@ -31,9 +32,9 @@ STATUS_LABEL = {
 
 HELP_TEXT = (
     "Envíame una factura para revisarla: adjunta un PDF o una imagen (PNG o JPG), o pega el texto del mensaje o "
-    "correo con la factura. Te digo si se paga, se frena o queda pendiente de aprobación, y por qué.\n"
+    "correo con la factura. Te digo si se paga, se rechaza o queda por aprobar, y por qué.\n"
     "También puedes preguntarme por lo ya decidido, por ejemplo: «¿por qué frenaste la SIG-497?», "
-    "«¿qué facturas están pendientes?», «¿cuánto se ha pagado esta semana?» o «facturas de Tecnoredes»."
+    "«¿qué facturas están por aprobar?», «¿cuánto se ha pagado esta semana?» o «facturas de Tecnoredes»."
 )
 
 
@@ -205,7 +206,7 @@ def _overview(invoices: list[Invoice]) -> str:
     blocked = counts[InvoiceStatus.blocked] + counts[InvoiceStatus.rejected]
     pending = counts[InvoiceStatus.pending_approval]
     lines = [(f"Hay {_count(len(invoices), 'factura', 'facturas')}: {_count(paid, 'pagada', 'pagadas')}, "
-              f"{_count(pending, 'pendiente', 'pendientes')} de aprobación y "
+              f"{_count(pending, 'por aprobar', 'por aprobar')} y "
               f"{_count(blocked, 'rechazada', 'rechazadas')}. Las más recientes:")]
     lines += [f"• {_label(i)}, {STATUS_LABEL.get(i.status, i.status.value)}" for i in invoices[:MAX_LISTED]]
     if len(invoices) > MAX_LISTED:
@@ -235,21 +236,25 @@ def answer_question(
     if subject:
         return "\n\n".join(_explain_invoice(i, dec_repo) for i in subject[:3])
 
-    if re.search(r"cuanto|gasto|gastado|pagado|presupuesto|tope|limite", plain):
+    if re.search(r"cuanto|gasto|gastado|pagado|presupuesto|tope|limite|umbral", plain):
         rules = rule_repo.get_current()
-        spent = dec_repo.sum_spent_between(start_dt=now - timedelta(days=rules.period_days))
+        start = now - timedelta(days=rules.period_days)
+        by_agent = dec_repo.sum_spent_between(start_dt=start, statuses=[InvoiceStatus.paid])
+        by_people = dec_repo.sum_spent_between(start_dt=start, statuses=[InvoiceStatus.approved])
         counts = {s: sum(1 for i in invoices if i.status == s) for s in InvoiceStatus}
         paid = counts[InvoiceStatus.paid] + counts[InvoiceStatus.approved]
         pending = counts[InvoiceStatus.pending_approval]
         blocked = counts[InvoiceStatus.blocked] + counts[InvoiceStatus.rejected]
-        return (f"En los últimos {rules.period_days} días se han pagado {_money(spent, rules.base_currency)} de un "
-                f"límite de {_money(rules.period_limit, rules.base_currency)}. Facturas: "
-                f"{_count(paid, 'pagada', 'pagadas')}, {_count(pending, 'pendiente', 'pendientes')} de aprobación y "
-                f"{_count(blocked, 'rechazada', 'rechazadas')}.")
+        cur = rules.base_currency
+        return (f"En los últimos {rules.period_days} días se pagaron {_money(by_agent + by_people, cur)}: "
+                f"{_money(by_agent, cur)} los pagó el agente dentro de las reglas y {_money(by_people, cur)} fueron "
+                f"excepciones aprobadas por personas. El umbral de revisión semanal es {_money(rules.period_limit, cur)}: "
+                f"por encima, cada factura nueva va a una persona. Facturas: {_count(paid, 'pagada', 'pagadas')}, "
+                f"{_count(pending, 'por aprobar', 'por aprobar')} y {_count(blocked, 'rechazada', 'rechazadas')}.")
 
     if re.search(r"pendiente|aprobar|aprobacion|escalad|revisar", plain):
         pending = [i for i in invoices if i.status == InvoiceStatus.pending_approval]
-        return _listing("Facturas pendientes de aprobación", pending, dec_repo, with_reason=True)
+        return _listing("Facturas por aprobar", pending, dec_repo, with_reason=True)
 
     if re.search(r"rechaz|frenad|bloquead|frenaste|rechazaste", plain):
         blocked = [i for i in invoices if i.status in (InvoiceStatus.blocked, InvoiceStatus.rejected)]

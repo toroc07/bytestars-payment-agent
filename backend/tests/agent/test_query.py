@@ -73,9 +73,9 @@ def test_pending_list_and_spend_summary():
     send(repos, "Factura No. ATS-842 por US$1,487.50", llm=chain_with({}))
     send(repos, "Factura No. ATS-900 por US$6,000.00", llm=chain_with({"invoice_number": "ATS-900", "amount": "6000.00"}))
     pending = send(repos, "¿qué facturas están pendientes?").assistant_message.content
-    assert "pendientes de aprobación: 1." in pending and "ATS-900" in pending and "R08" in pending
+    assert "Facturas por aprobar: 1." in pending and "ATS-900" in pending and "R08" in pending
     spend = send(repos, "¿cuánto se ha pagado esta semana?").assistant_message.content
-    assert "USD 1,487.50" in spend and "USD 50,000.00" in spend and "1 pagada," in spend
+    assert "USD 1,487.50" in spend and "USD 50,000.00" in spend and "1 pagada," in spend and "umbral de revisión" in spend
 
 
 def test_vendor_listing_and_unknown_question():
@@ -102,7 +102,7 @@ def test_questions_inside_an_invoice_conversation_are_about_that_invoice():
     assert "nunca paga algo que incumple una regla" in fix
 
     others = send(repos, "que otra factura hay?").assistant_message.content
-    assert others.startswith("Hay 2 facturas: 1 pagada,") and "ATS-842" in others and "WL2141486" in others
+    assert others.startswith("Hay 2 facturas: 1 pagada, 0 por aprobar") and "ATS-842" in others and "WL2141486" in others
 
 
 def test_remedy_for_an_escalation_points_to_human_approval():

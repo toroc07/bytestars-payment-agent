@@ -250,6 +250,8 @@ class SummaryResponse(BaseModel):
     blocked_count: int
     pending_count: int
     spent_in_period: MoneyStr
+    spent_by_agent: MoneyStr = Decimal("0.00")  # paid by the engine, inside the rules
+    spent_by_people: MoneyStr = Decimal("0.00")  # exceptions a person approved
     period_limit: MoneyStr
     period_budget: MoneyStr
 
